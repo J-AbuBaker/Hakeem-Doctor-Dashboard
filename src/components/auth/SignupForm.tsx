@@ -643,36 +643,36 @@ const SignupForm: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
 
-          <div className="form-group">
-            <label htmlFor="ph_num">
-              <Phone className="label-icon" />
-              Phone Number *
-            </label>
-            <div className="input-wrapper">
-              <Phone className="input-icon" />
-              <input
-                id="ph_num"
-                name="ph_num"
-                type="text"
-                inputMode="numeric"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.ph_num}
-                className={formik.touched.ph_num && formik.errors.ph_num ? 'error' : ''}
-                placeholder="e.g., 1234567890"
-              />
-              {formik.touched.ph_num && !formik.errors.ph_num && formik.values.ph_num && (
-                <CheckCircle2 className="input-icon-success" />
+            <div className="form-group">
+              <label htmlFor="ph_num">
+                <Phone className="label-icon" />
+                Phone Number *
+              </label>
+              <div className="input-wrapper">
+                <Phone className="input-icon" />
+                <input
+                  id="ph_num"
+                  name="ph_num"
+                  type="text"
+                  inputMode="numeric"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.ph_num}
+                  className={formik.touched.ph_num && formik.errors.ph_num ? 'error' : ''}
+                  placeholder="e.g., 1234567890"
+                />
+                {formik.touched.ph_num && !formik.errors.ph_num && formik.values.ph_num && (
+                  <CheckCircle2 className="input-icon-success" />
+                )}
+              </div>
+              {formik.touched.ph_num && formik.errors.ph_num && (
+                <div className="field-error">
+                  <AlertCircle className="error-icon" size={16} />
+                  {formik.errors.ph_num}
+                </div>
               )}
             </div>
-            {formik.touched.ph_num && formik.errors.ph_num && (
-              <div className="field-error">
-                <AlertCircle className="error-icon" size={16} />
-                {formik.errors.ph_num}
-              </div>
-            )}
           </div>
 
           <div className="form-group">
