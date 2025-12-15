@@ -1,0 +1,398 @@
+/* Auth Forms Error Messages - Professional Alignment & Styling */
+
+/* Field Error Messages - Properly Aligned at Start of Field */
+.auth-container .field-error {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  color: var(--danger) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+  text-align: left !important;
+  animation: fadeInError 0.3s ease-out !important;
+  position: relative !important;
+  left: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+  flex-wrap: nowrap !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  align-self: flex-start !important;
+  justify-content: flex-start !important;
+}
+
+/* Error Icon Styling - Red Circle with Exclamation */
+.auth-container .field-error .error-icon {
+  flex-shrink: 0;
+  flex-grow: 0;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--danger);
+  margin-top: 0;
+}
+
+/* Ensure SVG icons (AlertCircle) are properly sized */
+.auth-container .field-error .error-icon svg,
+.auth-container .field-error svg.error-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--danger);
+}
+
+/* Error Text */
+.auth-container .field-error>*:not(.error-icon) {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  line-height: 1.5 !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* Form Group Alignment */
+.auth-container .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+  position: relative;
+  min-width: 0;
+  align-items: flex-start;
+  padding: 0;
+  margin: 0;
+}
+
+/* Ensure input-wrapper has no margin that could affect alignment */
+.auth-container .form-group .input-wrapper {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  width: 100% !important;
+}
+
+/* Ensure error messages align at the start of the input field - consolidated and comprehensive */
+.auth-container .form-group .field-error {
+  align-self: stretch !important;
+  position: relative !important;
+  left: 0 !important;
+  right: auto !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-inline-start: 0 !important;
+  padding-inline-end: 0 !important;
+  text-align: left !important;
+  text-align: start !important;
+  text-indent: 0 !important;
+  transform: none !important;
+  translate: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  inset-inline-start: 0 !important;
+}
+
+/* Ensure error icon has no left margin and proper spacing */
+.auth-container .form-group .field-error .error-icon {
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+  flex-shrink: 0 !important;
+}
+
+/* Ensure error text content has no left margin/padding */
+.auth-container .form-group .field-error > *:not(.error-icon) {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+}
+
+/* Ensure error messages align properly in form rows */
+.auth-container .form-row .form-group .field-error {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  align-self: flex-start !important;
+  left: 0 !important;
+  transform: none !important;
+}
+
+/* Horizontal Form Group Error Alignment */
+.auth-container .form-group-horizontal .field-error {
+  grid-column: 2 !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  padding-left: 0 !important;
+  align-self: flex-start !important;
+  left: 0 !important;
+  transform: none !important;
+}
+
+/* Global Error Message (for form submission errors) */
+.auth-container .error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--danger-lighter);
+  color: var(--danger);
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  border-left: 4px solid var(--danger);
+  box-shadow: 0 2px 8px hsla(var(--danger-hue), 72%, 50%, 0.15);
+  animation: shakeError 0.5s ease-out;
+  width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.auth-container .error-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  background-color: var(--danger);
+  border-radius: 50%;
+  flex-shrink: 0;
+  color: white;
+}
+
+.auth-container .error-icon-wrapper svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Animations */
+@keyframes fadeInError {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shakeError {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Textarea - Disable Resize (Professional - No User Resizing) */
+.auth-container textarea,
+.auth-container .form-group textarea,
+.auth-container .textarea-wrapper textarea {
+  resize: none !important;
+  overflow-y: auto;
+  min-height: 100px;
+  max-height: 200px;
+  cursor: text;
+}
+
+/* Remove resize handle visually */
+.auth-container textarea::-webkit-resizer {
+  display: none !important;
+}
+
+.auth-container textarea::-moz-resizer {
+  display: none !important;
+}
+
+/* Input Error State - Red Border */
+.auth-container .form-group input.error,
+.auth-container .form-group select.error,
+.auth-container .form-group textarea.error {
+  border-color: var(--danger) !important;
+  border-width: 1.5px !important;
+  box-shadow: 0 0 0 3px hsla(var(--danger-hue), 72%, 50%, 0.1) !important;
+}
+
+/* Input wrapper error state for proper border display */
+.auth-container .form-group .input-wrapper:has(input.error) input,
+.auth-container .form-group .input-wrapper:has(select.error) select {
+  border-color: var(--danger) !important;
+  border-width: 1.5px !important;
+}
+
+.auth-container .form-group .textarea-wrapper:has(textarea.error) textarea {
+  border-color: var(--danger) !important;
+  border-width: 2px !important;
+}
+
+@keyframes errorPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 0 3px hsla(var(--danger-hue), 72%, 50%, 0.2);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .auth-container .field-error {
+    font-size: 0.75rem;
+    gap: 0.375rem;
+  }
+
+  .auth-container .error-message {
+    font-size: 0.8125rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .auth-container .form-row .form-group .field-error {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-container .field-error {
+    font-size: 0.75rem;
+    margin-top: 0.375rem;
+  }
+
+  .auth-container .error-message {
+    font-size: 0.75rem;
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .auth-container .error-icon-wrapper {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+  }
+}
+
+/* Resend Code Container */
+.resend-code-container {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.resend-success-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #10b981;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(16, 185, 129, 0.1);
+  border-radius: 8px;
+  width: 100%;
+  justify-content: center;
+}
+
+.resend-code-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.countdown-timer {
+  color: var(--text-light);
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  text-align: center;
+}
+
+.resend-code-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+}
+
+.resend-code-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  background: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 50%, #5eead4 100%);
+}
+
+.resend-code-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+}
+
+.resend-code-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.resend-code-button .spinner {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
