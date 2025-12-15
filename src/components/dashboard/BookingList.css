@@ -1,0 +1,307 @@
+.booking-list-container {
+  width: 100%;
+  margin-top: var(--spacing-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+.booking-list-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.date-group-header {
+  padding: var(--spacing-4) var(--spacing-5);
+  background: linear-gradient(135deg, var(--surface-alt) 0%, var(--surface-elevated) 100%);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.date-group-header.date-group-today {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.date-group-header-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.date-group-icon {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.date-group-header.date-group-today .date-group-icon {
+  color: #2563eb;
+}
+
+.date-group-label-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  flex: 1;
+}
+
+.date-group-label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.date-group-header.date-group-today .date-group-label {
+  color: #1e40af;
+}
+
+.date-group-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.date-group-header.date-group-today .date-group-subtitle {
+  color: #3b82f6;
+}
+
+.date-group-count {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  padding: var(--spacing-1) var(--spacing-3);
+  background: var(--surface-elevated);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-light);
+  white-space: nowrap;
+}
+
+.date-group-header.date-group-today .date-group-count {
+  background: rgba(255, 255, 255, 0.8);
+  color: #1e40af;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.booking-list-table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+.booking-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.booking-list-table thead {
+  background: var(--surface-alt);
+  border-bottom: 2px solid var(--border-light);
+}
+
+.booking-list-table thead tr {
+  border-bottom: 2px solid var(--border-light);
+}
+
+.booking-list-table th {
+  padding: var(--spacing-4) var(--spacing-5);
+  text-align: left;
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  background: var(--surface-alt);
+  z-index: 1;
+}
+
+.booking-list-table th .header-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: var(--spacing-2);
+  color: var(--text-secondary);
+}
+
+.booking-list-table tbody tr {
+  border-bottom: 1px solid var(--border-light);
+  transition: background-color 0.2s ease;
+}
+
+.booking-list-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.booking-list-table tbody tr:hover {
+  background-color: var(--surface-alt);
+}
+
+.booking-list-table td {
+  padding: var(--spacing-4) var(--spacing-5);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+/* Column-specific styles */
+.col-time {
+  min-width: 100px;
+}
+
+.time-display {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.time-value {
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  font-family: 'SF Mono', 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: var(--font-size-base);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.time-period {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+  line-height: 1.2;
+  margin-left: 0.125rem;
+}
+
+.col-duration {
+  min-width: 100px;
+}
+
+.duration-value {
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.col-patient {
+  min-width: 180px;
+}
+
+.patient-name-value {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.col-type {
+  min-width: 150px;
+}
+
+.type-value {
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.col-status {
+  min-width: 120px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: capitalize;
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.status-badge.status-scheduled {
+  background: var(--info-lighter);
+  color: var(--info);
+  border: 1px solid hsla(var(--info-hue), 100%, 50%, 0.2);
+}
+
+.status-badge.status-completed {
+  background: var(--success-lighter);
+  color: var(--success);
+  border: 1px solid hsla(var(--success-hue), 71%, 45%, 0.2);
+}
+
+.status-badge.status-cancelled {
+  background: var(--danger-lighter);
+  color: var(--danger);
+  border: 1px solid hsla(var(--danger-hue), 72%, 50%, 0.2);
+}
+
+/* Empty state */
+.booking-list-empty {
+  text-align: center;
+  padding: var(--spacing-12) var(--spacing-6);
+  color: var(--text-secondary);
+}
+
+.booking-list-empty .empty-icon {
+  margin: 0 auto var(--spacing-4);
+  color: var(--text-tertiary);
+  opacity: 0.5;
+}
+
+.booking-list-empty p {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .booking-list-container {
+    gap: var(--spacing-4);
+  }
+
+  .date-group-header {
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+
+  .date-group-header-content {
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+  }
+
+  .date-group-label-wrapper {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .date-group-count {
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-1) var(--spacing-2);
+  }
+
+  .booking-list-table {
+    font-size: var(--font-size-xs);
+  }
+
+  .booking-list-table th,
+  .booking-list-table td {
+    padding: var(--spacing-3) var(--spacing-4);
+  }
+
+  .booking-list-table th .header-icon {
+    display: none;
+  }
+
+  .col-time,
+  .col-duration,
+  .col-patient,
+  .col-type,
+  .col-status {
+    min-width: auto;
+  }
+}
+
