@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import AppointmentService from '../services/AppointmentService';
 import { Appointment } from '../types';
 import { hasStatus } from '../utils/statusUtils';
+import { getStoredToken, decodeToken } from '../utils/jwtUtils';
 
 interface AppointmentContextType {
   appointments: Appointment[];
@@ -40,25 +41,23 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
       console.log('Fetching appointments from API...');
 
       // Check token before making request
-      const token = localStorage.getItem('token');
+      const token = getStoredToken();
       if (!token) {
         throw new Error('No authentication token found. Please log in again.');
       }
 
       // Decode token to check role
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = decodeToken(token);
+      if (payload) {
         console.log('🔍 Current user info from token:', {
           username: payload.sub || payload.username,
           role: payload.role,
-          exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'N/A'
+          exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'N/A',
         });
 
         if (payload.role && payload.role.toUpperCase() !== 'DOCTOR') {
           console.warn(`⚠️ Warning: User role in token is "${payload.role}", but DOCTOR role is required.`);
         }
-      } catch (e) {
-        console.warn('Could not decode token for role check:', e);
       }
 
       // Fetch appointments from API
@@ -94,20 +93,13 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
 
       // Provide more helpful error message for 403
       if (err.response?.status === 403) {
-        const token = localStorage.getItem('token');
-        let roleInfo = 'Unknown';
-        if (token) {
-          try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            roleInfo = payload.role || 'Not found in token';
-          } catch (e) {
-            // Ignore
-          }
-        }
+        const token = getStoredToken();
+        const payload = token ? decodeToken(token) : null;
+        const roleInfo = payload?.role || 'Not found in token';
         setError(
           `Access Denied (403): Your account does not have the DOCTOR role required to access appointments. ` +
-          `Current role: ${roleInfo}. ` +
-          `Please contact your administrator to update your account role, or log in with a doctor account.`
+            `Current role: ${roleInfo}. ` +
+            `Please contact your administrator to update your account role, or log in with a doctor account.`
         );
       } else {
         setError(err.response?.data?.message || err.message || 'Failed to load appointments. Please try again.');

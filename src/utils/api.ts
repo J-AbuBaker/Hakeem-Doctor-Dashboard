@@ -1,5 +1,8 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import logger from './logger';
+import { formatAxiosError } from './errorHandlers';
+import { APP_CONFIG } from '../constants/appConfig';
+import { getStoredToken } from './jwtUtils';
 
 /**
  * API base URL configuration
@@ -63,7 +66,7 @@ const api: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: false,
-  timeout: 30000,
+  timeout: APP_CONFIG.API_TIMEOUT,
 });
 
 /**
@@ -71,7 +74,7 @@ const api: AxiosInstance = axios.create({
  */
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = getStoredToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -159,33 +162,18 @@ Please contact the server administrator to configure CORS.`;
       error.message = `Request Setup Error: ${error.message}`;
     }
 
+    // Format error using utility function
+    const formattedError = formatAxiosError(error);
+    error.message = formattedError.message;
+
+    // Handle authentication errors
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
+      localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.TOKEN);
       if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/signup')) {
         window.location.href = '/login';
       }
     } else if (error.response?.status === 403) {
       error.message = `Access Denied (403): You don't have permission to access this resource. Required role: DOCTOR. Please contact your administrator if you believe this is an error.`;
-    }
-
-    if (error.response?.data) {
-      const errorData = error.response.data as any;
-      
-      // Handle plain text error responses (common with 500 errors)
-      if (typeof errorData === 'string') {
-        error.message = errorData || error.message || 'An error occurred';
-      } else if (errorData && typeof errorData === 'object') {
-        // Handle JSON error responses
-        error.message = errorData.message || errorData.error || error.message || 'An error occurred';
-      } else {
-        error.message = error.message || 'An error occurred';
-      }
-      
-      // For 500 errors, provide more context
-      if (error.response.status === 500) {
-        const originalMessage = error.message;
-        error.message = `Server Error (500): ${originalMessage}. Please check backend logs for details.`;
-      }
     }
     return Promise.reject(error);
   }
