@@ -5,76 +5,43 @@ import {
   OpenSlotRequest,
 } from '../types';
 import { mapBackendStatusToFrontend } from '../utils/statusUtils';
+import {
+  parseDateTimeString,
+  formatDateToString,
+  formatTimeToString,
+  isValidDateTime,
+} from '../utils/dateParsing';
+import { formatAppointmentType } from '../utils/stringUtils';
+import { API_ENDPOINTS } from '../constants/apiEndpoints';
+import { APP_CONFIG } from '../constants/appConfig';
 
 class AppointmentService {
-  /**
-   * Capitalizes the first letter of a string
-   */
-  private capitalizeFirst(str: string): string {
-    if (!str) return str;
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-  }
-
-  /**
-   * Formats appointment type for display
-   */
-  private formatAppointmentType(appointmentType: string): string {
-    if (!appointmentType) return '';
-    return appointmentType
-      .split(/[\s_-]+/)
-      .map(word => this.capitalizeFirst(word))
-      .join(' ');
-  }
 
   private mapScheduledAppointmentToAppointment(apiAppointment: ScheduledAppointmentResponse): Appointment {
     if (!apiAppointment) {
       throw new Error('Invalid appointment data: appointment is null or undefined');
     }
 
-    let appointmentDate: Date;
-    try {
-      const dateStr = apiAppointment.appointmentDate;
-      if (!dateStr) {
-        throw new Error('appointmentDate is missing');
-      }
-
-      if (dateStr.includes('T')) {
-        const [datePart, timePart] = dateStr.split('T');
-        const [year, month, day] = datePart.split('-').map(Number);
-        const [hours, minutes, seconds] = (timePart || '00:00:00').split(':').map(part => parseInt(part, 10));
-        appointmentDate = new Date(year, month - 1, day, hours || 0, minutes || 0, seconds || 0);
-      } else {
-        appointmentDate = new Date(dateStr);
-      }
-
-      if (isNaN(appointmentDate.getTime())) {
-        throw new Error(`Invalid date format: ${dateStr}`);
-      }
-    } catch (error) {
-      console.error('Error parsing appointment date:', error, apiAppointment);
+    const appointmentDate = parseDateTimeString(apiAppointment.appointmentDate);
+    if (!appointmentDate) {
+      console.error('Error parsing appointment date:', apiAppointment);
       throw new Error(`Failed to parse appointment date: ${apiAppointment.appointmentDate}`);
     }
 
-    const year = appointmentDate.getFullYear();
-    const month = String(appointmentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(appointmentDate.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
-
-    const hours = String(appointmentDate.getHours()).padStart(2, '0');
-    const minutes = String(appointmentDate.getMinutes()).padStart(2, '0');
-    const timeStr = `${hours}:${minutes}`;
+    const dateStr = formatDateToString(appointmentDate);
+    const timeStr = formatTimeToString(appointmentDate);
 
     let status = mapBackendStatusToFrontend(apiAppointment.appointmentStatus);
 
     const appointmentType = apiAppointment.appointmentType || '';
-    const formattedType = this.formatAppointmentType(appointmentType);
+    const formattedType = formatAppointmentType(appointmentType);
 
     const notesParts: string[] = [];
     if (formattedType) {
       notesParts.push(`Type: ${formattedType}`);
     }
 
-    const duration = 30;
+    const duration = APP_CONFIG.DEFAULT_APPOINTMENT_DURATION;
 
     const patientId = (apiAppointment.patientId != null) ? apiAppointment.patientId.toString() : '0';
     
@@ -124,7 +91,9 @@ class AppointmentService {
    */
   async getScheduledAppointments(): Promise<Appointment[]> {
     try {
-      const response = await api.get<ScheduledAppointmentResponse[] | ScheduledAppointmentResponse>('/appointment/doctor/scheduled');
+      const response = await api.get<ScheduledAppointmentResponse[] | ScheduledAppointmentResponse>(
+        API_ENDPOINTS.APPOINTMENT.DOCTOR_SCHEDULED
+      );
 
       if (!response.data) {
         return [];
@@ -168,32 +137,8 @@ class AppointmentService {
       throw new Error('Invalid appointment date: date is required and must be a string');
     }
 
-    const dateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/;
-    if (!dateTimeRegex.test(appointmentDate)) {
+    if (!isValidDateTime(appointmentDate)) {
       throw new Error(`Invalid datetime format. Expected "YYYY-MM-DDTHH:mm:ss", got: ${appointmentDate}`);
-    }
-
-    const [datePart, timePart] = appointmentDate.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hours, minutes, seconds] = timePart.split(':').map(Number);
-
-    if (month < 1 || month > 12 || day < 1 || day > 31) {
-      throw new Error(`Invalid date components: ${appointmentDate}`);
-    }
-    if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
-      throw new Error(`Invalid time components: ${appointmentDate}`);
-    }
-
-    const testDate = new Date(year, month - 1, day, hours, minutes, seconds);
-    if (
-      testDate.getFullYear() !== year ||
-      testDate.getMonth() !== month - 1 ||
-      testDate.getDate() !== day ||
-      testDate.getHours() !== hours ||
-      testDate.getMinutes() !== minutes ||
-      testDate.getSeconds() !== seconds
-    ) {
-      throw new Error(`Invalid date: ${appointmentDate}`);
     }
 
     const request: OpenSlotRequest = {
@@ -201,7 +146,7 @@ class AppointmentService {
     };
 
     try {
-      await api.post<OpenSlotRequest>('/appointment/doctor/schedule', request);
+      await api.post<OpenSlotRequest>(API_ENDPOINTS.APPOINTMENT.DOCTOR_SCHEDULE, request);
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to open slot';
       throw new Error(`Failed to schedule slot at ${appointmentDate}: ${errorMessage}`);
@@ -219,7 +164,7 @@ class AppointmentService {
         throw new Error(`Invalid appointment ID: ${id}. ID must be a positive number.`);
       }
 
-      const url = `/appointment/doctor/complete?appointmentId=${appointmentId}`;
+      const url = `${API_ENDPOINTS.APPOINTMENT.DOCTOR_COMPLETE}?appointmentId=${appointmentId}`;
       const response = await api.put<ScheduledAppointmentResponse>(url, null);
 
       if (!response || !response.data) {

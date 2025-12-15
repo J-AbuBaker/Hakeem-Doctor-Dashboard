@@ -9,90 +9,72 @@ import {
   Doctor,
   UserInfo,
 } from '../types';
+import {
+  storeToken,
+  removeStoredToken,
+  getStoredToken,
+  isAuthenticated as checkAuth,
+  getUsernameFromToken,
+  hasRole,
+  getRoleFromToken,
+} from '../utils/jwtUtils';
+import {
+  isErrorResponse,
+  extractErrorFromResponse,
+  createResetPasswordError,
+} from '../utils/errorHandlers';
+import { API_ENDPOINTS } from '../constants/apiEndpoints';
+import { APP_CONFIG } from '../constants/appConfig';
 
 class AuthService {
   async signup(data: SignUpUserDto): Promise<SignupResponse> {
-    const response = await api.post<SignupResponse>('/auth/signup', data);
+    const response = await api.post<SignupResponse>(API_ENDPOINTS.AUTH.SIGNUP, data);
     if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
+      storeToken(response.data.token);
     }
     return response.data;
   }
 
   async login(data: LoginUserDto): Promise<LoginResponse> {
-    const response = await api.post<LoginResponse>('/auth/login', data);
+    const response = await api.post<LoginResponse>(API_ENDPOINTS.AUTH.LOGIN, data);
     if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
+      storeToken(response.data.token);
       // Store expiresIn if needed for token expiration handling
       if (response.data.expiresIn) {
         const expirationTime = Date.now() + response.data.expiresIn * 1000;
-        localStorage.setItem('tokenExpiration', expirationTime.toString());
+        localStorage.setItem(APP_CONFIG.STORAGE_KEYS.TOKEN_EXPIRATION, expirationTime.toString());
       }
     }
     return response.data;
   }
 
   async forgotPassword(data: ForgotPasswordRequest): Promise<void> {
-    await api.post('/auth/forgot-password', data);
+    await api.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, data);
   }
 
   async resetPassword(data: ResetPasswordRequest): Promise<void> {
     try {
-      const response = await api.post('/auth/reset-password', data);
-      
-      // PRIORITY 1: Check if the response contains an error message even with status 200
-      if (response.data) {
-        const responseData = response.data as any;
-        const responseMessage = responseData.message || responseData.error || '';
-        const responseText = typeof responseData === 'string' ? responseData : responseMessage;
-        
-        // Check for error indicators in the response message/body
-        const errorIndicators = [
-          'not been changed',
-          'isn\'t valid',
-          'isn\'t correct',
-          'invalid',
-          'error',
-          'failed',
-          'wrong',
-          'incorrect'
-        ];
-        
-        const lowerResponse = (responseText || '').toLowerCase();
-        const hasError = errorIndicators.some(indicator => lowerResponse.includes(indicator));
-        
-        // If response indicates an error, throw an error even though status is 200
-        if (hasError) {
-          const cleanMessage = responseText.split('|')[0].trim() || 'Invalid reset code. Please check your code and try again.';
-          
-          // Create an error object that mimics axios error structure
-          const error: any = new Error(cleanMessage);
-          error.response = {
-            data: {
-              message: cleanMessage,
-              error: cleanMessage
-            },
-            status: 200
-          };
-          throw error;
-        }
+      const response = await api.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, data);
+
+      // Check if the response contains an error message even with status 200
+      if (response.data && isErrorResponse(response.data)) {
+        const cleanMessage =
+          extractErrorFromResponse(
+            response.data,
+            'Invalid reset code. Please check your code and try again.'
+          ) || 'Invalid reset code. Please check your code and try again.';
+        throw createResetPasswordError(cleanMessage, 200);
       }
     } catch (err: any) {
-      // PRIORITY 2: Handle HTTP error status codes (400, 404, 500, etc.)
-      // If it's already an axios error with status code, re-throw it
+      // Handle HTTP error status codes (400, 404, 500, etc.)
       if (err.response) {
         // Handle 400 Bad Request specifically for invalid/expired code
         if (err.response.status === 400) {
-          const errorMessage = err.response.data?.message || err.response.data?.error || 'Invalid verification code or expired code';
-          const error: any = new Error(errorMessage);
-          error.response = {
-            data: {
-              message: errorMessage,
-              error: errorMessage
-            },
-            status: 400
-          };
-          throw error;
+          const errorMessage =
+            err.response.data?.message ||
+            err.response.data?.error ||
+            'Invalid verification code or expired code';
+          throw createResetPasswordError(errorMessage, 400);
         }
         // For other status codes, re-throw as is
         throw err;
@@ -103,7 +85,7 @@ class AuthService {
   }
 
   async getDoctors(): Promise<Doctor[]> {
-    const response = await api.get<Doctor[]>('/auth/doctors');
+    const response = await api.get<Doctor[]>(API_ENDPOINTS.AUTH.DOCTORS);
     return response.data;
   }
 
@@ -115,18 +97,11 @@ class AuthService {
       }
 
       // If no username provided, try to extract from token
-      const token = this.getToken();
+      const token = getStoredToken();
       if (token) {
-        try {
-          // Decode JWT token to get username (token format: header.payload.signature)
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const tokenUsername = payload.sub; // JWT 'sub' field contains username
-          if (tokenUsername) {
-            return await this.getUserByUsername(tokenUsername);
-          }
-        } catch (error) {
-          // If token decoding fails, return null
-          return null;
+        const tokenUsername = getUsernameFromToken(token);
+        if (tokenUsername) {
+          return await this.getUserByUsername(tokenUsername);
         }
       }
 
@@ -156,7 +131,7 @@ class AuthService {
    */
   async getUserInfo(): Promise<UserInfo | null> {
     try {
-      const response = await api.get<UserInfo>('/me/info');
+      const response = await api.get<UserInfo>(API_ENDPOINTS.USER.INFO);
       return response.data;
     } catch (error) {
       console.error('Error fetching user info:', error);
@@ -171,28 +146,20 @@ class AuthService {
   async verifyDoctorRole(username?: string): Promise<boolean> {
     try {
       // First, try to get role from JWT token
-      const token = this.getToken();
-      if (token) {
-        try {
-          // Decode JWT token to get role
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const role = payload.role?.toUpperCase() || '';
-          if (role === 'DOCTOR') {
-            return true;
-          }
-        } catch (error) {
-          // If token decoding fails, continue to fallback
-        }
+      const token = getStoredToken();
+      if (token && hasRole(token, APP_CONFIG.ROLES.DOCTOR)) {
+        return true;
       }
 
       // Fallback: try to get user by username if provided
       if (username) {
         const user = await this.getUserByUsername(username);
         if (user) {
-          const role = typeof user.role === 'string'
-            ? user.role.toUpperCase()
-            : (user.role as any)?.name?.toUpperCase() || '';
-          return role === 'DOCTOR';
+          const role =
+            typeof user.role === 'string'
+              ? user.role.toUpperCase()
+              : (user.role as any)?.name?.toUpperCase() || '';
+          return role === APP_CONFIG.ROLES.DOCTOR;
         }
       }
 
@@ -203,15 +170,15 @@ class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('token');
+    removeStoredToken();
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return getStoredToken();
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    return checkAuth();
   }
 }
 
