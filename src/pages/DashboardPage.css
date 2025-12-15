@@ -1,0 +1,207 @@
+/* Dashboard Page Layout Styles */
+
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--background);
+  isolation: isolate;
+}
+
+.dashboard-main {
+  flex: 1;
+  padding: 0;
+  margin-left: 0;
+  transition: margin-left 0.3s;
+  background: transparent;
+}
+
+.dashboard-content {
+  padding: var(--spacing-6);
+  max-width: var(--container-2xl);
+  margin-inline: auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.dashboard-header {
+  margin-block-end: var(--spacing-6);
+  padding: var(--spacing-5);
+  background: var(--surface-elevated);
+  border-radius: var(--radius-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-4);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.dashboard-header > div {
+  flex: 1;
+  min-width: 280px;
+}
+
+.title-icon {
+  font-size: var(--font-size-xl);
+  margin-inline-end: var(--spacing-2);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  white-space: nowrap;
+  padding: var(--spacing-3) var(--spacing-5);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-base);
+}
+
+.btn-icon:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-icon span:first-child {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1;
+}
+
+.dashboard-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin-block-end: var(--spacing-2);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.dashboard-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-normal);
+}
+
+.header-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: var(--spacing-2);
+}
+
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-12);
+  color: var(--text-secondary);
+}
+
+.spinner-large {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-light);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto var(--spacing-4);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.appointments-list-by-date {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+.appointments-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.appointments-date-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: var(--surface-elevated);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-xs);
+}
+
+.date-day-name {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+.date-day-number {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--primary);
+}
+
+.appointments-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+/* Booking List Section */
+.booking-list-section {
+  margin-top: var(--spacing-6);
+  width: 100%;
+}
+
+.booking-list-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin-block-end: var(--spacing-5);
+  letter-spacing: var(--letter-spacing-tight);
+  padding-block-end: var(--spacing-3);
+  border-bottom: 2px solid var(--border-light);
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .dashboard-main {
+    margin-left: 280px;
+  }
+
+  .dashboard-header {
+    align-items: center;
+  }
+}
+
+@media (max-width: 767px) {
+  .dashboard-content {
+    padding: var(--spacing-4);
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-3);
+  }
+
+  .dashboard-header > div {
+    min-width: 100%;
+  }
+}
+
