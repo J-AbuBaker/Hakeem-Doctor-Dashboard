@@ -30,17 +30,8 @@ import './AuthShared.css';
 import './AuthForms.css';
 
 const SignupForm: React.FC = () => {
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/0adfca04-9e80-43d6-a3b3-941a107b5fef', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignupForm.tsx:31', message: 'Component entry', data: {}, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A,B,D' }) }).catch(() => { });
-  // #endregion
   const navigate = useNavigate();
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/0adfca04-9e80-43d6-a3b3-941a107b5fef', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignupForm.tsx:34', message: 'After useNavigate', data: { hasNavigate: !!navigate }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'E' }) }).catch(() => { });
-  // #endregion
   const { signup } = useAuth();
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/0adfca04-9e80-43d6-a3b3-941a107b5fef', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignupForm.tsx:36', message: 'After useAuth', data: { hasSignup: !!signup }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'E' }) }).catch(() => { });
-  // #endregion
   const [error, setError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -88,13 +79,6 @@ const SignupForm: React.FC = () => {
     return new Date().toISOString().split('T')[0];
   };
 
-  // #region agent log
-  try {
-    fetch('http://127.0.0.1:7243/ingest/0adfca04-9e80-43d6-a3b3-941a107b5fef', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignupForm.tsx:72', message: 'Before validation schema creation', data: {}, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-  } catch (e) {
-    fetch('http://127.0.0.1:7243/ingest/0adfca04-9e80-43d6-a3b3-941a107b5fef', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignupForm.tsx:72', message: 'Error before validation schema', data: { error: String(e) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A,B' }) }).catch(() => { });
-  }
-  // #endregion
   const validationSchema = Yup.object({
     username: Yup.string()
       .email('Please enter a valid email address')
@@ -268,9 +252,6 @@ const SignupForm: React.FC = () => {
       }
     },
   });
-  // #region agent log
-  fetch('http://127.0.0.1:7243/ingest/0adfca04-9e80-43d6-a3b3-941a107b5fef', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignupForm.tsx:262', message: 'After formik initialization', data: { hasFormik: !!formik, hasValues: !!formik.values }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-  // #endregion
 
   // Custom submit handler that validates and shows errors
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -305,28 +286,6 @@ const SignupForm: React.FC = () => {
     // If validation passes, submit the form
     formik.handleSubmit(e);
   };
-
-
-  // #region agent log
-  React.useEffect(() => {
-    fetch('http://127.0.0.1:7243/ingest/0adfca04-9e80-43d6-a3b3-941a107b5fef', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignupForm.tsx:312', message: 'useEffect running', data: {}, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
-    const checkDOM = () => {
-      try {
-        const container = document.querySelector('.auth-container');
-        const card = document.querySelector('.auth-card');
-        const computedStyle = container ? window.getComputedStyle(container) : null;
-        const bodyStyle = document.body ? window.getComputedStyle(document.body) : null;
-        fetch('http://127.0.0.1:7243/ingest/0adfca04-9e80-43d6-a3b3-941a107b5fef', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignupForm.tsx:312', message: 'DOM check after render', data: { hasContainer: !!container, hasCard: !!card, display: computedStyle?.display, visibility: computedStyle?.visibility, opacity: computedStyle?.opacity, height: computedStyle?.height, width: computedStyle?.width, position: computedStyle?.position, zIndex: computedStyle?.zIndex, bodyDisplay: bodyStyle?.display, bodyVisibility: bodyStyle?.visibility, bodyOpacity: bodyStyle?.opacity, documentReadyState: document.readyState }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
-      } catch (e) {
-        fetch('http://127.0.0.1:7243/ingest/0adfca04-9e80-43d6-a3b3-941a107b5fef', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignupForm.tsx:312', message: 'Error in DOM check', data: { error: String(e) }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
-      }
-    };
-    setTimeout(checkDOM, 100);
-    setTimeout(checkDOM, 500);
-    setTimeout(checkDOM, 1000);
-  }, []);
-  fetch('http://127.0.0.1:7243/ingest/0adfca04-9e80-43d6-a3b3-941a107b5fef', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'SignupForm.tsx:290', message: 'Rendering JSX', data: {}, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'C' }) }).catch(() => { });
-  // #endregion
 
   return (
     <div className="auth-container">
