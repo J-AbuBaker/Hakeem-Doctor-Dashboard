@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { hasStatus } from '../../utils/statusUtils';
 import { parseAppointmentDate } from '../../utils/dateUtils';
+import { formatAppointmentType } from '../../utils/stringUtils';
 import './BookingList.css';
 
 interface BookingListProps {
@@ -140,17 +141,6 @@ const BookingList: React.FC<BookingListProps> = ({ appointments }) => {
     return `${hours}h ${mins}m`;
   };
 
-  /**
-   * Formats appointment type for display
-   */
-  const formatAppointmentType = (type?: string): string => {
-    if (!type) return '—';
-    // Capitalize first letter of each word for display
-    return type
-      .split(/[\s_-]+/)
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
-  };
 
 
   if (appointments.length === 0) {
@@ -230,7 +220,7 @@ const BookingList: React.FC<BookingListProps> = ({ appointments }) => {
                           </span>
                         </td>
                         <td className="col-type">
-                          <span className="type-value">{formatAppointmentType(appointment.appointmentType)}</span>
+                          <span className="type-value">{appointment.appointmentType ? formatAppointmentType(appointment.appointmentType) : '—'}</span>
                         </td>
                         <td className="col-status">
                           <span className={`status-badge ${getStatusColor(appointment.status)}`}>
