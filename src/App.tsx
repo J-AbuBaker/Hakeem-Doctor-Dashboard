@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { AppointmentProvider } from './context/AppointmentContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import SignupForm from './components/auth/SignupForm';
 import LoginForm from './components/auth/LoginForm';
 import ForgotPasswordForm from './components/auth/ForgotPasswordForm';
@@ -14,9 +15,10 @@ import './App.css';
 
 function App() {
   return (
-    <AuthProvider>
-      <AppointmentProvider>
-        <Router>
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppointmentProvider>
+          <Router>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/signup" element={<SignupForm />} />
@@ -48,9 +50,10 @@ function App() {
               }
             />
           </Routes>
-        </Router>
-      </AppointmentProvider>
-    </AuthProvider>
+          </Router>
+        </AppointmentProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
