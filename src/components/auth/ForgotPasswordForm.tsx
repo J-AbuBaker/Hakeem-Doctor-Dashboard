@@ -3,7 +3,8 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Link } from 'react-router-dom';
 import AuthService from '../../services/AuthService';
-import { Mail, Loader2, CheckCircle, User, Shield, ArrowLeft, AlertCircle, CheckCircle2, RefreshCw, Lock } from 'lucide-react';
+import { getErrorMessage } from '../../utils/errorUtils';
+import { Mail, Loader2, ArrowLeft, AlertCircle, CheckCircle2, RefreshCw, Lock } from 'lucide-react';
 import './AuthShared.css';
 import './AuthForms.css';
 
@@ -45,13 +46,9 @@ const ForgotPasswordForm: React.FC = () => {
         await AuthService.forgotPassword(values);
         setUserEmail(values.username);
         setSuccess(true);
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Professional error messages for better UX
-        let errorMessage =
-          err.response?.data?.message ||
-          err.response?.data?.error ||
-          err.message ||
-          'Unable to send reset code. Please check your email address and try again.';
+        let errorMessage = getErrorMessage(err);
 
         // Format network errors for better readability
         if (errorMessage.includes('Network Error') || errorMessage.includes('ERR_NETWORK')) {

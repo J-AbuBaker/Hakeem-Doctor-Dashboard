@@ -25,7 +25,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
     fetchAppointments({
       status: statusFilter !== 'All' ? statusFilter : undefined,
     });
-  }, [statusFilter]);
+  }, [statusFilter, fetchAppointments]);
 
   useEffect(() => {
     if (viewMode === 'week' || viewMode === 'month') {
@@ -33,17 +33,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
         status: statusFilter !== 'All' ? statusFilter : undefined,
       });
     }
-  }, [selectedDate, viewMode]);
-
-  // Debug logging
-  useEffect(() => {
-    console.log('AppointmentCalendar - Appointments state:', {
-      total: appointments.length,
-      appointments: appointments,
-      isLoading,
-      error,
-    });
-  }, [appointments, isLoading, error]);
+  }, [selectedDate, viewMode, statusFilter, fetchAppointments]);
 
   const filteredAppointments = appointments.filter((apt) => {
     if (statusFilter !== 'All' && !hasStatus(apt.status, statusFilter)) {

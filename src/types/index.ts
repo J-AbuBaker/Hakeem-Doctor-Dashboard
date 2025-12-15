@@ -12,3 +12,9 @@ export * from './appointment';
 // Doctor types
 export * from './doctor';
 
+// Error types
+export * from './errors';
+
+// Logger types
+export * from './logger';
+

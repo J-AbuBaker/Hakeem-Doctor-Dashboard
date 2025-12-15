@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import AppointmentService from '../services/AppointmentService';
 import { Appointment } from '../types';
 import { hasStatus } from '../utils/statusUtils';
 import { getStoredToken, decodeToken } from '../utils/jwtUtils';
+import { TypedAxiosError } from '../types/errors';
 
 interface AppointmentContextType {
   appointments: Appointment[];
@@ -16,6 +17,7 @@ interface AppointmentContextType {
 
 const AppointmentContext = createContext<AppointmentContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAppointments = () => {
   const context = useContext(AppointmentContext);
   if (!context) {
@@ -34,12 +36,10 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAppointments = async (params?: { status?: 'Scheduled' | 'Completed' | 'Cancelled' | 'All'; date?: string }) => {
+  const fetchAppointments = useCallback(async (params?: { status?: 'Scheduled' | 'Completed' | 'Cancelled' | 'All'; date?: string }) => {
     setIsLoading(true);
     setError(null);
     try {
-      console.log('Fetching appointments from API...');
-
       // Check token before making request
       const token = getStoredToken();
       if (!token) {
@@ -48,51 +48,40 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
 
       // Decode token to check role
       const payload = decodeToken(token);
-      if (payload) {
-        console.log('🔍 Current user info from token:', {
-          username: payload.sub || payload.username,
-          role: payload.role,
-          exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'N/A',
-        });
-
-        if (payload.role && payload.role.toUpperCase() !== 'DOCTOR') {
+      if (payload && payload.role && payload.role.toUpperCase() !== 'DOCTOR') {
+        if (import.meta.env.DEV) {
           console.warn(`⚠️ Warning: User role in token is "${payload.role}", but DOCTOR role is required.`);
         }
       }
 
       // Fetch appointments from API
       const data = await AppointmentService.getScheduledAppointments();
-      console.log(`Fetched ${data.length} appointments from API`);
 
       // Apply filters if needed
       let filtered = data;
       if (params?.status && params.status !== 'All') {
         filtered = data.filter(apt => hasStatus(apt.status, params.status as 'Scheduled' | 'Completed' | 'Cancelled'));
-        console.log(`Filtered to ${filtered.length} appointments with status: ${params.status}`);
       }
       if (params?.date) {
         filtered = filtered.filter(apt => apt.date === params.date);
-        console.log(`Filtered to ${filtered.length} appointments for date: ${params.date}`);
       }
 
       // Set appointments (even if empty array)
       setAppointments(filtered);
-      console.log(`Set ${filtered.length} appointments in state`);
-
-      if (filtered.length === 0 && data.length === 0) {
-        console.warn('No appointments found in API response. Check if there are appointments in the database.');
+    } catch (err: unknown) {
+      const error = err as TypedAxiosError;
+      if (import.meta.env.DEV) {
+        console.error('Failed to fetch appointments from API:', error);
+        console.error('Error details:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+        });
       }
-    } catch (err: any) {
-      console.error('Failed to fetch appointments from API:', err);
-      console.error('Error details:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-        statusText: err.response?.statusText,
-      });
 
       // Provide more helpful error message for 403
-      if (err.response?.status === 403) {
+      if (error.response?.status === 403) {
         const token = getStoredToken();
         const payload = token ? decodeToken(token) : null;
         const roleInfo = payload?.role || 'Not found in token';
@@ -102,16 +91,22 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
             `Please contact your administrator to update your account role, or log in with a doctor account.`
         );
       } else {
-        setError(err.response?.data?.message || err.message || 'Failed to load appointments. Please try again.');
+        const errorMessage = 
+          (typeof error.response?.data === 'object' && error.response.data && 'message' in error.response.data)
+            ? (error.response.data as { message?: string }).message
+            : typeof error.response?.data === 'string'
+            ? error.response.data
+            : error.message || 'Failed to load appointments. Please try again.';
+        setError(errorMessage || null);
       }
       // Set empty array on error
       setAppointments([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const openSlot = async (appointmentDate: string) => {
+  const openSlot = useCallback(async (appointmentDate: string) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -120,20 +115,27 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
       await AppointmentService.openSlot(appointmentDate);
       // Refresh appointments after opening slot
       await fetchAppointments();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to open slot');
-      throw err; // Re-throw to allow UI to handle error
+    } catch (err: unknown) {
+      const error = err as TypedAxiosError;
+      const errorMessage = 
+        (typeof error.response?.data === 'object' && error.response.data && 'message' in error.response.data)
+          ? (error.response.data as { message?: string }).message
+          : typeof error.response?.data === 'string'
+          ? error.response.data
+          : 'Failed to open slot';
+      setError(errorMessage || null);
+      throw error; // Re-throw to allow UI to handle error
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [fetchAppointments]);
 
   // Version without automatic refresh - for batch operations
-  const openSlotWithoutRefresh = async (appointmentDate: string) => {
+  const openSlotWithoutRefresh = useCallback(async (appointmentDate: string) => {
     await AppointmentService.openSlot(appointmentDate);
-  };
+  }, []);
 
-  const completeAppointment = async (id: string) => {
+  const completeAppointment = useCallback(async (id: string) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -168,25 +170,35 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
 
       // Return success indicator
       return completed;
-    } catch (err: any) {
-      console.error('Failed to complete appointment:', {
-        id,
-        error: err,
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-      });
+    } catch (err: unknown) {
+      const error = err as TypedAxiosError;
+      if (import.meta.env.DEV) {
+        console.error('Failed to complete appointment:', {
+          id,
+          error,
+          message: error.message,
+          response: error.response ? error.response.data : undefined,
+          status: error.response ? error.response.status : undefined,
+        });
+      }
 
       // Set user-friendly error message
-      const errorMessage = err.message || err.response?.data?.message || 'Failed to complete appointment. Please try again.';
-      setError(errorMessage);
+      let errorMessage = error.message || 'Failed to complete appointment. Please try again.';
+      if (error.response) {
+        if (typeof error.response.data === 'object' && error.response.data && 'message' in error.response.data) {
+          errorMessage = (error.response.data as { message?: string }).message || errorMessage;
+        } else if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data;
+        }
+      }
+      setError(errorMessage || null);
 
       // Re-throw to allow UI to handle error
-      throw err;
+      throw error;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
 
   return (

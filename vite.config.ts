@@ -40,9 +40,31 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/api/, ''),
           secure: false,
           configure: (proxy) => {
-            proxy.on('error', (err) => {
-              console.error('❌ Proxy error:', err);
+            proxy.on('error', (err: any) => {
+              console.error('❌ Proxy error:', err.message || err);
+              console.error('   Error code:', err.code);
               console.error('   Make sure the backend server is running at:', apiBaseUrl);
+              
+              // Provide helpful error messages based on error code
+              if (err.code === 'ECONNREFUSED') {
+                console.error('\n💡 Possible solutions:');
+                console.error('   1. Check if backend server is running');
+                console.error('   2. Verify the server URL is correct:', apiBaseUrl);
+                console.error('   3. Check if port 8089 is accessible');
+                console.error('   4. Verify firewall/network settings');
+                console.error('   5. Try: curl', apiBaseUrl, 'to test connectivity');
+              } else if (err.code === 'ECONNRESET') {
+                console.error('\n💡 Connection was reset. Possible causes:');
+                console.error('   1. Server closed the connection unexpectedly');
+                console.error('   2. Network instability');
+                console.error('   3. Server overloaded or restarting');
+                console.error('   4. Check server logs for errors');
+              } else if (err.code === 'ETIMEDOUT') {
+                console.error('\n💡 Connection timeout. Possible causes:');
+                console.error('   1. Server is slow to respond');
+                console.error('   2. Network latency issues');
+                console.error('   3. Server might be overloaded');
+              }
             });
             proxy.on('proxyReq', (proxyReq, req) => {
               console.log('📤 Sending Request to the Target:', req.method, req.url, '→', apiBaseUrl);

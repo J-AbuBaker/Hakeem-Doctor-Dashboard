@@ -4,6 +4,8 @@ import * as Yup from 'yup';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import AuthService from '../../services/AuthService';
 import { KeyRound, Loader2, CheckCircle, User, Lock, Eye, EyeOff, Shield, ArrowLeft, AlertCircle, CheckCircle2, Mail } from 'lucide-react';
+import { LocationState } from '../../types/errors';
+import { getErrorMessage, getErrorStatus } from '../../utils/errorUtils';
 import './AuthShared.css';
 import './AuthForms.css';
 
@@ -22,7 +24,7 @@ const ResetPasswordForm: React.FC = () => {
   const [resendSuccess, setResendSuccess] = React.useState(false);
 
   // Get email from location state if available
-  const emailFromState = (location.state as any)?.email || '';
+  const emailFromState = (location.state as LocationState)?.email || '';
 
   const validationSchema = Yup.object({
     username: Yup.string()
@@ -35,7 +37,7 @@ const ResetPasswordForm: React.FC = () => {
     password: Yup.string()
       .min(8, 'Password must be at least 8 characters long')
       .matches(/[A-Z]/, 'Password must include at least one uppercase letter')
-      .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must include at least one special character (!@#$%^&*...)')
+      .matches(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/, 'Password must include at least one special character (!@#$%^&*...)')
       .required('Password is required'),
     confirmPassword: Yup.string()
       .oneOf([Yup.ref('password')], 'Passwords do not match. Please ensure both passwords are identical')
@@ -63,13 +65,10 @@ const ResetPasswordForm: React.FC = () => {
         setTimeout(() => {
           navigate('/login');
         }, 2000);
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Professional error messages for better UX
-        let errorMessage =
-          err.response?.data?.message ||
-          err.response?.data?.error ||
-          err.message ||
-          'Unable to reset password. Please check your reset code and try again.';
+        let errorMessage = getErrorMessage(err);
+        const status = getErrorStatus(err);
 
         // Clean up error message if it contains pipe separators
         errorMessage = errorMessage.split('|')[0].trim();
@@ -78,7 +77,7 @@ const ResetPasswordForm: React.FC = () => {
         // Priority: Check status 200 error messages first, then status codes
 
         // Handle status 200 error messages (priority 1)
-        if (err.response?.status === 200 ||
+        if (status === 200 ||
           errorMessage.toLowerCase().includes('not been changed') ||
           errorMessage.toLowerCase().includes('isn\'t valid') ||
           errorMessage.toLowerCase().includes('invalid code') ||
@@ -86,7 +85,7 @@ const ResetPasswordForm: React.FC = () => {
           errorMessage = 'The reset code you entered is incorrect or has expired. Please check your email and try again.';
         }
         // Handle status 400 Bad Request (priority 2)
-        else if (err.response?.status === 400) {
+        else if (status === 400) {
           const lowerMessage = errorMessage.toLowerCase();
           if (lowerMessage.includes('invalid verification code') ||
             lowerMessage.includes('expired code') ||
@@ -100,9 +99,9 @@ const ResetPasswordForm: React.FC = () => {
         // Handle other errors
         else if (errorMessage.includes('Network Error') || errorMessage.includes('ERR_NETWORK')) {
           errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
-        } else if (err.response?.status === 404 || errorMessage.includes('Not Found')) {
+        } else if (status === 404 || errorMessage.includes('Not Found')) {
           errorMessage = 'No account found with this email address. Please check your email and try again.';
-        } else if (err.response?.status === 500 || errorMessage.includes('Internal Server Error')) {
+        } else if (status === 500 || errorMessage.includes('Internal Server Error')) {
           errorMessage = 'A server error occurred. Please try again in a few moments.';
         } else if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
           errorMessage = 'The request took too long. Please check your connection and try again.';
@@ -211,7 +210,7 @@ const ResetPasswordForm: React.FC = () => {
     return {
       minLength: password.length >= 8,
       hasUppercase: /[A-Z]/.test(password),
-      hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+      hasSpecialChar: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
     };
   };
 
@@ -234,13 +233,9 @@ const ResetPasswordForm: React.FC = () => {
       setTimeout(() => {
         setResendSuccess(false);
       }, 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Professional error messages for better UX
-      let errorMessage =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        err.message ||
-        'Unable to send reset code. Please check your email address and try again.';
+      let errorMessage = getErrorMessage(err) || 'Unable to send reset code. Please check your email address and try again.';
 
       // Format network errors for better readability
       if (errorMessage.includes('Network Error') || errorMessage.includes('ERR_NETWORK')) {

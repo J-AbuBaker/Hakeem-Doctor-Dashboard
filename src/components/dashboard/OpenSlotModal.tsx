@@ -6,6 +6,7 @@ import { X, Loader2, Calendar, Clock, AlertCircle, Plus, Minus, CheckCircle2, In
 import TimeSlotPicker from './TimeSlotPicker';
 import SlotDatePicker from './SlotDatePicker';
 import { format } from 'date-fns';
+import { getErrorMessage, getErrorStatus } from '../../utils/errorUtils';
 
 interface OpenSlotModalProps {
   isOpen: boolean;
@@ -145,16 +146,17 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
             `${results.failedSlots.length} slot(s) failed.`
           );
         }
-      } catch (err: any) {
-        let errorMessage = err.response?.data?.message || err.message || 'Failed to open slots';
+      } catch (err: unknown) {
+        let errorMessage = getErrorMessage(err);
+        const status = getErrorStatus(err);
 
         if (errorMessage.includes('Network Error') || errorMessage.includes('ERR_NETWORK')) {
           errorMessage = 'Unable to open slots. Please check your connection and try again.';
-        } else if (errorMessage.includes('409') || errorMessage.includes('Conflict')) {
+        } else if (status === 409 || errorMessage.includes('409') || errorMessage.includes('Conflict')) {
           errorMessage = 'One or more time slots are already open or booked. Please select different times.';
-        } else if (errorMessage.includes('400') || errorMessage.includes('Bad Request')) {
+        } else if (status === 400 || errorMessage.includes('400') || errorMessage.includes('Bad Request')) {
           errorMessage = 'Please check all fields and ensure the information is correct.';
-        } else if (errorMessage.includes('500')) {
+        } else if (status === 500 || errorMessage.includes('500')) {
           errorMessage = 'A server error occurred. Please try again in a few moments.';
         }
 
@@ -354,13 +356,15 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
 
         await openSlotWithoutRefresh(slot.datetime);
         successCount++;
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Log failure with detailed information
-        console.warn(`Failed to create slot ${slot.index} at ${slot.displayTime} (${slot.datetime}):`, {
-          error: err.message || err,
-          response: err.response?.data,
-          status: err.response?.status,
-        });
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        if (import.meta.env.DEV) {
+          console.warn(`Failed to create slot ${slot.index} at ${slot.displayTime} (${slot.datetime}):`, {
+            error: errorMessage,
+            errorObject: err,
+          });
+        }
         failedSlots.push(slot);
       }
     }
@@ -400,6 +404,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
       breakDuration,
       constrainToSameDay
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     formik.values.date,
     formik.values.startTime,

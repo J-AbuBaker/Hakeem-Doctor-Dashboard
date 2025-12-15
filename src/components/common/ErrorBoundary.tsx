@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import './ErrorBoundary.css';
 
@@ -81,7 +81,7 @@ class ErrorBoundary extends Component<Props, State> {
               We're sorry, but something unexpected happened. Please try refreshing the page or return to the home page.
             </p>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <div className="error-boundary-details">
                 <details>
                   <summary>Error Details (Development Only)</summary>

@@ -4,6 +4,7 @@ import * as Yup from 'yup';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LogIn, Loader2, Eye, EyeOff, Mail, Lock, Shield, AlertCircle } from 'lucide-react';
+import { getErrorMessage, getErrorResponseData, getErrorStatus } from '../../utils/errorUtils';
 import './AuthShared.css';
 import './AuthForms.css';
 
@@ -33,35 +34,33 @@ const LoginForm: React.FC = () => {
       try {
         await login(values.username, values.password);
         navigate('/dashboard');
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Professional error messages for better UX
-        let errorMessage =
-          err.response?.data?.message ||
-          err.response?.data?.error ||
-          err.message ||
-          'Invalid email or password. Please check your credentials and try again.';
+        let errorMessage = getErrorMessage(err);
+        const status = getErrorStatus(err);
 
         // Format network errors for better readability
         if (errorMessage.includes('Network Error') || errorMessage.includes('ERR_NETWORK')) {
           errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
-        } else if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+        } else if (status === 401 || errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.';
-        } else if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
+        } else if (status === 403 || errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
           errorMessage = 'Access denied. Please contact your administrator if you believe this is an error.';
-        } else if (errorMessage.includes('500') || errorMessage.includes('Internal Server Error')) {
+        } else if (status === 500 || errorMessage.includes('500') || errorMessage.includes('Internal Server Error')) {
           errorMessage = 'A server error occurred. Please try again in a few moments. If the problem persists, contact support.';
         } else if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
           errorMessage = 'The request took too long to complete. Please check your connection and try again.';
         }
 
         setError(errorMessage);
-        console.error('Login Error Details:', {
-          message: errorMessage,
-          response: err.response?.data,
-          status: err.response?.status,
-          code: err.code,
-          fullError: err,
-        });
+        if (import.meta.env.DEV) {
+          console.error('Login Error Details:', {
+            message: errorMessage,
+            response: getErrorResponseData(err),
+            status,
+            error: err,
+          });
+        }
       } finally {
         setIsSubmitting(false);
       }

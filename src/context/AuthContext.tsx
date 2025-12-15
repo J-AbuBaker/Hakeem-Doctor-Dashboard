@@ -1,19 +1,20 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AuthService from '../services/AuthService';
-import { Doctor } from '../types';
+import { Doctor, SignUpUserDto } from '../types';
 
 interface AuthContextType {
   user: Doctor | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  signup: (data: any) => Promise<void>;
+  signup: (data: SignUpUserDto) => Promise<void>;
   logout: () => void;
   updateUser: (user: Doctor) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -80,7 +81,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signup = async (data: any) => {
+  const signup = async (data: SignUpUserDto) => {
     const response = await AuthService.signup(data);
     // API returns token, username, and role from /auth/signup
     // Try to fetch full user details using username from signup response

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, Check } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 interface TimeSlotPickerProps {
   selectedTime: string;
@@ -82,7 +82,6 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
               disabled={!!disabled || !!isPast}
               title={isPast ? 'This time slot is in the past' : formatTime(time)}
             >
-              {isSelected && <Check className="time-slot-check" />}
               <span className="time-slot-text">{formatTime(time)}</span>
             </button>
           );

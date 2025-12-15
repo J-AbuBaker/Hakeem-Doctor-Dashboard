@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import AuthService from '../../services/AuthService';
+import { getErrorMessage } from '../../utils/errorUtils';
+import { TypedAxiosError } from '../../types/errors';
 import {
   X,
   Lock,
@@ -42,7 +44,7 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
     password: Yup.string()
       .min(8, 'Password must be at least 8 characters long')
       .matches(/[A-Z]/, 'Password must include at least one uppercase letter')
-      .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must include at least one special character (!@#$%^&*...)')
+      .matches(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/, 'Password must include at least one special character (!@#$%^&*...)')
       .required('Password is required'),
     confirmPassword: Yup.string()
       .oneOf([Yup.ref('password')], 'Passwords do not match. Please ensure both passwords are identical')
@@ -72,23 +74,20 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
           formik.resetForm();
           setCodeDigits(['', '', '', '', '', '']);
         }, 2000);
-      } catch (err: any) {
-        let errorMessage =
-          err.response?.data?.message ||
-          err.response?.data?.error ||
-          err.message ||
-          'Unable to reset password. Please check your reset code and try again.';
+      } catch (err: unknown) {
+        const typedErr = err as TypedAxiosError;
+        let errorMessage = getErrorMessage(err) || 'Unable to reset password. Please check your reset code and try again.';
 
         errorMessage = errorMessage.split('|')[0].trim();
 
-        if (err.response?.status === 200 ||
+        if (typedErr.response?.status === 200 ||
           errorMessage.toLowerCase().includes('not been changed') ||
           errorMessage.toLowerCase().includes('isn\'t valid') ||
           errorMessage.toLowerCase().includes('invalid code') ||
           errorMessage.toLowerCase().includes('code isn\'t valid')) {
           errorMessage = 'The reset code you entered is incorrect or has expired. Please check your email and try again.';
         }
-        else if (err.response?.status === 400) {
+        else if (typedErr.response?.status === 400) {
           const lowerMessage = errorMessage.toLowerCase();
           if (lowerMessage.includes('invalid verification code') ||
             lowerMessage.includes('expired code') ||
@@ -101,9 +100,9 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
         }
         else if (errorMessage.includes('Network Error') || errorMessage.includes('ERR_NETWORK')) {
           errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
-        } else if (err.response?.status === 404 || errorMessage.includes('Not Found')) {
+        } else if (typedErr.response?.status === 404 || errorMessage.includes('Not Found')) {
           errorMessage = 'No account found with this email address. Please check your email and try again.';
-        } else if (err.response?.status === 500 || errorMessage.includes('Internal Server Error')) {
+        } else if (typedErr.response?.status === 500 || errorMessage.includes('Internal Server Error')) {
           errorMessage = 'A server error occurred. Please try again in a few moments.';
         } else if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
           errorMessage = 'The request took too long. Please check your connection and try again.';
@@ -212,7 +211,7 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
     return {
       minLength: password.length >= 8,
       hasUppercase: /[A-Z]/.test(password),
-      hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+      hasSpecialChar: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
     };
   };
 
@@ -235,12 +234,8 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
       setTimeout(() => {
         setResendSuccess(false);
       }, 3000);
-    } catch (err: any) {
-      let errorMessage =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        err.message ||
-        'Unable to send reset code. Please check your email address and try again.';
+    } catch (err: unknown) {
+      let errorMessage = getErrorMessage(err) || 'Unable to send reset code. Please check your email address and try again.';
 
       if (errorMessage.includes('Network Error') || errorMessage.includes('ERR_NETWORK')) {
         errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
@@ -270,6 +265,7 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ isOpen, onClose
       setCountdown(120);
       setResendSuccess(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   if (!isOpen) return null;

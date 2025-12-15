@@ -13,7 +13,7 @@ const AppointmentsPage: React.FC = () => {
 
   React.useEffect(() => {
     fetchAppointments();
-  }, []);
+  }, [fetchAppointments]);
 
   const handleOpenSlot = () => {
     setModalOpen(true);

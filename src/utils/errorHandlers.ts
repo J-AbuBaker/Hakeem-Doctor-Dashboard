@@ -4,12 +4,13 @@
  */
 
 import { AxiosError } from 'axios';
+import { ApiErrorResponse } from '../types/errors';
 
 export interface ApiError {
   message: string;
   status?: number;
   code?: string;
-  details?: any;
+  details?: ApiErrorResponse | string | unknown;
 }
 
 /**
@@ -49,8 +50,9 @@ export function formatAxiosError(error: AxiosError): ApiError {
     if (typeof errorData === 'string') {
       apiError.message = errorData || error.message || 'An error occurred';
     } else if (errorData && typeof errorData === 'object') {
+      const errorObj = errorData as ApiErrorResponse;
       apiError.message =
-        errorData.message || errorData.error || error.message || 'An error occurred';
+        errorObj.message || errorObj.error || error.message || 'An error occurred';
     }
 
     // Add status-specific messages
@@ -96,14 +98,19 @@ export function formatAxiosError(error: AxiosError): ApiError {
  * @param status - HTTP status code (default: 200)
  * @returns Error object compatible with Axios error structure
  */
-export function createResetPasswordError(message: string, status: number = 200): AxiosError {
-  const error = new Error(message) as any;
+export function createResetPasswordError(message: string, status: number = 200): AxiosError<ApiErrorResponse> {
+  const error = new Error(message) as AxiosError<ApiErrorResponse>;
+  // Create a minimal config object if error.config is undefined
+  const config: AxiosError<ApiErrorResponse>['config'] = error.config || ({} as AxiosError<ApiErrorResponse>['config']);
   error.response = {
     data: {
       message,
       error: message,
     },
     status,
+    statusText: 'OK',
+    headers: {},
+    config: config as NonNullable<AxiosError<ApiErrorResponse>['config']>,
   };
   return error;
 }
@@ -114,13 +121,13 @@ export function createResetPasswordError(message: string, status: number = 200):
  * @param responseData - Response data from API
  * @returns true if response indicates an error
  */
-export function isErrorResponse(responseData: any): boolean {
+export function isErrorResponse(responseData: ApiErrorResponse | string | unknown): boolean {
   if (!responseData) return false;
 
   const responseMessage =
     typeof responseData === 'string'
       ? responseData
-      : responseData.message || responseData.error || '';
+      : (responseData as ApiErrorResponse).message || (responseData as ApiErrorResponse).error || '';
 
   const errorIndicators = [
     'not been changed',
@@ -144,7 +151,7 @@ export function isErrorResponse(responseData: any): boolean {
  * @returns Clean error message
  */
 export function extractErrorFromResponse(
-  responseData: any,
+  responseData: ApiErrorResponse | string | unknown,
   defaultMessage: string = 'An error occurred'
 ): string {
   if (typeof responseData === 'string') {
@@ -152,7 +159,8 @@ export function extractErrorFromResponse(
   }
 
   if (responseData && typeof responseData === 'object') {
-    const message = responseData.message || responseData.error || '';
+    const errorObj = responseData as ApiErrorResponse;
+    const message = errorObj.message || errorObj.error || '';
     return message.split('|')[0].trim() || defaultMessage;
   }
 

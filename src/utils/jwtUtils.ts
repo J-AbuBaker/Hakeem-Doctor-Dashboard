@@ -8,7 +8,8 @@ export interface TokenPayload {
   username?: string;
   role?: string;
   exp?: number; // expiration timestamp
-  [key: string]: any;
+  iat?: number; // issued at timestamp
+  [key: string]: string | number | boolean | undefined;
 }
 
 /**

@@ -4,6 +4,7 @@ import * as Yup from 'yup';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { SPECIALIZATIONS, BLOOD_TYPES } from '../../types';
+import { getErrorMessage, getErrorStatus } from '../../utils/errorUtils';
 import {
   UserPlus,
   Loader2,
@@ -55,7 +56,7 @@ const SignupForm: React.FC = () => {
     return {
       minLength: password.length >= 8,
       hasUppercase: /[A-Z]/.test(password),
-      hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+      hasSpecialChar: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
     };
   };
 
@@ -86,7 +87,7 @@ const SignupForm: React.FC = () => {
     password: Yup.string()
       .min(8, 'Password must be at least 8 characters long')
       .matches(/[A-Z]/, 'Password must include at least one uppercase letter')
-      .matches(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Password must include at least one special character (!@#$%^&*...)')
+      .matches(/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/, 'Password must include at least one special character (!@#$%^&*...)')
       .required('Password is required'),
     confirmPassword: Yup.string()
       .oneOf([Yup.ref('password')], 'Passwords do not match. Please ensure both passwords are identical')
@@ -203,6 +204,7 @@ const SignupForm: React.FC = () => {
       setIsSubmitting(true);
       setError(null);
       try {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { confirmPassword, ...signupData } = values;
         const dobISO = new Date(signupData.dob).toISOString();
         const calculatedAge = calculateAge(signupData.dob);
@@ -218,35 +220,32 @@ const SignupForm: React.FC = () => {
           role: signupData.role || 'DOCTOR', // Ensure role is included (uppercase to match API)
         });
         navigate('/dashboard');
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Professional error messages for better UX
-        let errorMessage =
-          err.response?.data?.message ||
-          err.response?.data?.error ||
-          err.message ||
-          'Registration failed. Please check your information and try again.';
+        let errorMessage = getErrorMessage(err);
+        const status = getErrorStatus(err);
 
         // Format network errors for better readability
         if (errorMessage.includes('Network Error') || errorMessage.includes('ERR_NETWORK')) {
           errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
-        } else if (errorMessage.includes('409') || errorMessage.includes('Conflict') || errorMessage.includes('already exists')) {
+        } else if (status === 409 || errorMessage.includes('409') || errorMessage.includes('Conflict') || errorMessage.includes('already exists')) {
           errorMessage = 'An account with this username already exists. Please use a different username or sign in instead.';
-        } else if (errorMessage.includes('400') || errorMessage.includes('Bad Request')) {
+        } else if (status === 400 || errorMessage.includes('400') || errorMessage.includes('Bad Request')) {
           errorMessage = 'Please check all required fields and ensure your information is correct.';
-        } else if (errorMessage.includes('500') || errorMessage.includes('Internal Server Error')) {
+        } else if (status === 500 || errorMessage.includes('500') || errorMessage.includes('Internal Server Error')) {
           errorMessage = 'A server error occurred during registration. Please try again in a few moments.';
         } else if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
           errorMessage = 'The registration request took too long. Please check your connection and try again.';
         }
 
         setError(errorMessage);
-        console.error('Signup Error Details:', {
-          message: errorMessage,
-          response: err.response?.data,
-          status: err.response?.status,
-          code: err.code,
-          fullError: err,
-        });
+        if (import.meta.env.DEV) {
+          console.error('Signup Error Details:', {
+            message: errorMessage,
+            status,
+            error: err,
+          });
+        }
       } finally {
         setIsSubmitting(false);
       }

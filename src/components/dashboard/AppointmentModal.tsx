@@ -5,6 +5,7 @@ import { Appointment, UpdateAppointmentDto } from '../../types';
 import { X, Loader2, Calendar, User, Clock, FileText, AlertCircle } from 'lucide-react';
 import TimeSlotPicker from './TimeSlotPicker';
 import ConfirmDialog from '../common/ConfirmDialog';
+import { getErrorMessage, getErrorStatus } from '../../utils/errorUtils';
 
 interface AppointmentModalProps {
   appointment?: Appointment;
@@ -85,16 +86,17 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
         }
         onClose();
         formik.resetForm();
-      } catch (err: any) {
-        let errorMessage = err.response?.data?.message || 'Failed to save appointment';
+      } catch (err: unknown) {
+        let errorMessage = getErrorMessage(err);
+        const status = getErrorStatus(err);
 
         if (errorMessage.includes('Network Error') || errorMessage.includes('ERR_NETWORK')) {
           errorMessage = 'Unable to save appointment. Please check your connection and try again.';
-        } else if (errorMessage.includes('409') || errorMessage.includes('Conflict')) {
+        } else if (status === 409 || errorMessage.includes('409') || errorMessage.includes('Conflict')) {
           errorMessage = 'This time slot is already booked. Please select a different time.';
-        } else if (errorMessage.includes('400') || errorMessage.includes('Bad Request')) {
+        } else if (status === 400 || errorMessage.includes('400') || errorMessage.includes('Bad Request')) {
           errorMessage = 'Please check all fields and ensure the information is correct.';
-        } else if (errorMessage.includes('500')) {
+        } else if (status === 500 || errorMessage.includes('500')) {
           errorMessage = 'A server error occurred. Please try again in a few moments.';
         }
 
@@ -114,8 +116,8 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
       setPendingUpdate(null);
       onClose();
       formik.resetForm();
-    } catch (err: any) {
-      let errorMessage = err.response?.data?.message || 'Failed to update appointment';
+    } catch (err: unknown) {
+      let errorMessage = getErrorMessage(err);
 
       if (errorMessage.includes('Network Error') || errorMessage.includes('ERR_NETWORK')) {
         errorMessage = 'Unable to update appointment. Please check your connection and try again.';

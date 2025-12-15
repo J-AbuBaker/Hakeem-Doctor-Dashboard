@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Doctor, UserInfo } from '../../types';
 import AuthService from '../../services/AuthService';
+import { getErrorMessage } from '../../utils/errorUtils';
 import {
   MapPin,
   Phone,
   Calendar,
-  CalendarDays,
   Stethoscope,
   BadgeCheck,
   Heart,
@@ -60,9 +60,11 @@ const DoctorProfile: React.FC = () => {
       } else {
         setError('Failed to load user information. Please try again.');
       }
-    } catch (err: any) {
-      console.error('Error fetching user profile:', err);
-      setError(err.message || 'Failed to load user profile. Please try again.');
+    } catch (err: unknown) {
+      if (import.meta.env.DEV) {
+        console.error('Error fetching user profile:', err);
+      }
+      setError(getErrorMessage(err) || 'Failed to load user profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -105,12 +107,6 @@ const DoctorProfile: React.FC = () => {
     );
   }
 
-  // Format date of birth
-  const formattedDate = new Date(user.dob).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
   const formattedCoordinates = `${Number.isFinite(user.y) ? user.y.toFixed(2) : '--'}, ${
     Number.isFinite(user.x) ? user.x.toFixed(2) : '--'
   }`;
@@ -133,7 +129,6 @@ const DoctorProfile: React.FC = () => {
             
             <div className="profile-header-info">
               <h1 className="profile-name-modern">Dr. {user.name}</h1>
-              <p className="profile-username-modern">@{user.username}</p>
               
               <div className="profile-badges-modern">
                 <div className="profile-badge-modern badge-specialization">
@@ -173,24 +168,6 @@ const DoctorProfile: React.FC = () => {
               </div>
             </div>
             <div className="info-grid-modern">
-              <div className="info-item-modern">
-                <div className="info-item-icon">
-                  <UserCircle size={18} />
-                </div>
-                <div className="info-item-content">
-                  <span className="info-item-label">Username</span>
-                  <span className="info-item-value">@{user.username}</span>
-                </div>
-              </div>
-              <div className="info-item-modern">
-                <div className="info-item-icon">
-                  <CalendarDays size={18} />
-                </div>
-                <div className="info-item-content">
-                  <span className="info-item-label">Date of Birth</span>
-                  <span className="info-item-value">{formattedDate}</span>
-                </div>
-              </div>
               <div className="info-item-modern">
                 <div className="info-item-icon">
                   <Users size={18} />

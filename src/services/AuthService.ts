@@ -16,7 +16,6 @@ import {
   isAuthenticated as checkAuth,
   getUsernameFromToken,
   hasRole,
-  getRoleFromToken,
 } from '../utils/jwtUtils';
 import {
   isErrorResponse,
@@ -25,6 +24,8 @@ import {
 } from '../utils/errorHandlers';
 import { API_ENDPOINTS } from '../constants/apiEndpoints';
 import { APP_CONFIG } from '../constants/appConfig';
+import { TypedAxiosError } from '../types/errors';
+import { Role } from '../types/auth';
 
 class AuthService {
   async signup(data: SignUpUserDto): Promise<SignupResponse> {
@@ -65,22 +66,25 @@ class AuthService {
           ) || 'Invalid reset code. Please check your code and try again.';
         throw createResetPasswordError(cleanMessage, 200);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as TypedAxiosError;
       // Handle HTTP error status codes (400, 404, 500, etc.)
-      if (err.response) {
+      if (error.response) {
         // Handle 400 Bad Request specifically for invalid/expired code
-        if (err.response.status === 400) {
+        if (error.response.status === 400) {
           const errorMessage =
-            err.response.data?.message ||
-            err.response.data?.error ||
-            'Invalid verification code or expired code';
-          throw createResetPasswordError(errorMessage, 400);
+            (typeof error.response.data === 'object' && error.response.data && 'message' in error.response.data)
+              ? (error.response.data as { message?: string }).message
+              : typeof error.response.data === 'string'
+              ? error.response.data
+              : 'Invalid verification code or expired code';
+          throw createResetPasswordError(errorMessage || 'Invalid verification code or expired code', 400);
         }
         // For other status codes, re-throw as is
-        throw err;
+        throw error;
       }
       // If it's our custom error from status 200 check, re-throw it
-      throw err;
+      throw error;
     }
   }
 
@@ -155,10 +159,10 @@ class AuthService {
       if (username) {
         const user = await this.getUserByUsername(username);
         if (user) {
-          const role =
+          const role: string = 
             typeof user.role === 'string'
               ? user.role.toUpperCase()
-              : (user.role as any)?.name?.toUpperCase() || '';
+              : (user.role as Role)?.role?.toUpperCase() || '';
           return role === APP_CONFIG.ROLES.DOCTOR;
         }
       }

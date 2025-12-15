@@ -13,6 +13,7 @@ import {
 import ConfirmDialog from '../common/ConfirmDialog';
 import { hasStatus } from '../../utils/statusUtils';
 import { isAppointmentOnDate } from '../../utils/dateUtils';
+import { getErrorMessage } from '../../utils/errorUtils';
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -87,23 +88,16 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
       await completeAppointment(appointment.id);
 
       setShowCompleteDialog(false);
-    } catch (error: any) {
-      console.error('Failed to complete appointment:', {
-        appointmentId: appointment.id,
-        error,
-        message: error?.message,
-        response: error?.response?.data,
-      });
+    } catch (error: unknown) {
+      if (import.meta.env.DEV) {
+        console.error('Failed to complete appointment:', {
+          appointmentId: appointment.id,
+          error,
+        });
+      }
 
       // Extract user-friendly error message
-      let errorMsg = 'Unable to complete appointment';
-      if (error?.message) {
-        errorMsg = error.message;
-      } else if (error?.response?.data?.message) {
-        errorMsg = error.response.data.message;
-      } else if (typeof error === 'string') {
-        errorMsg = error;
-      }
+      const errorMsg = getErrorMessage(error);
 
       setErrorMessage(`${errorMsg}\n\nPlease try again or contact support if the issue persists.`);
       setShowErrorDialog(true);

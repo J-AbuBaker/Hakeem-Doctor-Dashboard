@@ -2,16 +2,7 @@
  * Logger utility that logs to console, terminal, and saves to file
  */
 
-interface LogData {
-  level: 'info' | 'warn' | 'error';
-  message: string;
-  data?: any;
-  timestamp: string;
-  type: 'request' | 'response' | 'error';
-  method?: string;
-  url?: string;
-  status?: number;
-}
+import { LogData, RequestConfig, ResponseHeaders, NetworkErrorDetails } from '../types/logger';
 
 class Logger {
   private enabled: boolean = true;
@@ -23,7 +14,7 @@ class Logger {
   /**
    * Log request to console, terminal, and save to file
    */
-  logRequest(method: string, url: string, config: any, body?: any) {
+  logRequest(method: string, url: string, config: RequestConfig, body?: unknown) {
     if (!this.enabled) return;
 
     const logData: LogData = {
@@ -61,7 +52,7 @@ class Logger {
   /**
    * Log successful response
    */
-  logResponse(method: string, url: string, status: number, statusText: string, data: any, headers: any) {
+  logResponse(method: string, url: string, status: number, statusText: string, data: unknown, headers: ResponseHeaders) {
     if (!this.enabled) return;
 
     const logData: LogData = {
@@ -97,7 +88,7 @@ class Logger {
   /**
    * Log error response
    */
-  logError(method: string, url: string, status: number, statusText: string, errorData: any, headers: any) {
+  logError(method: string, url: string, status: number, statusText: string, errorData: unknown, headers: ResponseHeaders) {
     if (!this.enabled) return;
 
     // Handle plain text error responses
@@ -143,7 +134,7 @@ class Logger {
   /**
    * Log network error (no response received)
    */
-  logNetworkError(method: string, url: string, request: any, errorDetails?: any) {
+  logNetworkError(method: string, url: string, request: unknown, errorDetails?: NetworkErrorDetails) {
     if (!this.enabled) return;
 
     const apiBaseUrl = import.meta.env.DEV 
@@ -531,7 +522,7 @@ if (typeof window !== 'undefined') {
 
 // Expose logger to window for easy access from browser console
 if (typeof window !== 'undefined') {
-  (window as any).apiLogger = {
+  window.apiLogger = {
     // Save logs as JSON (default) - downloads file
     saveLogs: () => loggerInstance.saveLogsAsJSON(),
     // Save logs as JSON (explicit) - downloads file

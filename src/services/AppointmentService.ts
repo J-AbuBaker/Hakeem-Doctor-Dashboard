@@ -14,6 +14,7 @@ import {
 import { formatAppointmentType } from '../utils/stringUtils';
 import { API_ENDPOINTS } from '../constants/apiEndpoints';
 import { APP_CONFIG } from '../constants/appConfig';
+import { TypedAxiosError } from '../types/errors';
 
 class AppointmentService {
 
@@ -114,15 +115,19 @@ class AppointmentService {
           try {
             const mapped = this.mapScheduledAppointmentToAppointment(item);
             appointments.push(mapped);
-          } catch (error: any) {
-            console.error('Error mapping appointment:', error);
+          } catch (error: unknown) {
+            if (import.meta.env.DEV) {
+              console.error('Error mapping appointment:', error);
+            }
           }
         }
       }
 
       return appointments;
-    } catch (error: any) {
-      console.error('Error fetching scheduled appointments:', error);
+    } catch (error: unknown) {
+      if (import.meta.env.DEV) {
+        console.error('Error fetching scheduled appointments:', error);
+      }
       // Re-throw to let the context handle it
       throw error;
     }
@@ -147,8 +152,14 @@ class AppointmentService {
 
     try {
       await api.post<OpenSlotRequest>(API_ENDPOINTS.APPOINTMENT.DOCTOR_SCHEDULE, request);
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to open slot';
+    } catch (error: unknown) {
+      const axiosError = error as TypedAxiosError;
+      const errorMessage = 
+        (typeof axiosError.response?.data === 'object' && axiosError.response.data && 'message' in axiosError.response.data)
+          ? (axiosError.response.data as { message?: string }).message
+          : typeof axiosError.response?.data === 'string'
+          ? axiosError.response.data
+          : axiosError.message || 'Failed to open slot';
       throw new Error(`Failed to schedule slot at ${appointmentDate}: ${errorMessage}`);
     }
   }
@@ -183,18 +194,28 @@ class AppointmentService {
         }
 
         return mappedAppointment;
-      } catch (mappingError: any) {
-        console.error('Error mapping completed appointment:', mappingError);
-        throw new Error(`Failed to process completed appointment data: ${mappingError.message || 'Unknown mapping error'}`);
+      } catch (mappingError: unknown) {
+        const error = mappingError instanceof Error ? mappingError : new Error('Unknown mapping error');
+        if (import.meta.env.DEV) {
+          console.error('Error mapping completed appointment:', error);
+        }
+        throw new Error(`Failed to process completed appointment data: ${error.message || 'Unknown mapping error'}`);
       }
-    } catch (error: any) {
-      if (error.response) {
-        const status = error.response.status;
-        const errorData = error.response.data;
+    } catch (error: unknown) {
+      const axiosError = error as TypedAxiosError;
+      if (axiosError.response) {
+        const status = axiosError.response.status;
+        const errorData = axiosError.response.data;
+        const errorMessage = 
+          (typeof errorData === 'object' && errorData && 'message' in errorData)
+            ? (errorData as { message?: string }).message
+            : typeof errorData === 'string'
+            ? errorData
+            : undefined;
 
         switch (status) {
           case 400:
-            throw new Error(`Invalid request: ${errorData?.message || 'Invalid appointment ID or request format'}`);
+            throw new Error(`Invalid request: ${errorMessage || 'Invalid appointment ID or request format'}`);
           case 401:
             throw new Error('Unauthorized: Please log in again to complete this appointment');
           case 403:
@@ -204,13 +225,13 @@ class AppointmentService {
           case 500:
             throw new Error('Server error: Please try again later or contact support');
           default:
-            throw new Error(errorData?.message || `Failed to complete appointment (Status: ${status})`);
+            throw new Error(errorMessage || `Failed to complete appointment (Status: ${status})`);
         }
-      } else if (error.request) {
+      } else if (axiosError.request) {
         throw new Error('Network error: Unable to reach the server. Please check your connection and try again.');
       } else {
         // Re-throw our custom errors
-        throw error;
+        throw error instanceof Error ? error : new Error('Unknown error occurred');
       }
     }
   }
