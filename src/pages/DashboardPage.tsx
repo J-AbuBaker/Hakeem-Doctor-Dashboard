@@ -5,6 +5,7 @@ import DashboardStats from '../components/dashboard/DashboardStats';
 import BookingList from '../components/dashboard/BookingList';
 import DateDisplay from '../components/dashboard/DateDisplay';
 import { useAppointments } from '../context/AppointmentContext';
+import { sortAppointmentsByDateTime } from '../utils/appointmentSorting';
 import './DashboardPage.css';
 
 const DashboardPage: React.FC = () => {
@@ -27,18 +28,7 @@ const DashboardPage: React.FC = () => {
 
   // Sort appointments by date and time
   const sortedAppointments = React.useMemo(() => {
-    return [...appointments].sort((a, b) => {
-      // First sort by date
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
-      if (dateA !== dateB) {
-        return dateA - dateB;
-      }
-      // Then by time
-      const timeA = a.time.split(':').map(Number);
-      const timeB = b.time.split(':').map(Number);
-      return timeA[0] * 60 + timeA[1] - (timeB[0] * 60 + timeB[1]);
-    });
+    return sortAppointmentsByDateTime(appointments);
   }, [appointments]);
 
   return (
