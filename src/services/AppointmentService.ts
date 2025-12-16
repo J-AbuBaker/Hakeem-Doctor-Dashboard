@@ -15,6 +15,7 @@ import { formatAppointmentType } from '../utils/stringUtils';
 import { API_ENDPOINTS } from '../constants/apiEndpoints';
 import { APP_CONFIG } from '../constants/appConfig';
 import { TypedAxiosError } from '../types/errors';
+import { getDuration } from '../utils/durationCache';
 
 class AppointmentService {
 
@@ -42,7 +43,16 @@ class AppointmentService {
       notesParts.push(`Type: ${formattedType}`);
     }
 
-    const duration = APP_CONFIG.DEFAULT_APPOINTMENT_DURATION;
+    // Get duration from cache if available, otherwise use default
+    let duration: number = APP_CONFIG.DEFAULT_APPOINTMENT_DURATION;
+    try {
+      duration = getDuration(apiAppointment.appointmentDate, APP_CONFIG.DEFAULT_APPOINTMENT_DURATION);
+    } catch (error) {
+      // If duration cache fails, use default duration
+      if (import.meta.env.DEV) {
+        console.warn('Failed to get duration from cache, using default:', error);
+      }
+    }
 
     const patientId = (apiAppointment.patientId != null) ? apiAppointment.patientId.toString() : '0';
     
