@@ -1,9 +1,11 @@
-import React, { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from 'react';
 import AppointmentService from '../services/AppointmentService';
 import { Appointment } from '../types';
 import { hasStatus } from '../utils/statusUtils';
 import { getStoredToken, decodeToken } from '../utils/jwtUtils';
 import { TypedAxiosError } from '../types/errors';
+import { getAppointmentsToAutoComplete } from '../utils/appointmentAutoComplete';
+import { APP_CONFIG } from '../constants/appConfig';
 
 interface LoadingState {
   fetching: boolean;
@@ -50,10 +52,13 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
     completing: false,
   });
   const [error, setError] = useState<string | null>(null);
-  
+
   // Store previous state for rollback on error
   const previousStateRef = useRef<Appointment[]>([]);
   const optimisticUpdateRef = useRef<{ id: string; appointment: Appointment } | null>(null);
+
+  // Track appointments currently being processed for auto-completion to prevent duplicates
+  const processingAppointmentsRef = useRef<Set<string>>(new Set());
 
   // Helper function to extract error message
   const extractErrorMessage = useCallback((err: unknown): string => {
@@ -73,13 +78,13 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
   const fetchAppointments = useCallback(async (params?: { status?: 'Scheduled' | 'Completed' | 'Cancelled' | 'All'; date?: string }) => {
     setLoadingState(prev => ({ ...prev, fetching: true }));
     setError(null);
-    
+
     // Store previous state for potential rollback using functional update
     setAppointments((prev) => {
       previousStateRef.current = [...prev];
       return prev;
     });
-    
+
     try {
       // Check token before making request
       const token = getStoredToken();
@@ -110,15 +115,15 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
       // Update state with API response - this ensures state matches API exactly
       setAppointments(filtered);
       setLastFetchTime(Date.now());
-      
+
       // Clear any optimistic updates since we have fresh data
       optimisticUpdateRef.current = null;
     } catch (err: unknown) {
       const error = err as TypedAxiosError;
-      
+
       // Rollback to previous state on error
       setAppointments(previousStateRef.current);
-      
+
       if (import.meta.env.DEV) {
         console.error('Failed to fetch appointments from API:', error);
         console.error('Error details:', {
@@ -136,8 +141,8 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
         const roleInfo = payload?.role || 'Not found in token';
         setError(
           `Access Denied (403): Your account does not have the DOCTOR role required to access appointments. ` +
-            `Current role: ${roleInfo}. ` +
-            `Please contact your administrator to update your account role, or log in with a doctor account.`
+          `Current role: ${roleInfo}. ` +
+          `Please contact your administrator to update your account role, or log in with a doctor account.`
         );
       } else {
         const errorMessage = extractErrorMessage(error);
@@ -152,26 +157,26 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
   const openSlot = useCallback(async (appointmentDate: string) => {
     setLoadingState(prev => ({ ...prev, openingSlot: true }));
     setError(null);
-    
+
     // Store previous state for rollback using functional update
     setAppointments((prev) => {
       previousStateRef.current = [...prev];
       return prev;
     });
-    
+
     try {
       // Call API to open slot
       await AppointmentService.openSlot(appointmentDate);
-      
+
       // Refresh appointments from API to get the actual state
       // This ensures state matches API response exactly
       await fetchAppointments();
     } catch (err: unknown) {
       const error = err as TypedAxiosError;
-      
+
       // Rollback to previous state on error
       setAppointments(previousStateRef.current);
-      
+
       const errorMessage = extractErrorMessage(error);
       setError(errorMessage || 'Failed to open slot. Please try again.');
       throw error; // Re-throw to allow UI to handle error
@@ -194,7 +199,7 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
   const completeAppointment = useCallback(async (id: string) => {
     setLoadingState(prev => ({ ...prev, completing: true }));
     setError(null);
-    
+
     // Validate ID before making the call
     if (!id || id.trim() === '') {
       setLoadingState(prev => ({ ...prev, completing: false }));
@@ -206,7 +211,7 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
     setAppointments((prev) => {
       previousStateRef.current = [...prev];
       appointmentToUpdate = prev.find(apt => apt.id === id);
-      
+
       // Optimistic update - update UI immediately for better UX
       if (appointmentToUpdate) {
         optimisticUpdateRef.current = { id, appointment: { ...appointmentToUpdate, status: 'Completed' as const } };
@@ -249,7 +254,7 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
 
       // Clear optimistic update since we have confirmed API response
       optimisticUpdateRef.current = null;
-      
+
       // Update last fetch time
       setLastFetchTime(Date.now());
 
@@ -257,11 +262,11 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
       return apiResponse;
     } catch (err: unknown) {
       const error = err as TypedAxiosError;
-      
+
       // Rollback optimistic update on error
       setAppointments(previousStateRef.current);
       optimisticUpdateRef.current = null;
-      
+
       if (import.meta.env.DEV) {
         console.error('Failed to complete appointment:', {
           id,
@@ -296,6 +301,91 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
 
   // Computed isLoading - true if any operation is loading
   const isLoading = loadingState.fetching || loadingState.openingSlot || loadingState.completing;
+
+  // Auto-complete appointments that have passed their end time + grace period
+  useEffect(() => {
+    // Only run if user is authenticated and appointments are loaded
+    const token = getStoredToken();
+    if (!token || appointments.length === 0) {
+      return;
+    }
+
+    // Function to check and auto-complete eligible appointments
+    const checkAndAutoComplete = async () => {
+      try {
+        // Get appointments that should be auto-completed
+        const appointmentsToComplete = getAppointmentsToAutoComplete(appointments);
+
+        // Filter out appointments already being processed
+        const eligibleAppointments = appointmentsToComplete.filter(
+          apt => !processingAppointmentsRef.current.has(apt.id)
+        );
+
+        if (eligibleAppointments.length === 0) {
+          return;
+        }
+
+        // Process each eligible appointment
+        let hasSuccessfulCompletions = false;
+
+        for (const appointment of eligibleAppointments) {
+          // Mark as processing to prevent duplicate calls
+          processingAppointmentsRef.current.add(appointment.id);
+
+          try {
+            // Call the completion API
+            await completeAppointment(appointment.id);
+
+            // Remove from processing set after successful completion
+            processingAppointmentsRef.current.delete(appointment.id);
+            hasSuccessfulCompletions = true;
+
+            if (import.meta.env.DEV) {
+              console.log(`✅ Auto-completed appointment ${appointment.id} (${appointment.patientName})`);
+            }
+          } catch (error) {
+            // Log error in dev mode but don't disrupt the app
+            if (import.meta.env.DEV) {
+              console.error(`❌ Failed to auto-complete appointment ${appointment.id}:`, error);
+            }
+            // Remove from processing set on error so it can be retried next interval
+            processingAppointmentsRef.current.delete(appointment.id);
+          }
+        }
+
+        // Refresh appointments after processing to get updated statuses
+        // Only refresh if we successfully processed at least one appointment
+        if (hasSuccessfulCompletions) {
+          // Small delay to allow API to update before refreshing
+          setTimeout(() => {
+            fetchAppointments().catch((err) => {
+              if (import.meta.env.DEV) {
+                console.error('Failed to refresh appointments after auto-completion:', err);
+              }
+            });
+          }, 1000);
+        }
+      } catch (error) {
+        // Log unexpected errors in dev mode
+        if (import.meta.env.DEV) {
+          console.error('Error in auto-completion check:', error);
+        }
+      }
+    };
+
+    // Run initial check
+    checkAndAutoComplete();
+
+    // Set up interval to check every minute
+    const intervalId = setInterval(() => {
+      checkAndAutoComplete();
+    }, APP_CONFIG.AUTO_COMPLETE.CHECK_INTERVAL_MS);
+
+    // Cleanup interval on unmount or when dependencies change
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [appointments, completeAppointment, fetchAppointments]);
 
   return (
     <AppointmentContext.Provider

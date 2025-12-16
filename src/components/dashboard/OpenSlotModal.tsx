@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useAppointments } from '../../context/AppointmentContext';
@@ -8,6 +8,8 @@ import SlotDatePicker from './SlotDatePicker';
 import { format } from 'date-fns';
 import { getErrorMessage, getErrorStatus } from '../../utils/errorUtils';
 import { storeDurations } from '../../utils/durationCache';
+import { checkMultipleSlotsConflicts, getBlockedTimeRanges, getMaxDurationBeforeNextAppointment } from '../../utils/appointmentConflict';
+import { parseDateTimeString } from '../../utils/dateParsing';
 
 interface OpenSlotModalProps {
   isOpen: boolean;
@@ -47,7 +49,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { openSlotWithoutRefresh, fetchAppointments } = useAppointments();
+  const { openSlotWithoutRefresh, fetchAppointments, appointments } = useAppointments();
   const [error, setError] = useState<string | null>(null);
   const [successCount, setSuccessCount] = useState<number>(0);
   const [failedSlots, setFailedSlots] = useState<CalculatedSlot[]>([]);
@@ -57,7 +59,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
     date: Yup.string()
       .required('Date is required')
       .matches(/^\d{4}-\d{2}-\d{2}$/, 'Please select a valid date')
-      .test('not-past', 'Date cannot be in the past', function(value) {
+      .test('not-past', 'Date cannot be in the past', function (value) {
         if (!value) return false;
         const [year, month, day] = value.split('-').map(Number);
         const selectedDate = new Date(year, month - 1, day);
@@ -77,7 +79,11 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
     slotDuration: Yup.number()
       .required('Slot duration is required')
       .min(15, 'Minimum duration is 15 minutes')
-      .max(240, 'Maximum duration is 4 hours'),
+      .max(240, 'Maximum duration is 4 hours')
+      .test('max-duration-before-next', 'Duration exceeds available time before next appointment', function (value) {
+        // This will be validated dynamically in the component, but we keep basic validation here
+        return true; // Dynamic validation handled in component via disabled state
+      }),
     breakDuration: Yup.number()
       .required('Break duration is required')
       .min(0, 'Break cannot be negative')
@@ -440,6 +446,96 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
     return slotDate.toDateString() !== selectedDate.toDateString();
   }, [previewSlots, constrainToSameDay, formik.values.date]);
 
+  // Check for conflicts with existing appointments
+  const conflictCheckResult = useMemo(() => {
+    if (previewSlots.length === 0 || appointments.length === 0) {
+      return {
+        hasConflicts: false,
+        conflictingSlots: [],
+        totalConflicts: 0,
+      };
+    }
+
+    return checkMultipleSlotsConflicts(previewSlots, appointments, true);
+  }, [previewSlots, appointments]);
+
+  // Create a Set of conflicting slot indices for quick lookup
+  const conflictingSlotIndices = useMemo(() => {
+    return new Set(conflictCheckResult.conflictingSlots.map(cs => cs.slot.index));
+  }, [conflictCheckResult]);
+
+  // Calculate max duration before next appointment for selected time
+  const maxDurationBeforeNext = useMemo(() => {
+    if (!formik.values.date || !formik.values.startTime) {
+      return undefined;
+    }
+
+    const appointmentsForDate = appointments.filter(
+      (apt) => apt.date === formik.values.date && apt.status !== 'Cancelled'
+    );
+
+    if (appointmentsForDate.length === 0) {
+      return undefined;
+    }
+
+    const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
+    return getMaxDurationBeforeNextAppointment(formik.values.startTime, formik.values.date, blockedRanges);
+  }, [formik.values.date, formik.values.startTime, appointments]);
+
+  // Calculate maximum number of slots that fit in available free time
+  const maxSlotsInFreeTime = useMemo(() => {
+    if (!formik.values.date || !formik.values.startTime || maxDurationBeforeNext === undefined) {
+      return MAX_SLOTS; // No limit if no next appointment
+    }
+
+    const slotDuration = Number(formik.values.slotDuration);
+    const breakDuration = Number(formik.values.breakDuration);
+
+    if (slotDuration <= 0) {
+      return MAX_SLOTS;
+    }
+
+    // Calculate how many slots fit: available time / (slot duration + break)
+    // Each slot needs: slotDuration + breakDuration (except last slot doesn't need break)
+    // So for N slots: N * slotDuration + (N-1) * breakDuration <= maxDurationBeforeNext
+    // Solving: N * (slotDuration + breakDuration) - breakDuration <= maxDurationBeforeNext
+    // N <= (maxDurationBeforeNext + breakDuration) / (slotDuration + breakDuration)
+    const totalTimePerSlot = slotDuration + breakDuration;
+    const maxSlots = Math.floor((maxDurationBeforeNext + breakDuration) / totalTimePerSlot);
+
+    // Ensure at least 1 slot is allowed
+    return Math.max(1, Math.min(maxSlots, MAX_SLOTS));
+  }, [formik.values.date, formik.values.startTime, formik.values.slotDuration, formik.values.breakDuration, maxDurationBeforeNext]);
+
+  // Auto-adjust duration and number of slots when they exceed max allowed for selected time
+  useEffect(() => {
+    if (maxDurationBeforeNext !== undefined && formik.values.startTime) {
+      // Auto-adjust duration if it exceeds max
+      // Find the largest valid duration option that doesn't exceed maxDurationBeforeNext
+      if (formik.values.slotDuration > maxDurationBeforeNext) {
+        // Find the largest duration option that fits within maxDurationBeforeNext
+        const validDurations = SLOT_DURATION_OPTIONS
+          .map(opt => opt.value)
+          .filter(dur => dur <= maxDurationBeforeNext)
+          .sort((a, b) => b - a); // Sort descending
+
+        const adjustedDuration = validDurations.length > 0
+          ? validDurations[0] // Use the largest valid duration
+          : 15; // Fallback to minimum if no valid option
+
+        if (adjustedDuration !== formik.values.slotDuration) {
+          formik.setFieldValue('slotDuration', adjustedDuration, false);
+        }
+      }
+
+      // Auto-adjust number of slots if it exceeds max slots in free time
+      if (formik.values.numberOfSlots > maxSlotsInFreeTime) {
+        formik.setFieldValue('numberOfSlots', maxSlotsInFreeTime, false);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maxDurationBeforeNext, formik.values.startTime, maxSlotsInFreeTime]); // Adjust when time, max duration, or max slots change
+
   if (!isOpen) return null;
 
   return (
@@ -537,9 +633,36 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                 </label>
                 <TimeSlotPicker
                   selectedTime={formik.values.startTime}
-                  onTimeSelect={(time) => formik.setFieldValue('startTime', time)}
+                  onTimeSelect={(time) => {
+                    formik.setFieldValue('startTime', time);
+                    // Auto-adjust duration if current duration exceeds max for selected time
+                    if (time && formik.values.date) {
+                      const appointmentsForDate = appointments.filter(
+                        (apt) => apt.date === formik.values.date && apt.status !== 'Cancelled'
+                      );
+                      if (appointmentsForDate.length > 0) {
+                        const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
+                        const maxDuration = getMaxDurationBeforeNextAppointment(time, formik.values.date, blockedRanges);
+                        if (maxDuration !== undefined && formik.values.slotDuration > maxDuration) {
+                          // Find the largest valid duration option that fits within maxDuration
+                          const validDurations = SLOT_DURATION_OPTIONS
+                            .map(opt => opt.value)
+                            .filter(dur => dur <= maxDuration)
+                            .sort((a, b) => b - a); // Sort descending
+
+                          const adjustedDuration = validDurations.length > 0
+                            ? validDurations[0] // Use the largest valid duration
+                            : 15; // Fallback to minimum if no valid option
+
+                          formik.setFieldValue('slotDuration', adjustedDuration);
+                        }
+                      }
+                    }
+                  }}
                   date={formik.values.date}
                   error={formik.touched.startTime && formik.errors.startTime ? formik.errors.startTime : undefined}
+                  existingAppointments={appointments}
+                  slotDuration={formik.values.slotDuration}
                 />
               </div>
 
@@ -575,10 +698,10 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                       name="numberOfSlots"
                       type="number"
                       min={1}
-                      max={MAX_SLOTS}
+                      max={maxSlotsInFreeTime}
                       onChange={(e) => {
                         const value = parseInt(e.target.value, 10) || 1;
-                        const clampedValue = Math.max(1, Math.min(MAX_SLOTS, value));
+                        const clampedValue = Math.max(1, Math.min(maxSlotsInFreeTime, value));
                         formik.setFieldValue('numberOfSlots', clampedValue);
                       }}
                       onBlur={formik.handleBlur}
@@ -590,10 +713,10 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                       type="button"
                       className="number-input-btn"
                       onClick={() => {
-                        const newValue = Math.min(MAX_SLOTS, formik.values.numberOfSlots + 1);
+                        const newValue = Math.min(maxSlotsInFreeTime, formik.values.numberOfSlots + 1);
                         formik.setFieldValue('numberOfSlots', newValue);
                       }}
-                      disabled={formik.values.numberOfSlots >= MAX_SLOTS || isSubmitting}
+                      disabled={formik.values.numberOfSlots >= maxSlotsInFreeTime || isSubmitting}
                     >
                       <Plus size={16} />
                     </button>
@@ -606,7 +729,9 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                   </div>
                 )}
                 <div className="field-hint">
-                  Maximum {MAX_SLOTS} slots per session
+                  {maxDurationBeforeNext !== undefined && formik.values.startTime
+                    ? `Maximum ${maxSlotsInFreeTime} slot${maxSlotsInFreeTime !== 1 ? 's' : ''} fit in available time (${maxDurationBeforeNext} min)`
+                    : `Maximum ${MAX_SLOTS} slots per session`}
                 </div>
               </div>
 
@@ -618,16 +743,26 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                 <div className="duration-boxes-container">
                   {SLOT_DURATION_OPTIONS.map((option) => {
                     const isSelected = formik.values.slotDuration === option.value;
+                    // Check if this duration option exceeds max allowed for selected time
+                    const exceedsMax = maxDurationBeforeNext !== undefined &&
+                      formik.values.startTime &&
+                      option.value > maxDurationBeforeNext;
+                    const isDisabled = isSubmitting || exceedsMax;
+
                     return (
                       <button
                         key={option.value}
                         type="button"
                         onClick={() => {
-                          formik.setFieldValue('slotDuration', option.value);
-                          formik.setFieldTouched('slotDuration', true);
+                          if (!isDisabled) {
+                            formik.setFieldValue('slotDuration', option.value);
+                            formik.setFieldTouched('slotDuration', true);
+                          }
                         }}
-                        className={`duration-box ${isSelected ? 'selected' : ''} ${formik.touched.slotDuration && formik.errors.slotDuration ? 'error' : ''}`}
-                        disabled={isSubmitting}
+                        className={`duration-box ${isSelected ? 'selected' : ''} ${formik.touched.slotDuration && formik.errors.slotDuration ? 'error' : ''} ${exceedsMax ? 'duration-exceeds-max' : ''}`}
+                        disabled={isDisabled}
+                        data-max-duration={exceedsMax ? `Max: ${maxDurationBeforeNext}m` : ''}
+                        title={exceedsMax ? `Maximum duration: ${maxDurationBeforeNext} min (next appointment too close)` : option.label}
                       >
                         <span className="duration-box-label">{option.label}</span>
                       </button>
@@ -638,6 +773,41 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                   <div className="field-error">
                     <AlertCircle className="error-icon" size={14} />
                     {formik.errors.slotDuration}
+                  </div>
+                )}
+                {maxDurationBeforeNext !== undefined && formik.values.startTime && (
+                  <div className="field-hint">
+                    <Info size={14} />
+                    Maximum duration: {maxDurationBeforeNext} min (next appointment at {(() => {
+                      // Find next appointment time for display
+                      const appointmentsForDate = appointments.filter(
+                        (apt) => apt.date === formik.values.date && apt.status !== 'Cancelled'
+                      );
+                      if (appointmentsForDate.length === 0) return '';
+
+                      const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
+                      const slotDateTime = `${formik.values.date}T${formik.values.startTime}:00`;
+                      const slotStart = parseDateTimeString(slotDateTime);
+                      if (!slotStart) return '';
+
+                      let nextStart: Date | null = null;
+                      for (const range of blockedRanges) {
+                        if (range.start.getTime() > slotStart.getTime()) {
+                          if (!nextStart || range.start.getTime() < nextStart.getTime()) {
+                            nextStart = range.start;
+                          }
+                        }
+                      }
+
+                      if (nextStart) {
+                        const hours = nextStart.getHours();
+                        const minutes = nextStart.getMinutes();
+                        const ampm = hours >= 12 ? 'PM' : 'AM';
+                        const displayHour = hours % 12 || 12;
+                        return `${displayHour}:${String(minutes).padStart(2, '0')} ${ampm}`;
+                      }
+                      return '';
+                    })()})
                   </div>
                 )}
               </div>
@@ -709,6 +879,34 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                 </div>
               </div>
 
+              {conflictCheckResult.hasConflicts && (
+                <div className="preview-warning preview-warning-error">
+                  <AlertTriangle size={16} />
+                  <div className="conflict-warning-content">
+                    <span>
+                      <strong>{conflictCheckResult.conflictingSlots.length}</strong> slot{conflictCheckResult.conflictingSlots.length !== 1 ? 's' : ''} conflict{conflictCheckResult.conflictingSlots.length !== 1 ? '' : 's'} with existing appointments. Please adjust your schedule.
+                    </span>
+                    <div className="conflicting-appointments-list">
+                      {conflictCheckResult.conflictingSlots.map((conflictSlot) => (
+                        <div key={conflictSlot.slot.index} className="conflict-item">
+                          <span className="conflict-slot-info">
+                            Slot #{conflictSlot.slot.index} ({conflictSlot.slot.displayTime}) conflicts with:
+                          </span>
+                          <ul className="conflict-appointments">
+                            {conflictSlot.conflictingAppointments.map((apt, idx) => (
+                              <li key={`${apt.id}-${idx}`}>
+                                {apt.patientName} - {apt.date} at {apt.time}
+                                {apt.duration && ` (${apt.duration} min)`}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {wouldOverflowToNextDay && constrainToSameDay && (
                 <div className="preview-warning">
                   <AlertTriangle size={16} />
@@ -733,14 +931,19 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                   const slotDate = new Date(slot.datetime);
                   const isNextDay = formik.values.date &&
                     slotDate.toDateString() !== new Date(formik.values.date).toDateString();
+                  const hasConflict = conflictingSlotIndices.has(slot.index);
 
                   return (
                     <div
                       key={slot.index}
-                      className={`slot-preview-item ${isNextDay ? 'next-day' : ''}`}
+                      className={`slot-preview-item ${isNextDay ? 'next-day' : ''} ${hasConflict ? 'slot-conflict' : ''}`}
+                      title={hasConflict ? 'This slot conflicts with an existing appointment' : ''}
                     >
                       <div className="slot-preview-header">
                         <span className="slot-index">#{slot.index}</span>
+                        {hasConflict && (
+                          <AlertTriangle className="conflict-icon" size={14} />
+                        )}
                         {isNextDay && (
                           <span className="next-day-badge">Next Day</span>
                         )}
@@ -799,7 +1002,8 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={isSubmitting || previewSlots.length === 0}
+              disabled={isSubmitting || previewSlots.length === 0 || conflictCheckResult.hasConflicts}
+              title={conflictCheckResult.hasConflicts ? `Cannot create slots: ${conflictCheckResult.totalConflicts} conflict(s) detected` : ''}
             >
               {isSubmitting ? (
                 <>
@@ -809,6 +1013,11 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                   ) : (
                     `Creating Slots... (${successCount}/${previewSlots.length})`
                   )}
+                </>
+              ) : conflictCheckResult.hasConflicts ? (
+                <>
+                  <AlertTriangle size={16} />
+                  Cannot Create ({conflictCheckResult.totalConflicts} conflict{conflictCheckResult.totalConflicts !== 1 ? 's' : ''})
                 </>
               ) : formik.values.numberOfSlots === 1 ? (
                 'Create Single Appointment'
