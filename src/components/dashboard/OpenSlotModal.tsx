@@ -26,7 +26,6 @@ interface CalculatedSlot {
 
 // Slot duration options in minutes (controlled selection)
 const SLOT_DURATION_OPTIONS = [
-  { value: 15, label: '15 minutes' },
   { value: 30, label: '30 minutes' },
   { value: 45, label: '45 minutes' },
   { value: 60, label: '1 hour' },
@@ -81,7 +80,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
       .integer('Must be a whole number'),
     slotDuration: Yup.number()
       .required('Slot duration is required')
-      .min(15, 'Minimum duration is 15 minutes')
+      .min(30, 'Minimum duration is 30 minutes')
       .max(240, 'Maximum duration is 4 hours')
       .test('max-duration-before-next', 'Duration exceeds available time before next appointment', function () {
         // This will be validated dynamically in the component, but we keep basic validation here
@@ -583,7 +582,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
 
         const adjustedDuration = validDurations.length > 0
           ? validDurations[0] // Use the largest valid duration
-          : 15; // Fallback to minimum if no valid option
+          : 30; // Fallback to minimum if no valid option
 
         if (adjustedDuration !== formik.values.slotDuration) {
           formik.setFieldValue('slotDuration', adjustedDuration, false);
@@ -785,7 +784,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
 
                             const adjustedDuration = validDurations.length > 0
                               ? validDurations[0] // Use the largest valid duration
-                              : 15; // Fallback to minimum if no valid option
+                              : 30; // Fallback to minimum if no valid option
 
                             formik.setFieldValue('slotDuration', adjustedDuration);
                           }
@@ -901,7 +900,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
 
                         return `Maximum ${maxSlotsInFreeTime} slot${maxSlotsInFreeTime !== 1 ? 's' : ''} fit in available time (${availableTime} min ${limitText})`;
                       })()
-                      : `Maximum ${MAX_SLOTS} slots per session`}
+                      : ''}
                   </div>
                 </div>
 

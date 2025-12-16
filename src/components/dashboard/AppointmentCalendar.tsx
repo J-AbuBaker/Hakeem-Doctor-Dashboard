@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useAppointments } from '../../context/AppointmentContext';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth, isSameMonth, isToday, startOfDay } from 'date-fns';
-import { Calendar as CalendarIcon, Filter, Plus, ChevronLeft, ChevronRight, Clock, User, AlertCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Filter, Plus, ChevronLeft, ChevronRight, Clock, User, AlertCircle, Calendar } from 'lucide-react';
 import { getAppointmentsForDate, parseAppointmentDate } from '../../utils/dateUtils';
 import { hasStatus } from '../../utils/statusUtils';
 import { formatAppointmentType } from '../../utils/stringUtils';
+import { getAppointmentTypeLabel } from '../../utils/appointmentTypeUtils';
 import { sortAppointmentsByDateTime } from '../../utils/appointmentSorting';
 import { formatDuration } from '../../utils/durationUtils';
+import AppointmentCard from './AppointmentCard';
+import SectionModule from './SectionModule';
 import './BookingList.css';
+import './TodaySchedule.css';
 
 interface AppointmentCalendarProps {
   onOpenSlot?: () => void;
@@ -222,7 +226,6 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
               {viewMode === 'day' && (
                 <div className="day-view">
                   <div className="day-header">
-                    <h3>{format(selectedDate, 'EEEE, MMMM dd, yyyy')}</h3>
                     <div className="date-navigation">
                       <button
                         className="date-nav-btn"
@@ -257,79 +260,120 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                       </button>
                     </div>
                   </div>
-                  <div className="appointments-list">
-                    {(() => {
-                      const dayAppointments = getAppointmentsForDateLocal(selectedDate);
-                      const sortedDayAppointments = sortAppointmentsByDateTime(dayAppointments);
+                  {(() => {
+                    const dayAppointments = getAppointmentsForDateLocal(selectedDate);
+                    const sortedDayAppointments = sortAppointmentsByDateTime(dayAppointments);
+                    const isToday = isSameDay(selectedDate, new Date());
 
-                      if (sortedDayAppointments.length === 0) {
-                        return (
-                          <div className="empty-state">
-                            <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>No appointments scheduled for this day</p>
-                            <p style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '0.5rem' }}>
-                              You have a free schedule for {format(selectedDate, 'MMMM dd, yyyy')}.
-                              Consider adding a new appointment or checking other dates.
-                            </p>
-                          </div>
-                        );
+                    // Calculate stats
+                    const scheduledCount = sortedDayAppointments.filter(a => hasStatus(a.status, 'Scheduled')).length;
+                    const completedCount = sortedDayAppointments.filter(a => hasStatus(a.status, 'Completed')).length;
+
+                    // Get upcoming appointments (next 2 hours) - only for today
+                    const getUpcomingAppointments = () => {
+                      if (!isToday) return [];
+                      const now = new Date();
+                      const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+                      return sortedDayAppointments.filter(apt => {
+                        const aptDate = parseAppointmentDate(apt);
+                        if (!aptDate) return false;
+                        return aptDate > now && aptDate <= twoHoursFromNow && hasStatus(apt.status, 'Scheduled');
+                      });
+                    };
+
+                    const upcomingAppointments = getUpcomingAppointments();
+
+                    // Format time helper
+                    const formatTimeDisplay = (timeString: string): string => {
+                      try {
+                        if (!timeString || !timeString.includes(':')) {
+                          return timeString;
+                        }
+                        const [hours, minutes] = timeString.split(':').map(Number);
+                        const hour12 = hours % 12 || 12;
+                        const period = hours >= 12 ? 'PM' : 'AM';
+                        return `${String(hour12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+                      } catch (error) {
+                        return timeString;
                       }
+                    };
 
-                      return (
-                        <div className="booking-list-table-wrapper">
-                          <table className="booking-list-table">
-                            <thead>
-                              <tr>
-                                <th className="col-time">
-                                  <Clock className="header-icon" size={16} />
-                                  Time
-                                </th>
-                                <th className="col-duration">Duration</th>
-                                <th className="col-patient">
-                                  <User className="header-icon" size={16} />
-                                  Patient Name
-                                </th>
-                                <th className="col-type">Appointment Type</th>
-                                <th className="col-status">Status</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {sortedDayAppointments.map((appointment) => {
-                                const timeParts = formatTime(appointment.time);
-                                return (
-                                  <tr key={appointment.id} className="booking-list-row">
-                                    <td className="col-time">
-                                      <div className="time-display">
-                                        <span className="time-value">{timeParts.time}</span>
-                                        {timeParts.period && (
-                                          <span className="time-period">{timeParts.period}</span>
-                                        )}
-                                      </div>
-                                    </td>
-                                    <td className="col-duration">
-                                      <span className="duration-value">{formatDuration(appointment.duration)}</span>
-                                    </td>
-                                    <td className="col-patient">
-                                      <span className="patient-name-value" title={appointment.patientId}>
-                                        {appointment.patientName}
-                                      </span>
-                                    </td>
-                                    <td className="col-type">
-                                      <span className="type-value">{appointment.appointmentType ? formatAppointmentType(appointment.appointmentType) : '—'}</span>
-                                    </td>
-                                    <td className="col-status">
-                                      <span className={`status-badge ${getStatusColor(appointment.status)}`}>
-                                        {appointment.status}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      );
-                    })()}
-                  </div>
+                    return (
+                      <SectionModule
+                        title={isToday ? "Today's Schedule" : format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                        subtitle={isToday ? format(selectedDate, 'EEEE, MMMM d, yyyy') : undefined}
+                        icon={Calendar}
+                        actions={
+                          <div className="today-schedule-stats">
+                            <div className="today-stat-item">
+                              <span className="today-stat-label">Scheduled</span>
+                              <span className="today-stat-value">{scheduledCount}</span>
+                            </div>
+                            <div className="today-stat-item">
+                              <span className="today-stat-label">Completed</span>
+                              <span className="today-stat-value completed">{completedCount}</span>
+                            </div>
+                          </div>
+                        }
+                        empty={sortedDayAppointments.length === 0}
+                        emptyTitle="No appointments scheduled for this day"
+                        emptySubtitle={isToday ? "You have a free schedule. Consider opening new slots for patients." : `You have a free schedule for ${format(selectedDate, 'MMMM dd, yyyy')}. Consider adding a new appointment or checking other dates.`}
+                        emptyIcon={Calendar}
+                        aria-label={isToday ? "Today's Schedule" : `Schedule for ${format(selectedDate, 'MMMM dd, yyyy')}`}
+                      >
+                        {upcomingAppointments.length > 0 && (
+                          <div className="today-upcoming-alert" role="alert" aria-live="polite">
+                            <Clock className="upcoming-icon" size={18} aria-hidden="true" />
+                            <span>
+                              <strong>{upcomingAppointments.length}</strong> appointment{upcomingAppointments.length !== 1 ? 's' : ''} in the next 2 hours
+                            </span>
+                          </div>
+                        )}
+
+                        {sortedDayAppointments.length > 0 && (
+                          <div className="today-schedule-timeline" role="list" aria-label={`Appointments for ${format(selectedDate, 'MMMM dd, yyyy')}`}>
+                            {sortedDayAppointments.map((appointment, index) => {
+                              const appointmentDate = parseAppointmentDate(appointment);
+                              const isUpcoming = isToday &&
+                                appointmentDate &&
+                                appointmentDate > new Date() &&
+                                appointmentDate <= new Date(Date.now() + 2 * 60 * 60 * 1000) &&
+                                hasStatus(appointment.status, 'Scheduled');
+                              const isOverdue = isToday &&
+                                appointmentDate &&
+                                appointmentDate < new Date() &&
+                                hasStatus(appointment.status, 'Scheduled');
+
+                              return (
+                                <div
+                                  key={appointment.id}
+                                  className={`today-appointment-item ${isUpcoming ? 'upcoming' : ''} ${isOverdue ? 'overdue' : ''}`}
+                                  role="listitem"
+                                  tabIndex={0}
+                                  aria-label={`Appointment at ${formatTimeDisplay(appointment.time)} with ${appointment.patientName}`}
+                                >
+                                  <div className="today-appointment-time">
+                                    <div className="time-display-wrapper">
+                                      <Clock className="time-icon" size={18} aria-hidden="true" />
+                                      <span className="time-text">{formatTimeDisplay(appointment.time)}</span>
+                                    </div>
+                                  </div>
+                                  <div className="today-appointment-content">
+                                    <AppointmentCard
+                                      appointment={appointment}
+                                      hideTime={true}
+                                      hideDate={true}
+                                      compact={true}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </SectionModule>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -597,7 +641,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                                               </div>
                                               {apt.appointmentType && (
                                                 <div className="week-appointment-type">
-                                                  {formatAppointmentType(apt.appointmentType)}
+                                                  {getAppointmentTypeLabel(apt.appointmentType)}
                                                 </div>
                                               )}
                                               <div className={`week-appointment-status ${getStatusColor(apt.status)}`}>

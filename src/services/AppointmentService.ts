@@ -37,13 +37,10 @@ class AppointmentService {
     // This preserves the exact status from the API - "completed" becomes "Completed", etc.
     const status = mapBackendStatusToFrontend(apiAppointment.appointmentStatus);
 
-    const appointmentType = apiAppointment.appointmentType || '';
+    const appointmentType = apiAppointment.appointmentType || 'checkup';
     const formattedType = formatAppointmentType(appointmentType);
 
     const notesParts: string[] = [];
-    if (formattedType) {
-      notesParts.push(`Type: ${formattedType}`);
-    }
 
     // Get duration from cache if available, otherwise use default
     let duration: number = APP_CONFIG.DEFAULT_APPOINTMENT_DURATION;
@@ -80,7 +77,7 @@ class AppointmentService {
       date: dateStr,
       time: timeStr,
       status: status, // Status from API, mapped to frontend format
-      appointmentType: formattedType || undefined,
+      appointmentType: formattedType || 'checkup',
       duration: duration,
       notes: notesParts.length > 0 ? notesParts.join(' • ') : undefined,
       createdAt: apiAppointment.appointmentDate,

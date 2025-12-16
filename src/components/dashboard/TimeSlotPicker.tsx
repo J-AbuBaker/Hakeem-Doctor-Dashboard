@@ -36,8 +36,6 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
   existingAppointments = [],
   slotDuration = 30, // Default 30 minutes
 }) => {
-  const [customTime, setCustomTime] = useState('');
-  const [showCustomInput, setShowCustomInput] = useState(false);
   const timeSlots = generateTimeSlots();
 
   // Get time slot availability with improved conflict detection
@@ -66,7 +64,7 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
     // Check each time slot
     // IMPORTANT: Slots BEFORE blocked ranges are ALWAYS selectable (with duration limits)
     // Only slots WITHIN blocked ranges are disabled
-    const MIN_DURATION = 15;
+    const MIN_DURATION = 30;
     const availabilityMap = new Map<string, { isBlocked: boolean; reason?: string; maxDuration?: number }>();
 
     for (const time of timeSlots) {
@@ -177,19 +175,6 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
     return availabilityMap;
   }, [date, existingAppointments, timeSlots]);
 
-  const handleCustomTimeSubmit = () => {
-    if (customTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(customTime)) {
-      // Validate that time is before 6 PM (18:00)
-      const [hours, minutes] = customTime.split(':').map(Number);
-      if (hours > 17 || (hours === 17 && minutes > 0)) {
-        // Time is at or after 6 PM, reject it
-        return;
-      }
-      onTimeSelect(customTime);
-      setShowCustomInput(false);
-      setCustomTime('');
-    }
-  };
 
   const formatTime = (time: string): string => {
     const [hours, minutes] = time.split(':');
@@ -322,63 +307,6 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
             </button>
           );
         })}
-      </div>
-
-      <div className="custom-time-section">
-        {!showCustomInput ? (
-          <button
-            type="button"
-            className="custom-time-toggle"
-            onClick={() => setShowCustomInput(true)}
-            disabled={disabled}
-          >
-            + Add Custom Time
-          </button>
-        ) : (
-          <div className="custom-time-input">
-            <input
-              type="time"
-              value={customTime}
-              onChange={(e) => setCustomTime(e.target.value)}
-              className="custom-time-field"
-              placeholder="HH:MM"
-              max="17:59"
-            />
-            {customTime && (() => {
-              const [hours, minutes] = customTime.split(':').map(Number);
-              if (hours > 17 || (hours === 17 && minutes > 0)) {
-                return (
-                  <div className="custom-time-error" style={{ color: 'var(--danger)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                    Time must be before 6 PM
-                  </div>
-                );
-              }
-              return null;
-            })()}
-            <button
-              type="button"
-              className="custom-time-submit"
-              onClick={handleCustomTimeSubmit}
-              disabled={!customTime || (() => {
-                if (!customTime) return true;
-                const [hours, minutes] = customTime.split(':').map(Number);
-                return hours > 17 || (hours === 17 && minutes > 0);
-              })()}
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              className="custom-time-cancel"
-              onClick={() => {
-                setShowCustomInput(false);
-                setCustomTime('');
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
