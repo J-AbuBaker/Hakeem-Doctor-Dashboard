@@ -207,6 +207,12 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
       previousStateRef.current = [...prev];
       appointmentToUpdate = prev.find(apt => apt.id === id);
 
+      // CRITICAL: Check if appointment is cancelled before attempting completion
+      if (appointmentToUpdate && hasStatus(appointmentToUpdate.status, 'Cancelled')) {
+        // Do not update - return unchanged state
+        return prev;
+      }
+
       // Optimistic update - update UI immediately for better UX
       if (appointmentToUpdate) {
         optimisticUpdateRef.current = { id, appointment: { ...appointmentToUpdate, status: 'Completed' as const } };
@@ -218,6 +224,14 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
       }
       return prev;
     });
+
+    // CRITICAL: Validate appointment status after retrieving it from state
+    if (appointmentToUpdate && hasStatus(appointmentToUpdate.status, 'Cancelled')) {
+      setLoadingState(prev => ({ ...prev, completing: false }));
+      // Rollback optimistic update
+      setAppointments(previousStateRef.current);
+      throw new Error('Cannot complete a cancelled appointment. Cancelled appointments cannot be marked as completed.');
+    }
 
     try {
       // Call API to complete appointment - this is the source of truth
@@ -237,7 +251,12 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
 
         return prev.map((apt) => {
           if (apt.id === id) {
-            // Use API response as source of truth
+            // CRITICAL: Never override Cancelled status - if API returns cancelled, preserve it
+            // This ensures cancelled appointments remain cancelled and are never marked as completed
+            if (apiResponse.status === 'Cancelled' || hasStatus(apiResponse.status, 'Cancelled')) {
+              return { ...apt, status: 'Cancelled' as const };
+            }
+            // Use API response as source of truth for Completed status
             return {
               ...apiResponse,
               status: 'Completed' as const,

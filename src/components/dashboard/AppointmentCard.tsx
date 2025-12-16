@@ -54,7 +54,12 @@ const AppointmentCard = memo<AppointmentCardProps>(({
 
   // Check if appointment can be completed (only on the appointment date)
   const canCompleteAppointment = (): boolean => {
-    // Must be scheduled
+    // CRITICAL: Cannot complete cancelled appointments
+    if (hasStatus(appointment.status, 'Cancelled')) {
+      return false;
+    }
+
+    // Must be scheduled (not completed, expired, etc.)
     if (!hasStatus(appointment.status, 'Scheduled')) {
       return false;
     }
@@ -77,6 +82,11 @@ const AppointmentCard = memo<AppointmentCardProps>(({
       // Validate appointment ID
       if (!appointment.id || appointment.id.trim() === '') {
         throw new Error('Invalid appointment: Missing appointment ID');
+      }
+
+      // CRITICAL: Cannot complete cancelled appointments - this status must be preserved
+      if (hasStatus(appointment.status, 'Cancelled')) {
+        throw new Error('Cannot complete a cancelled appointment. Cancelled appointments cannot be marked as completed.');
       }
 
       // Prevent completing available slots (slots without a patient)

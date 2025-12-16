@@ -185,6 +185,10 @@ class AppointmentService {
         throw new Error(`Invalid appointment ID: ${id}. ID must be a positive number.`);
       }
 
+      // Note: We cannot check appointment status here as we don't have access to the appointment list
+      // The backend should reject completion of cancelled appointments, but we add validation
+      // in the context and component layers to prevent the API call
+
       const url = `${API_ENDPOINTS.APPOINTMENT.DOCTOR_COMPLETE}?appointmentId=${appointmentId}`;
       const response = await api.put<ScheduledAppointmentResponse>(url, null);
 
@@ -198,6 +202,12 @@ class AppointmentService {
 
       try {
         const mappedAppointment = this.mapScheduledAppointmentToAppointment(response.data);
+
+        // CRITICAL: Never override Cancelled status - if backend returns cancelled, preserve it
+        // This ensures cancelled appointments remain cancelled and are never marked as completed
+        if (mappedAppointment.status === 'Cancelled') {
+          return mappedAppointment; // Return as-is, do not change to Completed
+        }
 
         // Always ensure Completed status is preserved, even if expiration logic runs
         // This ensures Completed appointments stay Completed regardless of date/time
