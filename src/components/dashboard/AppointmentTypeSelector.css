@@ -1,0 +1,261 @@
+.appointment-type-selector {
+  width: 100%;
+}
+
+.appointment-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-4);
+  width: 100%;
+}
+
+.appointment-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-5);
+  background: var(--surface-elevated);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: var(--transition-base);
+  text-align: center;
+  min-height: 120px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Checkup - Green */
+.appointment-type-card[data-type="checkup"]:hover:not(:disabled),
+.appointment-type-card[data-type="checkup"].selected {
+  border-color: hsl(142, 71%, 45%);
+  background: hsl(142, 50%, 96%);
+  box-shadow: 0 0 0 3px hsla(142, 71%, 45%, 0.1);
+}
+
+.appointment-type-card[data-type="checkup"]:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px hsla(142, 71%, 45%, 0.15), 0 0 0 3px hsla(142, 71%, 45%, 0.1);
+}
+
+.appointment-type-card[data-type="checkup"]:focus-visible {
+  outline: 2px solid hsl(142, 71%, 45%);
+  outline-offset: 2px;
+}
+
+.appointment-type-card[data-type="checkup"] .appointment-type-icon-wrapper {
+  background: hsl(142, 50%, 94%);
+}
+
+.appointment-type-card[data-type="checkup"].selected .appointment-type-icon-wrapper {
+  background: hsl(142, 71%, 52%);
+}
+
+.appointment-type-card[data-type="checkup"] .appointment-type-icon {
+  color: hsl(142, 71%, 45%);
+}
+
+.appointment-type-card[data-type="checkup"].selected .appointment-type-icon {
+  color: white;
+}
+
+.appointment-type-card[data-type="checkup"] .appointment-type-title {
+  color: hsl(142, 71%, 35%);
+}
+
+.appointment-type-card[data-type="checkup"].selected .appointment-type-title {
+  color: hsl(142, 71%, 35%);
+}
+
+/* Consultation - Blue */
+.appointment-type-card[data-type="consultation"]:hover:not(:disabled),
+.appointment-type-card[data-type="consultation"].selected {
+  border-color: hsl(200, 100%, 42%);
+  background: hsl(200, 70%, 96%);
+  box-shadow: 0 0 0 3px hsla(200, 100%, 42%, 0.1);
+}
+
+.appointment-type-card[data-type="consultation"]:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px hsla(200, 100%, 42%, 0.15), 0 0 0 3px hsla(200, 100%, 42%, 0.1);
+}
+
+.appointment-type-card[data-type="consultation"]:focus-visible {
+  outline: 2px solid hsl(200, 100%, 42%);
+  outline-offset: 2px;
+}
+
+.appointment-type-card[data-type="consultation"] .appointment-type-icon-wrapper {
+  background: hsl(200, 70%, 94%);
+}
+
+.appointment-type-card[data-type="consultation"].selected .appointment-type-icon-wrapper {
+  background: hsl(200, 100%, 50%);
+}
+
+.appointment-type-card[data-type="consultation"] .appointment-type-icon {
+  color: hsl(200, 100%, 42%);
+}
+
+.appointment-type-card[data-type="consultation"].selected .appointment-type-icon {
+  color: white;
+}
+
+.appointment-type-card[data-type="consultation"] .appointment-type-title {
+  color: hsl(200, 100%, 32%);
+}
+
+.appointment-type-card[data-type="consultation"].selected .appointment-type-title {
+  color: hsl(200, 100%, 32%);
+}
+
+/* Follow Up - Orange */
+.appointment-type-card[data-type="followup"]:hover:not(:disabled),
+.appointment-type-card[data-type="followup"].selected {
+  border-color: hsl(38, 92%, 50%);
+  background: hsl(38, 80%, 96%);
+  box-shadow: 0 0 0 3px hsla(38, 92%, 50%, 0.1);
+}
+
+.appointment-type-card[data-type="followup"]:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px hsla(38, 92%, 50%, 0.15), 0 0 0 3px hsla(38, 92%, 50%, 0.1);
+}
+
+.appointment-type-card[data-type="followup"]:focus-visible {
+  outline: 2px solid hsl(38, 92%, 50%);
+  outline-offset: 2px;
+}
+
+.appointment-type-card[data-type="followup"] .appointment-type-icon-wrapper {
+  background: hsl(38, 80%, 94%);
+}
+
+.appointment-type-card[data-type="followup"].selected .appointment-type-icon-wrapper {
+  background: hsl(38, 92%, 58%);
+}
+
+.appointment-type-card[data-type="followup"] .appointment-type-icon {
+  color: hsl(38, 92%, 50%);
+}
+
+.appointment-type-card[data-type="followup"].selected .appointment-type-icon {
+  color: white;
+}
+
+.appointment-type-card[data-type="followup"] .appointment-type-title {
+  color: hsl(38, 92%, 40%);
+}
+
+.appointment-type-card[data-type="followup"].selected .appointment-type-title {
+  color: hsl(38, 92%, 40%);
+}
+
+/* Emergency - Red */
+.appointment-type-card[data-type="emergency"]:hover:not(:disabled),
+.appointment-type-card[data-type="emergency"].selected {
+  border-color: hsl(0, 72%, 50%);
+  background: hsl(0, 60%, 96%);
+  box-shadow: 0 0 0 3px hsla(0, 72%, 50%, 0.1);
+}
+
+.appointment-type-card[data-type="emergency"]:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px hsla(0, 72%, 50%, 0.15), 0 0 0 3px hsla(0, 72%, 50%, 0.1);
+}
+
+.appointment-type-card[data-type="emergency"]:focus-visible {
+  outline: 2px solid hsl(0, 72%, 50%);
+  outline-offset: 2px;
+}
+
+.appointment-type-card[data-type="emergency"] .appointment-type-icon-wrapper {
+  background: hsl(0, 60%, 94%);
+}
+
+.appointment-type-card[data-type="emergency"].selected .appointment-type-icon-wrapper {
+  background: hsl(0, 72%, 58%);
+}
+
+.appointment-type-card[data-type="emergency"] .appointment-type-icon {
+  color: hsl(0, 72%, 50%);
+}
+
+.appointment-type-card[data-type="emergency"].selected .appointment-type-icon {
+  color: white;
+}
+
+.appointment-type-card[data-type="emergency"] .appointment-type-title {
+  color: hsl(0, 72%, 40%);
+}
+
+.appointment-type-card[data-type="emergency"].selected .appointment-type-title {
+  color: hsl(0, 72%, 40%);
+}
+
+.appointment-type-card:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.appointment-type-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-3);
+  transition: var(--transition-base);
+}
+
+.appointment-type-icon {
+  transition: var(--transition-base);
+}
+
+.appointment-type-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  align-items: center;
+}
+
+.appointment-type-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  transition: var(--transition-base);
+}
+
+.appointment-type-description {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  transition: var(--transition-base);
+}
+
+.appointment-type-card.selected .appointment-type-description {
+  color: var(--text-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .appointment-type-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-3);
+  }
+
+  .appointment-type-card {
+    min-height: 100px;
+    padding: var(--spacing-4);
+  }
+
+  .appointment-type-icon-wrapper {
+    width: 48px;
+    height: 48px;
+  }
+
+  .appointment-type-icon {
+    size: 20px;
+  }
+}
