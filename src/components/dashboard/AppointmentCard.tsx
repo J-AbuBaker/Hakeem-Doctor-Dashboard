@@ -9,7 +9,6 @@ import {
   CheckCircle2,
   Loader2,
   FileText,
-  Stethoscope,
 } from 'lucide-react';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { hasStatus } from '../../utils/statusUtils';
@@ -17,6 +16,7 @@ import { isAppointmentOnDate } from '../../utils/dateUtils';
 import { getErrorMessage } from '../../utils/errorUtils';
 import { formatAppointmentType } from '../../utils/stringUtils';
 import { formatDuration } from '../../utils/durationUtils';
+import { getAppointmentTypeIcon, getAppointmentTypeLabel, getAppointmentTypeOption } from '../../utils/appointmentTypeUtils';
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -188,12 +188,18 @@ const AppointmentCard = memo<AppointmentCardProps>(({
               </span>
             </div>
           )}
-          <div className="appointment-info-item appointment-type-item">
-            <Stethoscope className="info-icon" />
+          <div
+            className="appointment-info-item appointment-type-item"
+            data-appointment-type={getAppointmentTypeOption(appointment.appointmentType).value}
+          >
+            {(() => {
+              const TypeIcon = getAppointmentTypeIcon(appointment.appointmentType);
+              return <TypeIcon className="info-icon" />;
+            })()}
             <span className="info-value">
               {appointment.appointmentType
-                ? formatAppointmentType(appointment.appointmentType)
-                : 'General Consultation'}
+                ? getAppointmentTypeLabel(appointment.appointmentType)
+                : getAppointmentTypeLabel(null)}
             </span>
           </div>
           <div className="appointment-info-item appointment-duration-item">

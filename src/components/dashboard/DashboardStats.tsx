@@ -16,19 +16,19 @@ const DashboardStats: React.FC = () => {
   const todayScheduledCount = todayAppointments.filter(a => hasStatus(a.status, 'Scheduled')).length;
   const completedCount = appointments.filter(a => hasStatus(a.status, 'Completed')).length;
 
-  // Pending count: future scheduled appointments WITH patients assigned (exclude unbooked slots and expired)
-  const pendingCount = appointments.filter(a => {
+  // Booked count: future scheduled appointments WITH real patients assigned (exclude unbooked slots and past appointments)
+  const bookedCount = appointments.filter(a => {
     // Must be scheduled (not completed, cancelled, or expired)
     if (!hasStatus(a.status, 'Scheduled')) {
       return false;
     }
 
-    // Must have a patient assigned (exclude unbooked slots)
-    if (!a.patientId || a.patientId === '0' || a.patientName === 'Available Slot') {
+    // Must have a real patient assigned (exclude unbooked slots)
+    if (!a.patientId || a.patientId === '0') {
       return false;
     }
 
-    // Must be in the future (not past appointments)
+    // Must be in the future (exclude past appointments)
     return isAppointmentInFuture(a);
   }).length;
 
@@ -74,8 +74,8 @@ const DashboardStats: React.FC = () => {
       trend: 'up' as const,
     },
     {
-      label: 'Pending',
-      value: pendingCount,
+      label: 'Booked',
+      value: bookedCount,
       icon: Clock,
       color: 'var(--warning)',
       bgColor: 'rgba(217, 119, 6, 0.1)',

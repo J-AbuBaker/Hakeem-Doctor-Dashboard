@@ -10,6 +10,7 @@ import {
 import { hasStatus } from '../../utils/statusUtils';
 import { parseAppointmentDate } from '../../utils/dateUtils';
 import { formatAppointmentType } from '../../utils/stringUtils';
+import { getAppointmentTypeLabel } from '../../utils/appointmentTypeUtils';
 import './BookingList.css';
 
 interface BookingListProps {
@@ -223,7 +224,7 @@ const BookingList: React.FC<BookingListProps> = ({ appointments }) => {
                           </span>
                         </td>
                         <td className="col-type">
-                          <span className="type-value">{appointment.appointmentType ? formatAppointmentType(appointment.appointmentType) : '—'}</span>
+                          <span className="type-value">{appointment.appointmentType ? getAppointmentTypeLabel(appointment.appointmentType) : '—'}</span>
                         </td>
                         <td className="col-status">
                           <span className={`status-badge ${getStatusColor(appointment.status)}`}>
