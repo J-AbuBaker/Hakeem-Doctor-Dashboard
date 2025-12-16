@@ -115,18 +115,20 @@ const DatePicker: React.FC<DatePickerProps> = ({
     return new Date(year, month - 1, day);
   })() : null;
 
-  // Generate year list - show years from minDate year (2000) back to 100 years ago
+  // Generate year list - show years from minDate year (2000) down to 1961
   // Years above 2000 should NOT be displayed (users must be 25+)
+  // Years 1960 and below are NOT displayed for better UX
   // Dates before 2000 are valid (they guarantee age >= 25)
   const getAvailableYears = (): number[] => {
     const currentYear = new Date().getFullYear();
     // Get the maximum selectable year from minDate (e.g., 2000)
     // This is the latest year that makes someone 25+ years old
     const maxSelectableYear = minDateObj ? minDateObj.getFullYear() : currentYear - 25;
+    const minSelectableYear = 1961; // Don't show years 1960 and below
     const years: number[] = [];
-    // Start from maxSelectableYear (2000) and go backwards 100 years
-    // This ensures years above 2000 are NOT displayed
-    for (let year = maxSelectableYear; year >= maxSelectableYear - 100; year--) {
+    // Start from maxSelectableYear (2000) and go down to 1961
+    // This ensures years above 2000 and years 1960/below are NOT displayed
+    for (let year = maxSelectableYear; year >= minSelectableYear; year--) {
       years.push(year);
     }
     return years;
@@ -250,12 +252,15 @@ const DatePicker: React.FC<DatePickerProps> = ({
   return (
     <div className="date-picker-wrapper" ref={pickerRef}>
       <div className="input-wrapper">
-        <Calendar className="date-picker-icon" size={18} />
-        <div
+        <Calendar className="input-icon" size={18} />
+        <input
+          type="text"
+          readOnly
+          value={displayValue}
+          placeholder={placeholder}
+          disabled={disabled}
           className={`date-picker-input ${error ? 'error' : ''} ${disabled ? 'disabled' : ''} ${isOpen ? 'active' : ''}`}
           onClick={() => !disabled && setIsOpen(!isOpen)}
-          role="button"
-          tabIndex={disabled ? -1 : 0}
           onKeyDown={(e) => {
             if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
               e.preventDefault();
@@ -265,29 +270,20 @@ const DatePicker: React.FC<DatePickerProps> = ({
           aria-label="Select date"
           aria-expanded={isOpen}
           aria-haspopup="dialog"
-        >
-          <input
-            type="text"
-            readOnly
-            value={displayValue}
-            placeholder={placeholder}
-            disabled={disabled}
-            className="date-picker-input-field"
-            aria-label="Selected date"
-          />
-          {value && !disabled && (
-            <button
-              type="button"
-              className="date-picker-clear"
-              onClick={handleClear}
-              title="Clear date"
-              aria-label="Clear selected date"
-            >
-              <X size={14} />
-            </button>
-          )}
-          <ChevronDown className={`date-picker-chevron ${isOpen ? 'open' : ''}`} size={18} />
-        </div>
+          tabIndex={disabled ? -1 : 0}
+        />
+        {value && !disabled && (
+          <button
+            type="button"
+            className="date-picker-clear"
+            onClick={handleClear}
+            title="Clear date"
+            aria-label="Clear selected date"
+          >
+            <X size={14} />
+          </button>
+        )}
+        <ChevronDown className={`date-picker-chevron ${isOpen ? 'open' : ''}`} size={18} />
       </div>
 
       {isOpen && !disabled && (
