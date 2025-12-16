@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Stethoscope,
   Calendar,
   Users,
   Shield,
@@ -21,10 +20,12 @@ const LandingPage: React.FC = () => {
           <div className="hero-content">
             <div className="hero-logo">
               <div className="logo-container">
-                <Stethoscope className="logo-icon" />
-                <h1 className="logo-text">HAKEEM</h1>
+                <img
+                  src="/hakeem-logo.png"
+                  alt="HAKEEM - Professional Healthcare Management"
+                  className="logo-image"
+                />
               </div>
-              <div className="ecg-line"></div>
             </div>
             <h2 className="hero-title">
               Professional Healthcare Management
@@ -149,8 +150,11 @@ const LandingPage: React.FC = () => {
           <div className="footer-content">
             <div className="footer-brand">
               <div className="logo-container small">
-                <Stethoscope className="logo-icon" />
-                <span className="logo-text">HAKEEM</span>
+                <img
+                  src="/hakeem-logo.png"
+                  alt="HAKEEM"
+                  className="logo-image small"
+                />
               </div>
               <p className="footer-tagline">
                 Professional healthcare management for modern medical practices.
