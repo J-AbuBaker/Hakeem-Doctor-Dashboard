@@ -8,7 +8,6 @@ import {
   LogOut,
   Menu,
   X,
-  Stethoscope,
   KeyRound,
 } from 'lucide-react';
 import ConfirmDialog from '../common/ConfirmDialog';
@@ -53,15 +52,16 @@ const DoctorSidebar: React.FC<DoctorSidebarProps> = ({ isOpen, onToggle }) => {
       <div className={`sidebar-overlay ${isOpen ? 'active' : ''}`} onClick={onToggle} />
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <div className="logo-wrapper">
-              <Stethoscope className="logo-icon" />
-              <h2 className="logo-text">HAKEEM</h2>
-            </div>
-            <p className="logo-subtitle">Doctor Portal</p>
+          <div className="sidebar-logo-container">
+            <img
+              src="/hakeem-logo.png"
+              alt="HAKEEM"
+              className="sidebar-logo-image"
+            />
+            <span className="sidebar-portal-label">Doctor Portal</span>
           </div>
-          <button className="sidebar-close" onClick={onToggle}>
-            <X />
+          <button className="sidebar-close" onClick={onToggle} aria-label="Close sidebar">
+            <X size={18} />
           </button>
         </div>
 
@@ -94,8 +94,8 @@ const DoctorSidebar: React.FC<DoctorSidebarProps> = ({ isOpen, onToggle }) => {
         </nav>
 
         <div className="sidebar-footer">
-          <button 
-            className="nav-item reset-password-btn" 
+          <button
+            className="nav-item reset-password-btn"
             onClick={() => setShowResetPasswordModal(true)}
           >
             <KeyRound className="nav-icon" />
