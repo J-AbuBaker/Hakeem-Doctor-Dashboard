@@ -137,8 +137,8 @@ class Logger {
   logNetworkError(method: string, url: string, request: unknown, errorDetails?: NetworkErrorDetails) {
     if (!this.enabled) return;
 
-    const apiBaseUrl = import.meta.env.DEV 
-      ? '/api' 
+    const apiBaseUrl = import.meta.env.DEV
+      ? '/api'
       : import.meta.env.VITE_API_BASE_URL || '';
 
     const logData: LogData = {
@@ -265,13 +265,11 @@ class Logger {
       this.logHistory.shift();
     }
 
-    // Auto-save to IndexedDB/localStorage
+    // Auto-save to IndexedDB/localStorage (no automatic file download)
     this.saveToLocalStorage();
 
-    // Auto-save to file on errors
-    if (logData.level === 'error') {
-      this.autoSaveOnError();
-    }
+    // Note: File downloads are only triggered manually via window.apiLogger.saveLogsAsJSON()
+    // or when auto-save interval is enabled via enableAutoSave()
   }
 
   /**
@@ -302,7 +300,9 @@ class Logger {
   }
 
   /**
-   * Auto-save logs to file when error occurs
+   * Auto-save logs to file when error occurs (disabled by default)
+   * This method is kept for potential future use but is not called automatically
+   * To enable automatic downloads on errors, uncomment the call in addToHistory()
    */
   private autoSaveOnError() {
     // Debounce: only save once per 5 seconds to avoid too many downloads
