@@ -10,6 +10,7 @@ import { getErrorMessage, getErrorStatus } from '../../utils/errorUtils';
 import { storeDurations } from '../../utils/durationCache';
 import { checkMultipleSlotsConflicts, getBlockedTimeRanges, getMaxDurationBeforeNextAppointment } from '../../utils/appointmentConflict';
 import { parseDateTimeString } from '../../utils/dateParsing';
+import { APP_CONFIG } from '../../constants/appConfig';
 
 interface OpenSlotModalProps {
   isOpen: boolean;
@@ -54,6 +55,8 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
   const [successCount, setSuccessCount] = useState<number>(0);
   const [failedSlots, setFailedSlots] = useState<CalculatedSlot[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [successDetails, setSuccessDetails] = useState<{ count: number; date: string; startTime: string } | null>(null);
 
   const validationSchema = Yup.object({
     date: Yup.string()
@@ -288,18 +291,18 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
       return [];
     }
 
-    // Calculate end of day (23:59:59) for same-day constraint
+    // Calculate end time (6 PM / 18:00) for slot constraint
     const [year, month, day] = date.split('-').map(Number);
-    const endOfDay = new Date(year, month - 1, day, 23, 59, 59);
+    const slotEndTimeLimit = new Date(year, month - 1, day, APP_CONFIG.SLOT_END_TIME.HOUR, APP_CONFIG.SLOT_END_TIME.MINUTE, 0);
 
     // Create sequential slots
     for (let i = 0; i < numberOfSlots; i++) {
-      // Check if slot would exceed end of day (if constrained to same day)
+      // Check if slot would exceed 6 PM limit
       if (constrainToSameDay) {
-        // Check if slot start time + duration would exceed end of day
+        // Check if slot start time + duration would exceed 6 PM
         const slotEndTime = new Date(currentSlotDate.getTime() + slotDurationMinutes * 60 * 1000);
-        if (slotEndTime > endOfDay) {
-          // Stop creating slots if this slot would exceed the day
+        if (slotEndTime > slotEndTimeLimit) {
+          // Stop creating slots if this slot would exceed 6 PM
           break;
         }
       }
@@ -464,28 +467,67 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
     return new Set(conflictCheckResult.conflictingSlots.map(cs => cs.slot.index));
   }, [conflictCheckResult]);
 
-  // Calculate max duration before next appointment for selected time
+  // Calculate max duration before next appointment AND 6 PM limit for selected time
+  // Note: This calculates max duration for a SINGLE slot, not accounting for breaks
+  // Break duration is considered separately in maxSlotsInFreeTime calculation
   const maxDurationBeforeNext = useMemo(() => {
     if (!formik.values.date || !formik.values.startTime) {
       return undefined;
+    }
+
+    // Parse start time to calculate time until 6 PM
+    const [startHours, startMinutes] = formik.values.startTime.split(':').map(Number);
+    const [year, month, day] = formik.values.date.split('-').map(Number);
+    const startDateTime = new Date(year, month - 1, day, startHours, startMinutes, 0);
+    const endTimeLimit = new Date(year, month - 1, day, APP_CONFIG.SLOT_END_TIME.HOUR, APP_CONFIG.SLOT_END_TIME.MINUTE, 0);
+
+    // Calculate time until 6 PM in minutes
+    const timeUntil6PM = (endTimeLimit.getTime() - startDateTime.getTime()) / (1000 * 60);
+
+    // If start time is at or after 6 PM, no duration allowed
+    if (timeUntil6PM <= 0) {
+      return 0;
     }
 
     const appointmentsForDate = appointments.filter(
       (apt) => apt.date === formik.values.date && apt.status !== 'Cancelled'
     );
 
+    // If no appointments, max duration is limited only by 6 PM
     if (appointmentsForDate.length === 0) {
-      return undefined;
+      return Math.floor(timeUntil6PM);
     }
 
     const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
-    return getMaxDurationBeforeNextAppointment(formik.values.startTime, formik.values.date, blockedRanges);
+    const maxDurationBeforeAppointment = getMaxDurationBeforeNextAppointment(formik.values.startTime, formik.values.date, blockedRanges);
+
+    // Return the minimum of: time until next appointment OR time until 6 PM
+    if (maxDurationBeforeAppointment === undefined) {
+      return Math.floor(timeUntil6PM);
+    }
+
+    return Math.min(maxDurationBeforeAppointment, Math.floor(timeUntil6PM));
   }, [formik.values.date, formik.values.startTime, appointments]);
 
-  // Calculate maximum number of slots that fit in available free time
+  // Calculate maximum number of slots that fit in available free time (considering both next appointment and 6 PM limit)
+  // Properly accounts for break duration between slots
   const maxSlotsInFreeTime = useMemo(() => {
-    if (!formik.values.date || !formik.values.startTime || maxDurationBeforeNext === undefined) {
-      return MAX_SLOTS; // No limit if no next appointment
+    if (!formik.values.date || !formik.values.startTime) {
+      return MAX_SLOTS; // No limit if no date/time selected
+    }
+
+    // Parse start time to calculate time until 6 PM
+    const [startHours, startMinutes] = formik.values.startTime.split(':').map(Number);
+    const [year, month, day] = formik.values.date.split('-').map(Number);
+    const startDateTime = new Date(year, month - 1, day, startHours, startMinutes, 0);
+    const endTimeLimit = new Date(year, month - 1, day, APP_CONFIG.SLOT_END_TIME.HOUR, APP_CONFIG.SLOT_END_TIME.MINUTE, 0);
+
+    // Calculate time until 6 PM in minutes
+    const timeUntil6PM = (endTimeLimit.getTime() - startDateTime.getTime()) / (1000 * 60);
+
+    // If start time is at or after 6 PM, no slots allowed
+    if (timeUntil6PM <= 0) {
+      return 0;
     }
 
     const slotDuration = Number(formik.values.slotDuration);
@@ -495,19 +537,39 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
       return MAX_SLOTS;
     }
 
-    // Calculate how many slots fit: available time / (slot duration + break)
-    // Each slot needs: slotDuration + breakDuration (except last slot doesn't need break)
-    // So for N slots: N * slotDuration + (N-1) * breakDuration <= maxDurationBeforeNext
-    // Solving: N * (slotDuration + breakDuration) - breakDuration <= maxDurationBeforeNext
-    // N <= (maxDurationBeforeNext + breakDuration) / (slotDuration + breakDuration)
-    const totalTimePerSlot = slotDuration + breakDuration;
-    const maxSlots = Math.floor((maxDurationBeforeNext + breakDuration) / totalTimePerSlot);
+    // Calculate available time considering both next appointment and 6 PM limit
+    let availableTime = timeUntil6PM;
 
-    // Ensure at least 1 slot is allowed
-    return Math.max(1, Math.min(maxSlots, MAX_SLOTS));
+    if (maxDurationBeforeNext !== undefined) {
+      // Use the minimum of time until next appointment or time until 6 PM
+      availableTime = Math.min(maxDurationBeforeNext, timeUntil6PM);
+    }
+
+    // Calculate how many slots fit considering break duration
+    // Formula: For N slots, total time needed = N * slotDuration + (N-1) * breakDuration
+    // We need: N * slotDuration + (N-1) * breakDuration <= availableTime
+    // Rearranging: N * (slotDuration + breakDuration) - breakDuration <= availableTime
+    // N * (slotDuration + breakDuration) <= availableTime + breakDuration
+    // N <= (availableTime + breakDuration) / (slotDuration + breakDuration)
+    const totalTimePerSlot = slotDuration + breakDuration;
+
+    // Handle edge case: if breakDuration is 0, simpler calculation
+    let maxSlots: number;
+    if (breakDuration === 0) {
+      // No breaks: N <= availableTime / slotDuration
+      maxSlots = Math.floor(availableTime / slotDuration);
+    } else {
+      // With breaks: N <= (availableTime + breakDuration) / (slotDuration + breakDuration)
+      maxSlots = Math.floor((availableTime + breakDuration) / totalTimePerSlot);
+    }
+
+    // Ensure at least 1 slot is allowed if there's enough time for at least one slot
+    // Also ensure we don't exceed MAX_SLOTS
+    return Math.max(availableTime >= slotDuration ? 1 : 0, Math.min(maxSlots, MAX_SLOTS));
   }, [formik.values.date, formik.values.startTime, formik.values.slotDuration, formik.values.breakDuration, maxDurationBeforeNext]);
 
   // Auto-adjust duration and number of slots when they exceed max allowed for selected time
+  // This effect runs when start time, duration, break duration, or max limits change
   useEffect(() => {
     if (maxDurationBeforeNext !== undefined && formik.values.startTime) {
       // Auto-adjust duration if it exceeds max
@@ -529,506 +591,656 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
       }
 
       // Auto-adjust number of slots if it exceeds max slots in free time
+      // maxSlotsInFreeTime already accounts for break duration, so this will adjust correctly
       if (formik.values.numberOfSlots > maxSlotsInFreeTime) {
         formik.setFieldValue('numberOfSlots', maxSlotsInFreeTime, false);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maxDurationBeforeNext, formik.values.startTime, maxSlotsInFreeTime]); // Adjust when time, max duration, or max slots change
+  }, [maxDurationBeforeNext, formik.values.startTime, formik.values.slotDuration, formik.values.breakDuration, maxSlotsInFreeTime]); // Adjust when time, duration, break, max duration, or max slots change
 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content modal-content-large" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <div>
-            <h2>Schedule Appointment Slots</h2>
-            <p className="modal-subtitle">Create multiple sequential time slots for patient appointments</p>
-          </div>
-          <button className="modal-close" onClick={onClose}>
-            <X />
-          </button>
-        </div>
-
-        {error && (
-          <div className={`error-message ${successCount > 0 ? 'error-partial' : ''}`}>
-            <div className="error-icon-wrapper">
-              <AlertCircle size={20} />
-            </div>
-            <div className="error-content">
-              {error}
-              {failedSlots.length > 0 && (
-                <div className="failed-slots-list">
-                  <strong>Failed slots:</strong>
-                  <ul>
-                    {failedSlots.map((slot) => (
-                      <li key={slot.index}>
-                        Slot {slot.index}: {slot.displayTime}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {successCount > 0 && failedSlots.length === 0 && (
-          <div className="success-message">
-            <div className="success-icon-wrapper">
-              <CheckCircle2 size={20} />
-            </div>
-            <div>
-              Successfully created {successCount} slot{successCount !== 1 ? 's' : ''}!
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={formik.handleSubmit} className="modal-form">
-          <div className="form-section">
-            <h3 className="form-section-title">
-              <Calendar size={18} />
-              Schedule Details
-            </h3>
-            <div className="form-section-content">
-              <div className="form-group">
-                <label htmlFor="date">
-                  <Calendar className="label-icon" />
-                  Appointment Date *
-                </label>
-                <SlotDatePicker
-                  value={formik.values.date}
-                  onChange={(date) => {
-                    formik.setFieldValue('date', date, true); // Validate immediately
-                    formik.setFieldTouched('date', true, false); // Mark as touched without validation (already validated above)
-                    // Clear start time if date changes to past
-                    if (date && formik.values.startTime) {
-                      const [year, month, day] = date.split('-').map(Number);
-                      const selectedDate = new Date(year, month - 1, day);
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      if (selectedDate.getTime() === today.getTime()) {
-                        // If today, validate time is not in past
-                        const [hours, minutes] = formik.values.startTime.split(':').map(Number);
-                        const timeDate = new Date();
-                        timeDate.setHours(hours, minutes, 0, 0);
-                        if (timeDate < new Date()) {
-                          formik.setFieldValue('startTime', '');
-                        }
-                      }
-                    }
-                  }}
-                  onBlur={() => formik.setFieldTouched('date', true)}
-                  error={formik.touched.date && formik.errors.date ? formik.errors.date : undefined}
-                  disabled={isSubmitting}
-                  placeholder="Select appointment date"
-                />
+    <>
+      {/* Professional Success Dialog - Rendered outside modal for proper popup display */}
+      {showSuccessDialog && successDetails && (
+        <div className="success-dialog-overlay" onClick={() => {
+          setShowSuccessDialog(false);
+          setSuccessDetails(null);
+          onClose();
+          formik.resetForm();
+          setSuccessCount(0);
+          setFailedSlots([]);
+        }}>
+          <div className="success-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="success-dialog-content">
+              <div className="success-dialog-icon-wrapper">
+                <CheckCircle2 className="success-dialog-icon" size={64} />
               </div>
-
-              <div className="form-group">
-                <label>
-                  <Clock className="label-icon" />
-                  Start Time *
-                </label>
-                <TimeSlotPicker
-                  selectedTime={formik.values.startTime}
-                  onTimeSelect={(time) => {
-                    formik.setFieldValue('startTime', time);
-                    // Auto-adjust duration if current duration exceeds max for selected time
-                    if (time && formik.values.date) {
-                      const appointmentsForDate = appointments.filter(
-                        (apt) => apt.date === formik.values.date && apt.status !== 'Cancelled'
-                      );
-                      if (appointmentsForDate.length > 0) {
-                        const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
-                        const maxDuration = getMaxDurationBeforeNextAppointment(time, formik.values.date, blockedRanges);
-                        if (maxDuration !== undefined && formik.values.slotDuration > maxDuration) {
-                          // Find the largest valid duration option that fits within maxDuration
-                          const validDurations = SLOT_DURATION_OPTIONS
-                            .map(opt => opt.value)
-                            .filter(dur => dur <= maxDuration)
-                            .sort((a, b) => b - a); // Sort descending
-
-                          const adjustedDuration = validDurations.length > 0
-                            ? validDurations[0] // Use the largest valid duration
-                            : 15; // Fallback to minimum if no valid option
-
-                          formik.setFieldValue('slotDuration', adjustedDuration);
-                        }
-                      }
-                    }
-                  }}
-                  date={formik.values.date}
-                  error={formik.touched.startTime && formik.errors.startTime ? formik.errors.startTime : undefined}
-                  existingAppointments={appointments}
-                  slotDuration={formik.values.slotDuration}
-                />
-              </div>
-
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h3 className="form-section-title">
-              <Clock size={18} />
-              Slot Configuration
-            </h3>
-            <div className="form-section-content">
-              <div className="form-group form-group-horizontal">
-                <label htmlFor="numberOfSlots">
-                  <Plus className="label-icon" />
-                  Number of Slots *
-                </label>
-                <div className="input-wrapper">
-                  <div className="number-input-controls">
-                    <button
-                      type="button"
-                      className="number-input-btn"
-                      onClick={() => {
-                        const newValue = Math.max(1, formik.values.numberOfSlots - 1);
-                        formik.setFieldValue('numberOfSlots', newValue);
-                      }}
-                      disabled={formik.values.numberOfSlots <= 1 || isSubmitting}
-                    >
-                      <Minus size={16} />
-                    </button>
-                    <input
-                      id="numberOfSlots"
-                      name="numberOfSlots"
-                      type="number"
-                      min={1}
-                      max={maxSlotsInFreeTime}
-                      onChange={(e) => {
-                        const value = parseInt(e.target.value, 10) || 1;
-                        const clampedValue = Math.max(1, Math.min(maxSlotsInFreeTime, value));
-                        formik.setFieldValue('numberOfSlots', clampedValue);
-                      }}
-                      onBlur={formik.handleBlur}
-                      value={formik.values.numberOfSlots}
-                      className={formik.touched.numberOfSlots && formik.errors.numberOfSlots ? 'error' : ''}
-                      disabled={isSubmitting}
-                    />
-                    <button
-                      type="button"
-                      className="number-input-btn"
-                      onClick={() => {
-                        const newValue = Math.min(maxSlotsInFreeTime, formik.values.numberOfSlots + 1);
-                        formik.setFieldValue('numberOfSlots', newValue);
-                      }}
-                      disabled={formik.values.numberOfSlots >= maxSlotsInFreeTime || isSubmitting}
-                    >
-                      <Plus size={16} />
-                    </button>
-                  </div>
-                </div>
-                {formik.touched.numberOfSlots && formik.errors.numberOfSlots && (
-                  <div className="field-error">
-                    <AlertCircle className="error-icon" size={14} />
-                    {formik.errors.numberOfSlots}
-                  </div>
-                )}
-                <div className="field-hint">
-                  {maxDurationBeforeNext !== undefined && formik.values.startTime
-                    ? `Maximum ${maxSlotsInFreeTime} slot${maxSlotsInFreeTime !== 1 ? 's' : ''} fit in available time (${maxDurationBeforeNext} min)`
-                    : `Maximum ${MAX_SLOTS} slots per session`}
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="slotDuration">
-                  <Clock className="label-icon" />
-                  Slot Duration *
-                </label>
-                <div className="duration-boxes-container">
-                  {SLOT_DURATION_OPTIONS.map((option) => {
-                    const isSelected = formik.values.slotDuration === option.value;
-                    // Check if this duration option exceeds max allowed for selected time
-                    const exceedsMax = maxDurationBeforeNext !== undefined &&
-                      formik.values.startTime &&
-                      option.value > maxDurationBeforeNext;
-                    const isDisabled = isSubmitting || exceedsMax;
-
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => {
-                          if (!isDisabled) {
-                            formik.setFieldValue('slotDuration', option.value);
-                            formik.setFieldTouched('slotDuration', true);
-                          }
-                        }}
-                        className={`duration-box ${isSelected ? 'selected' : ''} ${formik.touched.slotDuration && formik.errors.slotDuration ? 'error' : ''} ${exceedsMax ? 'duration-exceeds-max' : ''}`}
-                        disabled={isDisabled}
-                        data-max-duration={exceedsMax ? `Max: ${maxDurationBeforeNext}m` : ''}
-                        title={exceedsMax ? `Maximum duration: ${maxDurationBeforeNext} min (next appointment too close)` : option.label}
-                      >
-                        <span className="duration-box-label">{option.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {formik.touched.slotDuration && formik.errors.slotDuration && (
-                  <div className="field-error">
-                    <AlertCircle className="error-icon" size={14} />
-                    {formik.errors.slotDuration}
-                  </div>
-                )}
-                {maxDurationBeforeNext !== undefined && formik.values.startTime && (
-                  <div className="field-hint">
-                    <Info size={14} />
-                    Maximum duration: {maxDurationBeforeNext} min (next appointment at {(() => {
-                      // Find next appointment time for display
-                      const appointmentsForDate = appointments.filter(
-                        (apt) => apt.date === formik.values.date && apt.status !== 'Cancelled'
-                      );
-                      if (appointmentsForDate.length === 0) return '';
-
-                      const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
-                      const slotDateTime = `${formik.values.date}T${formik.values.startTime}:00`;
-                      const slotStart = parseDateTimeString(slotDateTime);
-                      if (!slotStart) return '';
-
-                      let nextStart: Date | null = null;
-                      for (const range of blockedRanges) {
-                        if (range.start.getTime() > slotStart.getTime()) {
-                          if (!nextStart || range.start.getTime() < nextStart.getTime()) {
-                            nextStart = range.start;
-                          }
-                        }
-                      }
-
-                      if (nextStart) {
-                        const hours = nextStart.getHours();
-                        const minutes = nextStart.getMinutes();
-                        const ampm = hours >= 12 ? 'PM' : 'AM';
-                        const displayHour = hours % 12 || 12;
-                        return `${displayHour}:${String(minutes).padStart(2, '0')} ${ampm}`;
-                      }
-                      return '';
-                    })()})
-                  </div>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="breakDuration">
-                  <Clock className="label-icon" />
-                  Break Between Slots *
-                </label>
-                <div className="duration-boxes-container">
-                  {BREAK_DURATION_OPTIONS.map((option) => {
-                    const isSelected = formik.values.breakDuration === option.value;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => {
-                          formik.setFieldValue('breakDuration', option.value);
-                          formik.setFieldTouched('breakDuration', true);
-                        }}
-                        className={`duration-box ${isSelected ? 'selected' : ''} ${formik.touched.breakDuration && formik.errors.breakDuration ? 'error' : ''}`}
-                        disabled={isSubmitting}
-                      >
-                        <span className="duration-box-label">{option.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {formik.touched.breakDuration && formik.errors.breakDuration && (
-                  <div className="field-error">
-                    <AlertCircle className="error-icon" size={14} />
-                    {formik.errors.breakDuration}
-                  </div>
-                )}
-                <div className="field-hint">
-                  Time between consecutive slots (for preparation/cleanup)
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          {/* Preview Section */}
-          {previewSlots.length > 0 && (
-            <div className="slots-preview">
-              <div className="preview-header">
-                <div className="preview-title-wrapper">
-                  <h3 className="preview-title">
-                    <Calendar size={18} />
-                    Preview ({previewSlots.length} slot{previewSlots.length !== 1 ? 's' : ''})
-                  </h3>
-                  {formik.values.date && (
-                    <span className="preview-date">
+              <h2 className="success-dialog-title">Slots Created Successfully</h2>
+              <p className="success-dialog-message">
+                {successDetails.count === 1
+                  ? `Your appointment slot has been successfully created and is now available for booking.`
+                  : `All ${successDetails.count} appointment slots have been successfully created and are now available for booking.`}
+              </p>
+              <div className="success-dialog-details">
+                <div className="success-detail-item">
+                  <Calendar size={18} className="success-detail-icon" />
+                  <div className="success-detail-content">
+                    <span className="success-detail-label">Date</span>
+                    <span className="success-detail-value">
                       {(() => {
                         try {
-                          const [year, month, day] = formik.values.date.split('-').map(Number);
+                          const [year, month, day] = successDetails.date.split('-').map(Number);
                           const dateObj = new Date(year, month - 1, day);
-                          if (isNaN(dateObj.getTime())) {
-                            return formik.values.date;
-                          }
                           return format(dateObj, 'EEEE, MMMM d, yyyy');
-                        } catch (error) {
-                          console.error('Error formatting preview date:', error);
-                          return formik.values.date;
+                        } catch {
+                          return successDetails.date;
                         }
                       })()}
                     </span>
-                  )}
-                </div>
-              </div>
-
-              {conflictCheckResult.hasConflicts && (
-                <div className="preview-warning preview-warning-error">
-                  <AlertTriangle size={16} />
-                  <div className="conflict-warning-content">
-                    <span>
-                      <strong>{conflictCheckResult.conflictingSlots.length}</strong> slot{conflictCheckResult.conflictingSlots.length !== 1 ? 's' : ''} conflict{conflictCheckResult.conflictingSlots.length !== 1 ? '' : 's'} with existing appointments. Please adjust your schedule.
-                    </span>
-                    <div className="conflicting-appointments-list">
-                      {conflictCheckResult.conflictingSlots.map((conflictSlot) => (
-                        <div key={conflictSlot.slot.index} className="conflict-item">
-                          <span className="conflict-slot-info">
-                            Slot #{conflictSlot.slot.index} ({conflictSlot.slot.displayTime}) conflicts with:
-                          </span>
-                          <ul className="conflict-appointments">
-                            {conflictSlot.conflictingAppointments.map((apt, idx) => (
-                              <li key={`${apt.id}-${idx}`}>
-                                {apt.patientName} - {apt.date} at {apt.time}
-                                {apt.duration && ` (${apt.duration} min)`}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </div>
-              )}
-
-              {wouldOverflowToNextDay && constrainToSameDay && (
-                <div className="preview-warning">
-                  <AlertTriangle size={16} />
-                  <span>
-                    Some slots would overflow to the next day and have been excluded.
-                    Consider reducing the number of slots or adjusting the start time.
-                  </span>
+                <div className="success-detail-item">
+                  <Clock size={18} className="success-detail-icon" />
+                  <div className="success-detail-content">
+                    <span className="success-detail-label">Start Time</span>
+                    <span className="success-detail-value">
+                      {(() => {
+                        const [hours, minutes] = successDetails.startTime.split(':').map(Number);
+                        const ampm = hours >= 12 ? 'PM' : 'AM';
+                        const displayHour = hours % 12 || 12;
+                        return `${displayHour}:${String(minutes).padStart(2, '0')} ${ampm}`;
+                      })()}
+                    </span>
+                  </div>
                 </div>
-              )}
-
-              {previewSlots.length < formik.values.numberOfSlots && (
-                <div className="preview-info">
-                  <Info size={16} />
-                  <span>
-                    Only {previewSlots.length} of {formik.values.numberOfSlots} requested slots fit within the day.
-                  </span>
+                <div className="success-detail-item">
+                  <CheckCircle2 size={18} className="success-detail-icon" />
+                  <div className="success-detail-content">
+                    <span className="success-detail-label">Slots Created</span>
+                    <span className="success-detail-value">{successDetails.count} slot{successDetails.count !== 1 ? 's' : ''}</span>
+                  </div>
                 </div>
-              )}
-
-              <div className="slots-preview-grid">
-                {previewSlots.map((slot, idx) => {
-                  const slotDate = new Date(slot.datetime);
-                  const isNextDay = formik.values.date &&
-                    slotDate.toDateString() !== new Date(formik.values.date).toDateString();
-                  const hasConflict = conflictingSlotIndices.has(slot.index);
-
-                  return (
-                    <div
-                      key={slot.index}
-                      className={`slot-preview-item ${isNextDay ? 'next-day' : ''} ${hasConflict ? 'slot-conflict' : ''}`}
-                      title={hasConflict ? 'This slot conflicts with an existing appointment' : ''}
-                    >
-                      <div className="slot-preview-header">
-                        <span className="slot-index">#{slot.index}</span>
-                        {hasConflict && (
-                          <AlertTriangle className="conflict-icon" size={14} />
-                        )}
-                        {isNextDay && (
-                          <span className="next-day-badge">Next Day</span>
-                        )}
-                      </div>
-                      <span className="slot-time">{slot.displayTime}</span>
-                      {idx < previewSlots.length - 1 && (
-                        <span className="slot-arrow">→</span>
-                      )}
-                    </div>
-                  );
-                })}
               </div>
+              <button
+                className="btn btn-primary success-dialog-button"
+                onClick={() => {
+                  setShowSuccessDialog(false);
+                  setSuccessDetails(null);
+                  onClose();
+                  formik.resetForm();
+                  setSuccessCount(0);
+                  setFailedSlots([]);
+                }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-              <div className="preview-summary">
-                <div className="summary-row">
-                  <span className="summary-label">Start:</span>
-                  <span className="summary-value">{previewSlots[0]?.displayTime}</span>
-                </div>
-                <div className="summary-row">
-                  <span className="summary-label">End:</span>
-                  <span className="summary-value">
-                    {(() => {
-                      if (previewSlots.length === 0) return 'N/A';
-                      const lastSlot = previewSlots[previewSlots.length - 1];
-                      const slotDate = new Date(lastSlot.datetime);
-                      const endTime = new Date(slotDate.getTime() + Number(formik.values.slotDuration) * 60 * 1000);
-                      return formatTimeForDisplay(endTime);
-                    })()}
-                  </span>
-                </div>
-                <div className="summary-row">
-                  <span className="summary-label">Duration:</span>
-                  <span className="summary-value">{formik.values.slotDuration} min</span>
-                </div>
-                {formik.values.breakDuration > 0 && (
-                  <div className="summary-row">
-                    <span className="summary-label">Break:</span>
-                    <span className="summary-value">{formik.values.breakDuration} min</span>
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content modal-content-large" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <div>
+              <h2>Schedule Appointment Slots</h2>
+              <p className="modal-subtitle">Create multiple sequential time slots for patient appointments</p>
+            </div>
+            <button className="modal-close" onClick={onClose}>
+              <X />
+            </button>
+          </div>
+
+          {error && (
+            <div className={`error-message ${successCount > 0 ? 'error-partial' : ''}`}>
+              <div className="error-icon-wrapper">
+                <AlertCircle size={20} />
+              </div>
+              <div className="error-content">
+                {error}
+                {failedSlots.length > 0 && (
+                  <div className="failed-slots-list">
+                    <strong>Failed slots:</strong>
+                    <ul>
+                      {failedSlots.map((slot) => (
+                        <li key={slot.index}>
+                          Slot {slot.index}: {slot.displayTime}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {formik.values.date && formik.values.startTime && formik.values.numberOfSlots > 0 && previewSlots.length === 0 && (
-            <div className="preview-empty">
-              <AlertTriangle size={20} />
-              <p>No valid slots could be calculated. Please check your inputs.</p>
-            </div>
-          )}
 
-          <div className="modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isSubmitting || previewSlots.length === 0 || conflictCheckResult.hasConflicts}
-              title={conflictCheckResult.hasConflicts ? `Cannot create slots: ${conflictCheckResult.totalConflicts} conflict(s) detected` : ''}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="spinner" />
-                  {formik.values.numberOfSlots === 1 ? (
-                    'Creating Appointment...'
-                  ) : (
-                    `Creating Slots... (${successCount}/${previewSlots.length})`
+          <form onSubmit={formik.handleSubmit} className="modal-form">
+            <div className="form-section">
+              <h3 className="form-section-title">
+                <Calendar size={18} />
+                Schedule Details
+              </h3>
+              <div className="form-section-content">
+                <div className="form-group">
+                  <label htmlFor="date">
+                    <Calendar className="label-icon" />
+                    Appointment Date *
+                  </label>
+                  <SlotDatePicker
+                    value={formik.values.date}
+                    onChange={(date) => {
+                      formik.setFieldValue('date', date, true); // Validate immediately
+                      formik.setFieldTouched('date', true, false); // Mark as touched without validation (already validated above)
+                      // Clear start time if date changes to past
+                      if (date && formik.values.startTime) {
+                        const [year, month, day] = date.split('-').map(Number);
+                        const selectedDate = new Date(year, month - 1, day);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        if (selectedDate.getTime() === today.getTime()) {
+                          // If today, validate time is not in past
+                          const [hours, minutes] = formik.values.startTime.split(':').map(Number);
+                          const timeDate = new Date();
+                          timeDate.setHours(hours, minutes, 0, 0);
+                          if (timeDate < new Date()) {
+                            formik.setFieldValue('startTime', '');
+                          }
+                        }
+                      }
+                    }}
+                    onBlur={() => formik.setFieldTouched('date', true)}
+                    error={formik.touched.date && formik.errors.date ? formik.errors.date : undefined}
+                    disabled={isSubmitting}
+                    placeholder="Select appointment date"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    <Clock className="label-icon" />
+                    Start Time *
+                  </label>
+                  <TimeSlotPicker
+                    selectedTime={formik.values.startTime}
+                    onTimeSelect={(time) => {
+                      formik.setFieldValue('startTime', time);
+                      // Auto-adjust duration if current duration exceeds max for selected time
+                      if (time && formik.values.date) {
+                        const appointmentsForDate = appointments.filter(
+                          (apt) => apt.date === formik.values.date && apt.status !== 'Cancelled'
+                        );
+                        if (appointmentsForDate.length > 0) {
+                          const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
+                          const maxDuration = getMaxDurationBeforeNextAppointment(time, formik.values.date, blockedRanges);
+                          if (maxDuration !== undefined && formik.values.slotDuration > maxDuration) {
+                            // Find the largest valid duration option that fits within maxDuration
+                            const validDurations = SLOT_DURATION_OPTIONS
+                              .map(opt => opt.value)
+                              .filter(dur => dur <= maxDuration)
+                              .sort((a, b) => b - a); // Sort descending
+
+                            const adjustedDuration = validDurations.length > 0
+                              ? validDurations[0] // Use the largest valid duration
+                              : 15; // Fallback to minimum if no valid option
+
+                            formik.setFieldValue('slotDuration', adjustedDuration);
+                          }
+                        }
+                      }
+                    }}
+                    date={formik.values.date}
+                    error={formik.touched.startTime && formik.errors.startTime ? formik.errors.startTime : undefined}
+                    existingAppointments={appointments}
+                    slotDuration={formik.values.slotDuration}
+                  />
+                </div>
+
+              </div>
+            </div>
+
+            <div className="form-section">
+              <h3 className="form-section-title">
+                <Clock size={18} />
+                Slot Configuration
+              </h3>
+              <div className="form-section-content">
+                <div className="form-group form-group-horizontal">
+                  <label htmlFor="numberOfSlots">
+                    <Plus className="label-icon" />
+                    Number of Slots *
+                  </label>
+                  <div className="input-wrapper">
+                    <div className="number-input-controls">
+                      <button
+                        type="button"
+                        className="number-input-btn"
+                        onClick={() => {
+                          const newValue = Math.max(1, formik.values.numberOfSlots - 1);
+                          formik.setFieldValue('numberOfSlots', newValue);
+                        }}
+                        disabled={formik.values.numberOfSlots <= 1 || isSubmitting}
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <input
+                        id="numberOfSlots"
+                        name="numberOfSlots"
+                        type="number"
+                        min={1}
+                        max={maxSlotsInFreeTime}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value, 10) || 1;
+                          const clampedValue = Math.max(1, Math.min(maxSlotsInFreeTime, value));
+                          formik.setFieldValue('numberOfSlots', clampedValue);
+                        }}
+                        onBlur={formik.handleBlur}
+                        value={formik.values.numberOfSlots}
+                        className={formik.touched.numberOfSlots && formik.errors.numberOfSlots ? 'error' : ''}
+                        disabled={isSubmitting}
+                      />
+                      <button
+                        type="button"
+                        className="number-input-btn"
+                        onClick={() => {
+                          const newValue = Math.min(maxSlotsInFreeTime, formik.values.numberOfSlots + 1);
+                          formik.setFieldValue('numberOfSlots', newValue);
+                        }}
+                        disabled={formik.values.numberOfSlots >= maxSlotsInFreeTime || isSubmitting}
+                      >
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  {formik.touched.numberOfSlots && formik.errors.numberOfSlots && (
+                    <div className="field-error">
+                      <AlertCircle className="error-icon" size={14} />
+                      {formik.errors.numberOfSlots}
+                    </div>
                   )}
-                </>
-              ) : conflictCheckResult.hasConflicts ? (
-                <>
-                  <AlertTriangle size={16} />
-                  Cannot Create ({conflictCheckResult.totalConflicts} conflict{conflictCheckResult.totalConflicts !== 1 ? 's' : ''})
-                </>
-              ) : formik.values.numberOfSlots === 1 ? (
-                'Create Single Appointment'
-              ) : (
-                `Create ${formik.values.numberOfSlots} Slot${formik.values.numberOfSlots !== 1 ? 's' : ''}`
-              )}
-            </button>
-          </div>
-        </form>
+                  <div className="field-hint">
+                    {formik.values.date && formik.values.startTime
+                      ? (() => {
+                        // Check if limit is due to 6 PM or next appointment
+                        const [startHours, startMinutes] = formik.values.startTime.split(':').map(Number);
+                        const [year, month, day] = formik.values.date.split('-').map(Number);
+                        const startDateTime = new Date(year, month - 1, day, startHours, startMinutes, 0);
+                        const endTimeLimit = new Date(year, month - 1, day, APP_CONFIG.SLOT_END_TIME.HOUR, APP_CONFIG.SLOT_END_TIME.MINUTE, 0);
+                        const timeUntil6PM = (endTimeLimit.getTime() - startDateTime.getTime()) / (1000 * 60);
+
+                        const appointmentsForDate = appointments.filter(
+                          (apt) => apt.date === formik.values.date && apt.status !== 'Cancelled'
+                        );
+
+                        // Calculate available time (considering both 6 PM and next appointment)
+                        let availableTime = Math.floor(timeUntil6PM);
+                        if (appointmentsForDate.length > 0) {
+                          const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
+                          const maxDurationBeforeAppointment = getMaxDurationBeforeNextAppointment(formik.values.startTime, formik.values.date, blockedRanges);
+                          if (maxDurationBeforeAppointment !== undefined) {
+                            availableTime = Math.min(maxDurationBeforeAppointment, Math.floor(timeUntil6PM));
+                          }
+                        }
+
+                        let limitText = '';
+                        if (appointmentsForDate.length === 0) {
+                          limitText = `until 6 PM`;
+                        } else {
+                          const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
+                          const maxDurationBeforeAppointment = getMaxDurationBeforeNextAppointment(formik.values.startTime, formik.values.date, blockedRanges);
+
+                          if (maxDurationBeforeAppointment === undefined || maxDurationBeforeAppointment >= Math.floor(timeUntil6PM)) {
+                            limitText = `until 6 PM`;
+                          } else {
+                            limitText = `before next appointment`;
+                          }
+                        }
+
+                        return `Maximum ${maxSlotsInFreeTime} slot${maxSlotsInFreeTime !== 1 ? 's' : ''} fit in available time (${availableTime} min ${limitText})`;
+                      })()
+                      : `Maximum ${MAX_SLOTS} slots per session`}
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="slotDuration">
+                    <Clock className="label-icon" />
+                    Slot Duration *
+                  </label>
+                  <div className="duration-boxes-container">
+                    {SLOT_DURATION_OPTIONS.map((option) => {
+                      const isSelected = formik.values.slotDuration === option.value;
+                      // Check if this duration option exceeds max allowed for selected time (considering both next appointment and 6 PM)
+                      // Note: Break duration doesn't affect single slot duration validation, only affects max slots calculation
+                      const exceedsMax = maxDurationBeforeNext !== undefined &&
+                        formik.values.startTime &&
+                        option.value > maxDurationBeforeNext;
+                      const isDisabled = isSubmitting || exceedsMax;
+
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            if (!isDisabled) {
+                              formik.setFieldValue('slotDuration', option.value);
+                              formik.setFieldTouched('slotDuration', true);
+                            }
+                          }}
+                          className={`duration-box ${isSelected ? 'selected' : ''} ${formik.touched.slotDuration && formik.errors.slotDuration ? 'error' : ''} ${exceedsMax ? 'duration-exceeds-max' : ''}`}
+                          disabled={isDisabled}
+                          data-max-duration={exceedsMax ? `Max: ${maxDurationBeforeNext}m` : ''}
+                          title={exceedsMax ? (() => {
+                            // Check if limit is due to 6 PM or next appointment
+                            const [startHours, startMinutes] = formik.values.startTime.split(':').map(Number);
+                            const [year, month, day] = formik.values.date.split('-').map(Number);
+                            const startDateTime = new Date(year, month - 1, day, startHours, startMinutes, 0);
+                            const endTimeLimit = new Date(year, month - 1, day, APP_CONFIG.SLOT_END_TIME.HOUR, APP_CONFIG.SLOT_END_TIME.MINUTE, 0);
+                            const timeUntil6PM = (endTimeLimit.getTime() - startDateTime.getTime()) / (1000 * 60);
+
+                            const appointmentsForDate = appointments.filter(
+                              (apt) => apt.date === formik.values.date && apt.status !== 'Cancelled'
+                            );
+
+                            if (appointmentsForDate.length === 0) {
+                              return `Maximum duration: ${maxDurationBeforeNext} min (until 6 PM)`;
+                            }
+
+                            const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
+                            const maxDurationBeforeAppointment = getMaxDurationBeforeNextAppointment(formik.values.startTime, formik.values.date, blockedRanges);
+
+                            if (maxDurationBeforeAppointment === undefined || maxDurationBeforeAppointment >= Math.floor(timeUntil6PM)) {
+                              return `Maximum duration: ${maxDurationBeforeNext} min (until 6 PM)`;
+                            }
+
+                            return `Maximum duration: ${maxDurationBeforeNext} min (next appointment too close)`;
+                          })() : option.label}
+                        >
+                          <span className="duration-box-label">{option.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {formik.touched.slotDuration && formik.errors.slotDuration && (
+                    <div className="field-error">
+                      <AlertCircle className="error-icon" size={14} />
+                      {formik.errors.slotDuration}
+                    </div>
+                  )}
+                  {maxDurationBeforeNext !== undefined && formik.values.startTime && (
+                    <div className="field-hint">
+                      <Info size={14} />
+                      Maximum duration: {maxDurationBeforeNext} min {(() => {
+                        // Check if limit is due to 6 PM or next appointment
+                        const [startHours, startMinutes] = formik.values.startTime.split(':').map(Number);
+                        const [year, month, day] = formik.values.date.split('-').map(Number);
+                        const startDateTime = new Date(year, month - 1, day, startHours, startMinutes, 0);
+                        const endTimeLimit = new Date(year, month - 1, day, APP_CONFIG.SLOT_END_TIME.HOUR, APP_CONFIG.SLOT_END_TIME.MINUTE, 0);
+                        const timeUntil6PM = (endTimeLimit.getTime() - startDateTime.getTime()) / (1000 * 60);
+
+                        const appointmentsForDate = appointments.filter(
+                          (apt) => apt.date === formik.values.date && apt.status !== 'Cancelled'
+                        );
+
+                        if (appointmentsForDate.length === 0) {
+                          return '(until 6 PM)';
+                        }
+
+                        const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
+                        const maxDurationBeforeAppointment = getMaxDurationBeforeNextAppointment(formik.values.startTime, formik.values.date, blockedRanges);
+
+                        if (maxDurationBeforeAppointment === undefined || maxDurationBeforeAppointment >= Math.floor(timeUntil6PM)) {
+                          return '(until 6 PM)';
+                        }
+
+                        // Find next appointment time for display
+                        const slotDateTime = `${formik.values.date}T${formik.values.startTime}:00`;
+                        const slotStart = parseDateTimeString(slotDateTime);
+                        if (!slotStart) return '';
+
+                        let nextStart: Date | null = null;
+                        for (const range of blockedRanges) {
+                          if (range.start.getTime() > slotStart.getTime()) {
+                            if (!nextStart || range.start.getTime() < nextStart.getTime()) {
+                              nextStart = range.start;
+                            }
+                          }
+                        }
+
+                        if (nextStart) {
+                          const hours = nextStart.getHours();
+                          const minutes = nextStart.getMinutes();
+                          const ampm = hours >= 12 ? 'PM' : 'AM';
+                          const displayHour = hours % 12 || 12;
+                          return `(next appointment at ${displayHour}:${String(minutes).padStart(2, '0')} ${ampm})`;
+                        }
+                        return '';
+                      })()}
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="breakDuration">
+                    <Clock className="label-icon" />
+                    Break Between Slots *
+                  </label>
+                  <div className="duration-boxes-container">
+                    {BREAK_DURATION_OPTIONS.map((option) => {
+                      const isSelected = formik.values.breakDuration === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => {
+                            formik.setFieldValue('breakDuration', option.value);
+                            formik.setFieldTouched('breakDuration', true);
+                          }}
+                          className={`duration-box ${isSelected ? 'selected' : ''} ${formik.touched.breakDuration && formik.errors.breakDuration ? 'error' : ''}`}
+                          disabled={isSubmitting}
+                        >
+                          <span className="duration-box-label">{option.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {formik.touched.breakDuration && formik.errors.breakDuration && (
+                    <div className="field-error">
+                      <AlertCircle className="error-icon" size={14} />
+                      {formik.errors.breakDuration}
+                    </div>
+                  )}
+                  <div className="field-hint">
+                    Time between consecutive slots (for preparation/cleanup)
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Preview Section */}
+            {previewSlots.length > 0 && (
+              <div className="slots-preview">
+                <div className="preview-header">
+                  <div className="preview-title-wrapper">
+                    <h3 className="preview-title">
+                      <Calendar size={18} />
+                      Preview ({previewSlots.length} slot{previewSlots.length !== 1 ? 's' : ''})
+                    </h3>
+                    {formik.values.date && (
+                      <span className="preview-date">
+                        {(() => {
+                          try {
+                            const [year, month, day] = formik.values.date.split('-').map(Number);
+                            const dateObj = new Date(year, month - 1, day);
+                            if (isNaN(dateObj.getTime())) {
+                              return formik.values.date;
+                            }
+                            return format(dateObj, 'EEEE, MMMM d, yyyy');
+                          } catch (error) {
+                            console.error('Error formatting preview date:', error);
+                            return formik.values.date;
+                          }
+                        })()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {conflictCheckResult.hasConflicts && (
+                  <div className="preview-warning preview-warning-error">
+                    <AlertTriangle size={16} />
+                    <div className="conflict-warning-content">
+                      <span>
+                        <strong>{conflictCheckResult.conflictingSlots.length}</strong> slot{conflictCheckResult.conflictingSlots.length !== 1 ? 's' : ''} conflict{conflictCheckResult.conflictingSlots.length !== 1 ? '' : 's'} with existing appointments. Please adjust your schedule.
+                      </span>
+                      <div className="conflicting-appointments-list">
+                        {conflictCheckResult.conflictingSlots.map((conflictSlot) => (
+                          <div key={conflictSlot.slot.index} className="conflict-item">
+                            <span className="conflict-slot-info">
+                              Slot #{conflictSlot.slot.index} ({conflictSlot.slot.displayTime}) conflicts with:
+                            </span>
+                            <ul className="conflict-appointments">
+                              {conflictSlot.conflictingAppointments.map((apt, idx) => (
+                                <li key={`${apt.id}-${idx}`}>
+                                  {apt.patientName} - {apt.date} at {apt.time}
+                                  {apt.duration && ` (${apt.duration} min)`}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {wouldOverflowToNextDay && constrainToSameDay && (
+                  <div className="preview-warning">
+                    <AlertTriangle size={16} />
+                    <span>
+                      Some slots would overflow to the next day and have been excluded.
+                      Consider reducing the number of slots or adjusting the start time.
+                    </span>
+                  </div>
+                )}
+
+                {previewSlots.length < formik.values.numberOfSlots && (
+                  <div className="preview-info">
+                    <Info size={16} />
+                    <span>
+                      Only {previewSlots.length} of {formik.values.numberOfSlots} requested slots fit within the day.
+                    </span>
+                  </div>
+                )}
+
+                <div className="slots-preview-grid">
+                  {previewSlots.map((slot, idx) => {
+                    const slotDate = new Date(slot.datetime);
+                    const isNextDay = formik.values.date &&
+                      slotDate.toDateString() !== new Date(formik.values.date).toDateString();
+                    const hasConflict = conflictingSlotIndices.has(slot.index);
+
+                    return (
+                      <div
+                        key={slot.index}
+                        className={`slot-preview-item ${isNextDay ? 'next-day' : ''} ${hasConflict ? 'slot-conflict' : ''}`}
+                        title={hasConflict ? 'This slot conflicts with an existing appointment' : ''}
+                      >
+                        <div className="slot-preview-header">
+                          <span className="slot-index">#{slot.index}</span>
+                          {hasConflict && (
+                            <AlertTriangle className="conflict-icon" size={14} />
+                          )}
+                          {isNextDay && (
+                            <span className="next-day-badge">Next Day</span>
+                          )}
+                        </div>
+                        <span className="slot-time">{slot.displayTime}</span>
+                        {idx < previewSlots.length - 1 && (
+                          <span className="slot-arrow">→</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="preview-summary">
+                  <div className="summary-row">
+                    <span className="summary-label">Start:</span>
+                    <span className="summary-value">{previewSlots[0]?.displayTime}</span>
+                  </div>
+                  <div className="summary-row">
+                    <span className="summary-label">End:</span>
+                    <span className="summary-value">
+                      {(() => {
+                        if (previewSlots.length === 0) return 'N/A';
+                        const lastSlot = previewSlots[previewSlots.length - 1];
+                        const slotDate = new Date(lastSlot.datetime);
+                        const endTime = new Date(slotDate.getTime() + Number(formik.values.slotDuration) * 60 * 1000);
+                        return formatTimeForDisplay(endTime);
+                      })()}
+                    </span>
+                  </div>
+                  <div className="summary-row">
+                    <span className="summary-label">Duration:</span>
+                    <span className="summary-value">{formik.values.slotDuration} min</span>
+                  </div>
+                  {formik.values.breakDuration > 0 && (
+                    <div className="summary-row">
+                      <span className="summary-label">Break:</span>
+                      <span className="summary-value">{formik.values.breakDuration} min</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {formik.values.date && formik.values.startTime && formik.values.numberOfSlots > 0 && previewSlots.length === 0 && (
+              <div className="preview-empty">
+                <AlertTriangle size={20} />
+                <p>No valid slots could be calculated. Please check your inputs.</p>
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isSubmitting || previewSlots.length === 0 || conflictCheckResult.hasConflicts}
+                title={conflictCheckResult.hasConflicts ? `Cannot create slots: ${conflictCheckResult.totalConflicts} conflict(s) detected` : ''}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="spinner" />
+                    {formik.values.numberOfSlots === 1 ? (
+                      'Creating Appointment...'
+                    ) : (
+                      `Creating Slots... (${successCount}/${previewSlots.length})`
+                    )}
+                  </>
+                ) : conflictCheckResult.hasConflicts ? (
+                  <>
+                    <AlertTriangle size={16} />
+                    Cannot Create ({conflictCheckResult.totalConflicts} conflict{conflictCheckResult.totalConflicts !== 1 ? 's' : ''})
+                  </>
+                ) : formik.values.numberOfSlots === 1 ? (
+                  'Create Single Appointment'
+                ) : (
+                  `Create ${formik.values.numberOfSlots} Slot${formik.values.numberOfSlots !== 1 ? 's' : ''}`
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -3,6 +3,7 @@ import { Clock, Lock, Timer } from 'lucide-react';
 import { Appointment } from '../../types';
 import { getBlockedTimeRanges, isTimeSlotBlocked, getMaxDurationBeforeNextAppointment } from '../../utils/appointmentConflict';
 import { parseDateTimeString } from '../../utils/dateParsing';
+import { APP_CONFIG } from '../../constants/appConfig';
 
 interface TimeSlotPickerProps {
   selectedTime: string;
@@ -112,7 +113,30 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
 
       // Slot is BEFORE all blocked ranges or AFTER them - it's SELECTABLE
       // Calculate max duration before next appointment (if any)
-      const maxDuration = getMaxDurationBeforeNextAppointment(time, date, blockedRanges);
+      let maxDuration = getMaxDurationBeforeNextAppointment(time, date, blockedRanges);
+
+      // Also consider 6 PM limit (reuse existing slotStart from above)
+      if (slotStart) {
+        const [year, month, day] = date.split('-').map(Number);
+        const endTimeLimit = new Date(year, month - 1, day, APP_CONFIG.SLOT_END_TIME.HOUR, APP_CONFIG.SLOT_END_TIME.MINUTE, 0);
+        const timeUntil6PM = (endTimeLimit.getTime() - slotStart.getTime()) / (1000 * 60);
+
+        if (timeUntil6PM <= 0) {
+          // Slot is at or after 6 PM, should be blocked
+          availabilityMap.set(time, {
+            isBlocked: true,
+            reason: 'Time slot is at or after 6 PM',
+          });
+          continue;
+        }
+
+        // Use the minimum of time until next appointment OR time until 6 PM
+        if (maxDuration === undefined) {
+          maxDuration = Math.floor(timeUntil6PM);
+        } else {
+          maxDuration = Math.min(maxDuration, Math.floor(timeUntil6PM));
+        }
+      }
 
       // Only block if maxDuration is too small (< 15 min) - this handles edge cases
       // where there's literally no time (e.g., slot at 9:29 with appointment at 9:30)
@@ -155,6 +179,12 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
 
   const handleCustomTimeSubmit = () => {
     if (customTime && /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(customTime)) {
+      // Validate that time is before 6 PM (18:00)
+      const [hours, minutes] = customTime.split(':').map(Number);
+      if (hours > 17 || (hours === 17 && minutes > 0)) {
+        // Time is at or after 6 PM, reject it
+        return;
+      }
       onTimeSelect(customTime);
       setShowCustomInput(false);
       setCustomTime('');
@@ -223,11 +253,41 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
           } else if (hasConflict) {
             tooltipText = availability?.reason || 'This time slot conflicts with an existing appointment';
           } else if (maxDuration !== undefined) {
-            // Show max duration hint for slots before appointments
+            // Show max duration hint for slots before appointments or 6 PM
+            // Check if limit is due to 6 PM or next appointment
+            let limitReason = '';
+            if (date) {
+              const slotDateTime = `${date}T${time}:00`;
+              const slotStartForCheck = parseDateTimeString(slotDateTime);
+              if (slotStartForCheck) {
+                const [year, month, day] = date.split('-').map(Number);
+                const endTimeLimit = new Date(year, month - 1, day, APP_CONFIG.SLOT_END_TIME.HOUR, APP_CONFIG.SLOT_END_TIME.MINUTE, 0);
+                const timeUntil6PM = (endTimeLimit.getTime() - slotStartForCheck.getTime()) / (1000 * 60);
+
+                // Check if there are appointments
+                const appointmentsForDate = existingAppointments.filter(
+                  (apt) => apt.date === date && apt.status !== 'Cancelled'
+                );
+
+                if (appointmentsForDate.length === 0) {
+                  limitReason = ' (until 6 PM)';
+                } else {
+                  const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
+                  const maxDurationBeforeAppointment = getMaxDurationBeforeNextAppointment(time, date, blockedRanges);
+
+                  if (maxDurationBeforeAppointment === undefined || maxDurationBeforeAppointment >= Math.floor(timeUntil6PM)) {
+                    limitReason = ' (until 6 PM)';
+                  } else {
+                    limitReason = ' (limited by next appointment)';
+                  }
+                }
+              }
+            }
+
             if (maxDuration < slotDuration) {
-              tooltipText = `Maximum duration: ${maxDuration} min (selected duration ${slotDuration} min exceeds limit)`;
+              tooltipText = `Maximum duration: ${maxDuration} min${limitReason} (selected duration ${slotDuration} min exceeds limit)`;
             } else {
-              tooltipText = `Maximum duration: ${maxDuration} min (limited by next appointment)`;
+              tooltipText = `Maximum duration: ${maxDuration} min${limitReason}`;
             }
           }
 
@@ -282,12 +342,28 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
               onChange={(e) => setCustomTime(e.target.value)}
               className="custom-time-field"
               placeholder="HH:MM"
+              max="17:59"
             />
+            {customTime && (() => {
+              const [hours, minutes] = customTime.split(':').map(Number);
+              if (hours > 17 || (hours === 17 && minutes > 0)) {
+                return (
+                  <div className="custom-time-error" style={{ color: 'var(--danger)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                    Time must be before 6 PM
+                  </div>
+                );
+              }
+              return null;
+            })()}
             <button
               type="button"
               className="custom-time-submit"
               onClick={handleCustomTimeSubmit}
-              disabled={!customTime}
+              disabled={!customTime || (() => {
+                if (!customTime) return true;
+                const [hours, minutes] = customTime.split(':').map(Number);
+                return hours > 17 || (hours === 17 && minutes > 0);
+              })()}
             >
               Add
             </button>

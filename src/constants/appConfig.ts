@@ -27,5 +27,11 @@ export const APP_CONFIG = {
     CHECK_INTERVAL_MS: 60000, // 1 minute
     GRACE_PERIOD_MINUTES: 5, // 5 minutes after end time
   },
+
+  // Slot opening end time (6 PM)
+  SLOT_END_TIME: {
+    HOUR: 18, // 6 PM
+    MINUTE: 0,
+  },
 } as const;
 

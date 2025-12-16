@@ -16,43 +16,43 @@ import './App.css';
 function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <AppointmentProvider>
-          <Router>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/signup" element={<SignupForm />} />
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/forgot-password" element={<ForgotPasswordForm />} />
-            <Route path="/reset-password" element={<ResetPasswordForm />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dashboard/appointments"
-              element={
-                <ProtectedRoute>
-                  <AppointmentsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/dashboard/profile"
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-          </Router>
-        </AppointmentProvider>
-      </AuthProvider>
+      <Router>
+        <AuthProvider>
+          <AppointmentProvider>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/signup" element={<SignupForm />} />
+              <Route path="/login" element={<LoginForm />} />
+              <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+              <Route path="/reset-password" element={<ResetPasswordForm />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/appointments"
+                element={
+                  <ProtectedRoute>
+                    <AppointmentsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/profile"
+                element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </AppointmentProvider>
+        </AuthProvider>
+      </Router>
     </ErrorBoundary>
   );
 }

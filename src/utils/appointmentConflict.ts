@@ -166,6 +166,13 @@ export function checkSlotConflicts(
         continue;
       }
 
+      // Skip "Available Slot" appointments - these are open slots that can be replaced/overlapped
+      // when creating new slots. Only actual booked appointments should cause conflicts.
+      if (appointment.patientName === 'Available Slot' ||
+        (appointment.patientId && (appointment.patientId === '0' || appointment.patientId === ''))) {
+        continue;
+      }
+
       // Get appointment time range
       const appointmentRange = getAppointmentTimeRange(appointment);
       if (!appointmentRange) {
