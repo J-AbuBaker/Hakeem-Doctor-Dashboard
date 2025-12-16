@@ -7,6 +7,7 @@ import TimeSlotPicker from './TimeSlotPicker';
 import SlotDatePicker from './SlotDatePicker';
 import { format } from 'date-fns';
 import { getErrorMessage, getErrorStatus } from '../../utils/errorUtils';
+import { storeDurations } from '../../utils/durationCache';
 
 interface OpenSlotModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface CalculatedSlot {
   datetime: string;
   displayTime: string;
   index: number;
+  duration: number; // Duration in minutes for this slot
 }
 
 // Slot duration options in minutes (controlled selection)
@@ -124,6 +126,14 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
         if (calculatedSlots.length === 0) {
           throw new Error('No slots could be calculated. Please check your inputs.');
         }
+
+        // Store durations for all calculated slots
+        storeDurations(
+          calculatedSlots.map(slot => ({
+            datetime: slot.datetime,
+            duration: slot.duration,
+          }))
+        );
 
         const results = await createSlotsBatch(calculatedSlots);
 
@@ -303,6 +313,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
         datetime: isoDateTime,
         displayTime,
         index: i + 1,
+        duration: slotDurationMinutes, // Store duration for each slot
       });
 
       // Calculate next slot start time

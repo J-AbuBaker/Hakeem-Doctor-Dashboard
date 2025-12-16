@@ -140,12 +140,15 @@ const SlotDatePicker: React.FC<SlotDatePickerProps> = ({
   return (
     <div className="date-picker-wrapper" ref={pickerRef}>
       <div className="input-wrapper">
-        <Calendar className="date-picker-icon" size={16} />
-        <div
+        <Calendar className="input-icon" size={18} />
+        <input
+          type="text"
+          readOnly
+          value={displayValue}
+          placeholder={placeholder}
+          disabled={disabled}
           className={`date-picker-input ${error ? 'error' : ''} ${disabled ? 'disabled' : ''} ${isOpen ? 'active' : ''}`}
           onClick={() => !disabled && setIsOpen(!isOpen)}
-          role="button"
-          tabIndex={disabled ? -1 : 0}
           onKeyDown={(e) => {
             if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
               e.preventDefault();
@@ -155,29 +158,20 @@ const SlotDatePicker: React.FC<SlotDatePickerProps> = ({
           aria-label="Select appointment date"
           aria-expanded={isOpen}
           aria-haspopup="dialog"
-        >
-          <input
-            type="text"
-            readOnly
-            value={displayValue}
-            placeholder={placeholder}
-            disabled={disabled}
-            className="date-picker-input-field"
-            aria-label="Selected date"
-          />
-          {value && !disabled && (
-            <button
-              type="button"
-              className="date-picker-clear"
-              onClick={handleClear}
-              title="Clear date"
-              aria-label="Clear selected date"
-            >
-              <X size={12} />
-            </button>
-          )}
-          <ChevronDown className={`date-picker-chevron ${isOpen ? 'open' : ''}`} size={16} />
-        </div>
+          tabIndex={disabled ? -1 : 0}
+        />
+        {value && !disabled && (
+          <button
+            type="button"
+            className="date-picker-clear"
+            onClick={handleClear}
+            title="Clear date"
+            aria-label="Clear selected date"
+          >
+            <X size={14} />
+          </button>
+        )}
+        <ChevronDown className={`date-picker-chevron ${isOpen ? 'open' : ''}`} size={18} />
       </div>
 
       {isOpen && !disabled && (
