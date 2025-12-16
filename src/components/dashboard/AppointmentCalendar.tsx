@@ -6,7 +6,7 @@ import { getAppointmentsForDate, parseAppointmentDate } from '../../utils/dateUt
 import { hasStatus } from '../../utils/statusUtils';
 import { formatAppointmentType } from '../../utils/stringUtils';
 import { sortAppointmentsByDateTime } from '../../utils/appointmentSorting';
-import { formatDuration, getDisplayDuration } from '../../utils/durationUtils';
+import { formatDuration } from '../../utils/durationUtils';
 import './BookingList.css';
 
 interface AppointmentCalendarProps {

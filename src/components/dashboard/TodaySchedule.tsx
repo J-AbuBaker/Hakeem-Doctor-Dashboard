@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useEffect } from 'react';
-import { format, isToday, startOfDay } from 'date-fns';
+import { format } from 'date-fns';
 import { Clock, Calendar } from 'lucide-react';
 import { useAppointments } from '../../context/AppointmentContext';
 import { getTodayAppointments, parseAppointmentDate } from '../../utils/dateUtils';

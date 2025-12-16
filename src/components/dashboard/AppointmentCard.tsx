@@ -10,7 +10,6 @@ import {
   Loader2,
   FileText,
   Stethoscope,
-  Tag,
 } from 'lucide-react';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { hasStatus } from '../../utils/statusUtils';

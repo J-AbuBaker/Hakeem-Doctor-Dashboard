@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { format, addDays, isToday, startOfDay } from 'date-fns';
+import { format, addDays, startOfDay } from 'date-fns';
 import { ChevronDown, ChevronRight, Calendar, Clock } from 'lucide-react';
 import { useAppointments } from '../../context/AppointmentContext';
-import { getAppointmentsForDate, parseAppointmentDate } from '../../utils/dateUtils';
+import { getAppointmentsForDate } from '../../utils/dateUtils';
 import { hasStatus } from '../../utils/statusUtils';
 import { sortAppointmentsByDateTime } from '../../utils/appointmentSorting';
 import AppointmentCard from './AppointmentCard';

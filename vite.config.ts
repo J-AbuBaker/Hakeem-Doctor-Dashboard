@@ -6,10 +6,10 @@ export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   // Set third parameter to '' to load all env regardless of the `VITE_` prefix.
   const env = loadEnv(mode, process.cwd(), '')
-  
+
   // Get API base URL from environment variable with fallback
   const apiBaseUrl = env.VITE_API_BASE_URL || 'http://localhost:8080'
-  
+
   // Validate API base URL
   if (!env.VITE_API_BASE_URL) {
     console.warn('⚠️  VITE_API_BASE_URL is not set. Using default: http://localhost:8080')
@@ -40,11 +40,11 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/api/, ''),
           secure: false,
           configure: (proxy) => {
-            proxy.on('error', (err: any) => {
+            proxy.on('error', (err: Error & { code?: string }) => {
               console.error('❌ Proxy error:', err.message || err);
               console.error('   Error code:', err.code);
               console.error('   Make sure the backend server is running at:', apiBaseUrl);
-              
+
               // Provide helpful error messages based on error code
               if (err.code === 'ECONNREFUSED') {
                 console.error('\n💡 Possible solutions:');

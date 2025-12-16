@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Clock, Lock, Timer } from 'lucide-react';
 import { Appointment } from '../../types';
-import { getBlockedTimeRanges, isTimeSlotBlocked, getMaxDurationBeforeNextAppointment } from '../../utils/appointmentConflict';
+import { getBlockedTimeRanges, getMaxDurationBeforeNextAppointment } from '../../utils/appointmentConflict';
 import { parseDateTimeString } from '../../utils/dateParsing';
 import { APP_CONFIG } from '../../constants/appConfig';
 

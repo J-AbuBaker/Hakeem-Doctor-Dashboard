@@ -187,12 +187,7 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
 
   // Version without automatic refresh - for batch operations
   const openSlotWithoutRefresh = useCallback(async (appointmentDate: string) => {
-    try {
-      await AppointmentService.openSlot(appointmentDate);
-    } catch (err: unknown) {
-      // Re-throw to allow caller to handle error
-      throw err;
-    }
+    await AppointmentService.openSlot(appointmentDate);
   }, []);
 
   // Complete appointment with optimistic update and proper API response tracking

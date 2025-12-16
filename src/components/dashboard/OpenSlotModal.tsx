@@ -83,7 +83,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
       .required('Slot duration is required')
       .min(15, 'Minimum duration is 15 minutes')
       .max(240, 'Maximum duration is 4 hours')
-      .test('max-duration-before-next', 'Duration exceeds available time before next appointment', function (value) {
+      .test('max-duration-before-next', 'Duration exceeds available time before next appointment', function () {
         // This will be validated dynamically in the component, but we keep basic validation here
         return true; // Dynamic validation handled in component via disabled state
       }),

@@ -15,7 +15,7 @@ const DashboardPage: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<DashboardTab>('today');
-  const { appointments, fetchAppointments, isLoading } = useAppointments();
+  const { fetchAppointments, isLoading } = useAppointments();
 
   React.useEffect(() => {
     fetchAppointments();

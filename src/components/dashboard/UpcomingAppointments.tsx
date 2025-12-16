@@ -7,7 +7,6 @@ import { hasStatus } from '../../utils/statusUtils';
 import { sortAppointmentsByDateTime } from '../../utils/appointmentSorting';
 import {
   getWeeksWithAppointments,
-  getAppointmentsForWeek,
   groupAppointmentsByDay,
   getCurrentWeekStart,
   isDateInWeek,

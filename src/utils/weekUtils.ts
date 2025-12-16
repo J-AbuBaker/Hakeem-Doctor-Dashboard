@@ -1,6 +1,6 @@
 import { startOfWeek, endOfWeek, format, addWeeks, isSameWeek, startOfDay } from 'date-fns';
 import { Appointment } from '../types';
-import { parseAppointmentDate, isAppointmentOnDate } from './dateUtils';
+import { parseAppointmentDate } from './dateUtils';
 
 export interface Week {
   start: Date;
