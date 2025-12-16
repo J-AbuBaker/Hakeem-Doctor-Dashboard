@@ -342,7 +342,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
     const minutes = date.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     const displayHour = hours % 12 || 12;
-    return `${displayHour}:${String(minutes).padStart(2, '0')} ${ampm}`;
+    return `${String(displayHour).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${ampm}`;
   };
 
   /**

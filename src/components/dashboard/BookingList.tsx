@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
 import { Appointment } from '../../types';
 import { format, isToday, isTomorrow, isYesterday, startOfDay } from 'date-fns';
-import { 
-  Calendar, 
-  Clock, 
-  User, 
+import {
+  Calendar,
+  Clock,
+  User,
   AlertCircle
 } from 'lucide-react';
 import { hasStatus } from '../../utils/statusUtils';
@@ -30,6 +30,9 @@ const BookingList: React.FC<BookingListProps> = ({ appointments }) => {
     if (hasStatus(status, 'Completed')) {
       return 'status-completed';
     }
+    if (hasStatus(status, 'Expired')) {
+      return 'status-expired';
+    }
     return 'status-scheduled';
   };
 
@@ -44,7 +47,7 @@ const BookingList: React.FC<BookingListProps> = ({ appointments }) => {
       if (!appointmentDate) return;
 
       const dateKey = format(startOfDay(appointmentDate), 'yyyy-MM-dd');
-      
+
       if (!groups.has(dateKey)) {
         groups.set(dateKey, {
           date: appointmentDate,
@@ -52,7 +55,7 @@ const BookingList: React.FC<BookingListProps> = ({ appointments }) => {
           appointments: []
         });
       }
-      
+
       groups.get(dateKey)!.appointments.push(appointment);
     });
 
@@ -89,7 +92,7 @@ const BookingList: React.FC<BookingListProps> = ({ appointments }) => {
           subtitle: format(date, 'EEEE, MMMM d, yyyy')
         };
       }
-      
+
       return {
         label: format(date, 'EEEE, MMMM d'),
         subtitle: format(date, 'yyyy')
@@ -108,13 +111,13 @@ const BookingList: React.FC<BookingListProps> = ({ appointments }) => {
       if (!timeString || !timeString.includes(':')) {
         return { time: timeString, period: '' };
       }
-      
+
       const [hours, minutes] = timeString.split(':').map(Number);
       const hour12 = hours % 12 || 12;
       const period = hours >= 12 ? 'PM' : 'AM';
       const formattedHour = String(hour12).padStart(2, '0');
       const formattedMinutes = String(minutes).padStart(2, '0');
-      
+
       return {
         time: `${formattedHour}:${formattedMinutes}`,
         period: period
@@ -157,7 +160,7 @@ const BookingList: React.FC<BookingListProps> = ({ appointments }) => {
       {groupedAppointments.map((group) => {
         const dateHeader = formatDateHeader(group.date);
         const isTodayDate = isToday(group.date);
-        
+
         return (
           <div key={group.dateKey} className="booking-list-date-group">
             <div className={`date-group-header ${isTodayDate ? 'date-group-today' : ''}`}>
@@ -172,7 +175,7 @@ const BookingList: React.FC<BookingListProps> = ({ appointments }) => {
                 <span className="date-group-count">{group.appointments.length} {group.appointments.length === 1 ? 'appointment' : 'appointments'}</span>
               </div>
             </div>
-            
+
             <div className="booking-list-table-wrapper">
               <table className="booking-list-table">
                 <thead>

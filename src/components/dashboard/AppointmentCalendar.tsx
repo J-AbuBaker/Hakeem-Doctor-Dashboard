@@ -14,7 +14,7 @@ interface AppointmentCalendarProps {
 }
 
 type ViewMode = 'day' | 'week' | 'month';
-type StatusFilter = 'All' | 'Scheduled' | 'Completed' | 'Cancelled';
+type StatusFilter = 'All' | 'Scheduled' | 'Completed' | 'Cancelled' | 'Expired';
 
 const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
   onOpenSlot,
@@ -32,6 +32,9 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
     if (hasStatus(status, 'Completed')) {
       return 'status-completed';
     }
+    if (hasStatus(status, 'Expired')) {
+      return 'status-expired';
+    }
     return 'status-scheduled';
   };
 
@@ -40,13 +43,13 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
       if (!timeString || !timeString.includes(':')) {
         return { time: timeString, period: '' };
       }
-      
+
       const [hours, minutes] = timeString.split(':').map(Number);
       const hour12 = hours % 12 || 12;
       const period = hours >= 12 ? 'PM' : 'AM';
       const formattedHour = String(hour12).padStart(2, '0');
       const formattedMinutes = String(minutes).padStart(2, '0');
-      
+
       return {
         time: `${formattedHour}:${formattedMinutes}`,
         period: period
@@ -57,7 +60,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
     }
   };
 
-    // formatDuration is now imported from durationUtils
+  // formatDuration is now imported from durationUtils
 
   useEffect(() => {
     fetchAppointments({
@@ -67,9 +70,9 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
 
   // Fetch appointments when week view is active or when week changes
   useEffect(() => {
-      fetchAppointments({
-        status: statusFilter !== 'All' ? statusFilter : undefined,
-      });
+    fetchAppointments({
+      status: statusFilter !== 'All' ? statusFilter : undefined,
+    });
   }, [selectedDate, viewMode, statusFilter, fetchAppointments]);
 
   // Filter appointments by status only (don't filter by date here - do it per view)
@@ -149,6 +152,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
               <option value="Scheduled">Scheduled</option>
               <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
+              <option value="Expired">Expired</option>
             </select>
           </div>
           <button className="btn btn-primary" onClick={onOpenSlot}>
@@ -232,7 +236,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                         <ChevronLeft size={18} className="nav-arrow-icon" />
                         <span>Previous</span>
                       </button>
-                      <button 
+                      <button
                         className="date-nav-btn today-btn"
                         onClick={() => setSelectedDate(new Date())}
                         aria-label="Go to Today"
@@ -260,13 +264,13 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
 
                       if (sortedDayAppointments.length === 0) {
                         return (
-                      <div className="empty-state">
-                        <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>No appointments scheduled for this day</p>
-                        <p style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '0.5rem' }}>
-                          You have a free schedule for {format(selectedDate, 'MMMM dd, yyyy')}.
-                          Consider adding a new appointment or checking other dates.
-                        </p>
-                      </div>
+                          <div className="empty-state">
+                            <p style={{ fontWeight: 600, marginBottom: '0.5rem' }}>No appointments scheduled for this day</p>
+                            <p style={{ fontSize: '0.9rem', opacity: 0.7, marginTop: '0.5rem' }}>
+                              You have a free schedule for {format(selectedDate, 'MMMM dd, yyyy')}.
+                              Consider adding a new appointment or checking other dates.
+                            </p>
+                          </div>
                         );
                       }
 
@@ -346,10 +350,10 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                     </button>
                     <div className="week-header-center">
                       <div className="week-header-title-section">
-                      <h3>
-                        {format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'MMM dd')} -{' '}
-                        {format(endOfWeek(selectedDate, { weekStartsOn: 1 }), 'MMM dd, yyyy')}
-                      </h3>
+                        <h3>
+                          {format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'MMM dd')} -{' '}
+                          {format(endOfWeek(selectedDate, { weekStartsOn: 1 }), 'MMM dd, yyyy')}
+                        </h3>
                         {(() => {
                           const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
                           const weekEnd = endOfWeek(selectedDate, { weekStartsOn: 1 });
@@ -362,7 +366,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                           const bookedCount = weekAppointments.filter(
                             apt => apt.patientId && apt.patientId !== '0' && apt.patientName !== 'Available Slot'
                           ).length;
-                          
+
                           if (bookedCount > 0) {
                             return (
                               <span className="week-appointments-summary">
@@ -408,238 +412,238 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                   ) : (
                     /* Professional Time-Based Week Grid */
                     <div className="week-calendar-container">
-                    {/* Time column */}
-                    <div className="week-time-column">
-                      {Array.from({ length: 13 }, (_, i) => {
-                        const hour = i + 8; // 8 AM to 8 PM
-                        const displayHour = hour % 12 || 12;
-                        const period = hour >= 12 ? 'PM' : 'AM';
-                        return (
-                          <div key={hour} className="time-slot-label">
-                            <span className="time-label-hour">{displayHour}</span>
-                            <span className="time-label-period">{period}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Days grid */}
-                    <div className="week-days-grid">
-                      {/* Day headers */}
-                      <div className="week-days-header">
-                        {weekDays.map((day) => {
-                          const isTodayDate = isSameDay(day, new Date());
-                          const dayAppointments = getAppointmentsForDateLocal(day);
-                          const appointmentCount = dayAppointments.filter(
-                            apt => apt.patientId && apt.patientId !== '0' && apt.patientName !== 'Available Slot'
-                          ).length;
-                          
+                      {/* Time column */}
+                      <div className="week-time-column">
+                        {Array.from({ length: 13 }, (_, i) => {
+                          const hour = i + 8; // 8 AM to 8 PM
+                          const displayHour = hour % 12 || 12;
+                          const period = hour >= 12 ? 'PM' : 'AM';
                           return (
-                            <div key={day.toISOString()} className={`week-day-header ${isTodayDate ? 'today' : ''}`}>
-                              <div className="day-header-content">
-                                <span className="day-header-name">{format(day, 'EEE').toUpperCase()}</span>
-                                <span className={`day-header-number ${isTodayDate ? 'today-number' : ''}`}>
-                                  {format(day, 'd')}
-                                </span>
-                                {isTodayDate && (
-                                  <span className="day-header-month">{format(day, 'MMM')}</span>
-                                )}
-                              </div>
-                              {appointmentCount > 0 && (
-                                <div className="day-appointment-badge">
-                                  {appointmentCount}
-                                </div>
-                              )}
+                            <div key={hour} className="time-slot-label">
+                              <span className="time-label-hour">{displayHour}</span>
+                              <span className="time-label-period">{period}</span>
                             </div>
                           );
                         })}
                       </div>
 
-                      {/* Time slots grid */}
-                      <div className="week-time-slots-grid">
-                    {weekDays.map((day) => {
-                      const dayAppointments = getAppointmentsForDateLocal(day);
-                          const isTodayDate = isSameDay(day, new Date());
-                          
-                          // Sort appointments by time for proper display
-                          const sortedDayAppointments = sortAppointmentsByDateTime(dayAppointments);
+                      {/* Days grid */}
+                      <div className="week-days-grid">
+                        {/* Day headers */}
+                        <div className="week-days-header">
+                          {weekDays.map((day) => {
+                            const isTodayDate = isSameDay(day, new Date());
+                            const dayAppointments = getAppointmentsForDateLocal(day);
+                            const appointmentCount = dayAppointments.filter(
+                              apt => apt.patientId && apt.patientId !== '0' && apt.patientName !== 'Available Slot'
+                            ).length;
 
-                          // Separate booked appointments from available slots
-                          const bookedAppointments = sortedDayAppointments.filter(
-                        apt => apt.patientId && apt.patientId !== '0' && apt.patientName !== 'Available Slot'
-                      );
+                            return (
+                              <div key={day.toISOString()} className={`week-day-header ${isTodayDate ? 'today' : ''}`}>
+                                <div className="day-header-content">
+                                  <span className="day-header-name">{format(day, 'EEE').toUpperCase()}</span>
+                                  <span className={`day-header-number ${isTodayDate ? 'today-number' : ''}`}>
+                                    {format(day, 'd')}
+                                  </span>
+                                  {isTodayDate && (
+                                    <span className="day-header-month">{format(day, 'MMM')}</span>
+                                  )}
+                                </div>
+                                {appointmentCount > 0 && (
+                                  <div className="day-appointment-badge">
+                                    {appointmentCount}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
 
-                          // Also show available slots as visual indicators
-                          const availableSlots = sortedDayAppointments.filter(
-                            apt => !apt.patientId || apt.patientId === '0' || apt.patientName === 'Available Slot'
-                          );
+                        {/* Time slots grid */}
+                        <div className="week-time-slots-grid">
+                          {weekDays.map((day) => {
+                            const dayAppointments = getAppointmentsForDateLocal(day);
+                            const isTodayDate = isSameDay(day, new Date());
 
-                          // Calculate appointment positions based on time (8 AM to 8 PM = 13 hours)
-                          // Using pixel-perfect positioning for better alignment
-                          const MINUTES_PER_HOUR = 60;
-                          const PIXELS_PER_HOUR = 60; // 60px per hour for precise alignment
-                          const START_HOUR = 8; // 8 AM
-                          const END_HOUR = 21; // 9 PM (for display)
-                          
-                          const getAppointmentPosition = (time: string): number => {
-                            try {
-                              const [hours, minutes] = time.split(':').map(Number);
-                              const totalMinutes = hours * MINUTES_PER_HOUR + (minutes || 0);
-                              const startMinutes = START_HOUR * MINUTES_PER_HOUR;
-                              const endMinutes = END_HOUR * MINUTES_PER_HOUR;
-                              
-                              if (totalMinutes < startMinutes) {
-                                return 0; // Before 8 AM, show at top
+                            // Sort appointments by time for proper display
+                            const sortedDayAppointments = sortAppointmentsByDateTime(dayAppointments);
+
+                            // Separate booked appointments from available slots
+                            const bookedAppointments = sortedDayAppointments.filter(
+                              apt => apt.patientId && apt.patientId !== '0' && apt.patientName !== 'Available Slot'
+                            );
+
+                            // Also show available slots as visual indicators
+                            const availableSlots = sortedDayAppointments.filter(
+                              apt => !apt.patientId || apt.patientId === '0' || apt.patientName === 'Available Slot'
+                            );
+
+                            // Calculate appointment positions based on time (8 AM to 8 PM = 13 hours)
+                            // Using pixel-perfect positioning for better alignment
+                            const MINUTES_PER_HOUR = 60;
+                            const PIXELS_PER_HOUR = 60; // 60px per hour for precise alignment
+                            const START_HOUR = 8; // 8 AM
+                            const END_HOUR = 21; // 9 PM (for display)
+
+                            const getAppointmentPosition = (time: string): number => {
+                              try {
+                                const [hours, minutes] = time.split(':').map(Number);
+                                const totalMinutes = hours * MINUTES_PER_HOUR + (minutes || 0);
+                                const startMinutes = START_HOUR * MINUTES_PER_HOUR;
+                                const endMinutes = END_HOUR * MINUTES_PER_HOUR;
+
+                                if (totalMinutes < startMinutes) {
+                                  return 0; // Before 8 AM, show at top
+                                }
+                                if (totalMinutes > endMinutes) {
+                                  return (END_HOUR - START_HOUR) * PIXELS_PER_HOUR; // After 9 PM, show at bottom
+                                }
+
+                                // Calculate position in pixels for pixel-perfect alignment
+                                const minutesFromStart = totalMinutes - startMinutes;
+                                const positionPixels = (minutesFromStart / MINUTES_PER_HOUR) * PIXELS_PER_HOUR;
+                                return Math.max(0, Math.min((END_HOUR - START_HOUR) * PIXELS_PER_HOUR, positionPixels));
+                              } catch (error) {
+                                console.error('Error calculating appointment position:', error);
+                                return 0;
                               }
-                              if (totalMinutes > endMinutes) {
-                                return (END_HOUR - START_HOUR) * PIXELS_PER_HOUR; // After 9 PM, show at bottom
-                              }
-                              
-                              // Calculate position in pixels for pixel-perfect alignment
-                              const minutesFromStart = totalMinutes - startMinutes;
-                              const positionPixels = (minutesFromStart / MINUTES_PER_HOUR) * PIXELS_PER_HOUR;
-                              return Math.max(0, Math.min((END_HOUR - START_HOUR) * PIXELS_PER_HOUR, positionPixels));
-                            } catch (error) {
-                              console.error('Error calculating appointment position:', error);
-                              return 0;
-                            }
-                          };
+                            };
 
-                          const getAppointmentHeight = (duration?: number): number => {
-                            // Use actual duration for accurate height calculation
-                            const actualDuration = duration || 30; // Default 30 minutes if not provided
-                            
-                            // Convert duration to pixels (60px per hour = 1px per minute)
-                            // This ensures perfect proportional representation
-                            const heightPixels = (actualDuration / MINUTES_PER_HOUR) * PIXELS_PER_HOUR;
-                            
-                            // Professional minimum height: 40px (for 15 min slots) ensures readability
-                            // Maximum height: 8 hours = 480px (reasonable limit)
-                            // Ensure height is at least 40px for visibility and professionalism
-                            return Math.max(40, Math.min(480, Math.round(heightPixels)));
-                          };
+                            const getAppointmentHeight = (duration?: number): number => {
+                              // Use actual duration for accurate height calculation
+                              const actualDuration = duration || 30; // Default 30 minutes if not provided
 
-                      return (
-                            <div key={day.toISOString()} className={`week-day-column ${isTodayDate ? 'today-column' : ''}`}>
-                              {/* Time slot dividers */}
-                              {Array.from({ length: 13 }, (_, i) => (
-                                <div key={i} className="time-slot-divider" />
-                              ))}
-                              
-                              {/* Appointments positioned by time */}
-                              <div className="week-day-appointments">
-                                {sortedDayAppointments.length === 0 ? null : bookedAppointments.length === 0 && availableSlots.length > 0 ? (
-                                  <>
-                                    {/* Show available slots when no booked appointments */}
-                                    {availableSlots.map((slot) => {
-                                      const timeParts = formatTime(slot.time);
-                                      const position = getAppointmentPosition(slot.time);
-                                      const height = getAppointmentHeight(slot.duration);
-                                      
-                                      return (
-                                        <div
-                                          key={slot.id}
-                                          className="week-appointment-block week-slot-indicator"
-                                          style={{
-                                            top: `${position}px`,
-                                            height: `${height}px`,
-                                          }}
-                                          title={`Available Slot - ${timeParts.time} ${timeParts.period} (${formatDuration(slot.duration)})`}
-                                        >
-                                          <div className="week-appointment-content">
-                                            <div className="week-appointment-time">
-                                              {timeParts.time} {timeParts.period}
-                                            </div>
-                                            <div className="week-appointment-patient">
-                                              Available
-                                            </div>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </>
-                                ) : (
-                                  <>
-                                    {/* Show booked appointments */}
-                                    {bookedAppointments.map((apt) => {
-                                      const timeParts = formatTime(apt.time);
-                                      const position = getAppointmentPosition(apt.time);
-                                      const height = getAppointmentHeight(apt.duration);
-                                      
-                                      return (
-                                        <div
-                                          key={apt.id}
-                                          className={`week-appointment-block ${getStatusColor(apt.status)}`}
-                                          style={{
-                                            top: `${position}px`,
-                                            height: `${height}px`,
-                                          }}
-                                          title={`${apt.patientName} - ${timeParts.time} ${timeParts.period} (${formatDuration(apt.duration)})`}
-                                        >
-                                          <div className="week-appointment-content">
-                                            <div className="week-appointment-header">
+                              // Convert duration to pixels (60px per hour = 1px per minute)
+                              // This ensures perfect proportional representation
+                              const heightPixels = (actualDuration / MINUTES_PER_HOUR) * PIXELS_PER_HOUR;
+
+                              // Professional minimum height: 40px (for 15 min slots) ensures readability
+                              // Maximum height: 8 hours = 480px (reasonable limit)
+                              // Ensure height is at least 40px for visibility and professionalism
+                              return Math.max(40, Math.min(480, Math.round(heightPixels)));
+                            };
+
+                            return (
+                              <div key={day.toISOString()} className={`week-day-column ${isTodayDate ? 'today-column' : ''}`}>
+                                {/* Time slot dividers */}
+                                {Array.from({ length: 13 }, (_, i) => (
+                                  <div key={i} className="time-slot-divider" />
+                                ))}
+
+                                {/* Appointments positioned by time */}
+                                <div className="week-day-appointments">
+                                  {sortedDayAppointments.length === 0 ? null : bookedAppointments.length === 0 && availableSlots.length > 0 ? (
+                                    <>
+                                      {/* Show available slots when no booked appointments */}
+                                      {availableSlots.map((slot) => {
+                                        const timeParts = formatTime(slot.time);
+                                        const position = getAppointmentPosition(slot.time);
+                                        const height = getAppointmentHeight(slot.duration);
+
+                                        return (
+                                          <div
+                                            key={slot.id}
+                                            className="week-appointment-block week-slot-indicator"
+                                            style={{
+                                              top: `${position}px`,
+                                              height: `${height}px`,
+                                            }}
+                                            title={`Available Slot - ${timeParts.time} ${timeParts.period} (${formatDuration(slot.duration)})`}
+                                          >
+                                            <div className="week-appointment-content">
                                               <div className="week-appointment-time">
                                                 {timeParts.time} {timeParts.period}
                                               </div>
-                                              {apt.duration && (
-                                                <div className="week-appointment-duration">
-                                                  <Clock size={12} />
-                                                  <span>{formatDuration(apt.duration)}</span>
-                                      </div>
-                                    )}
+                                              <div className="week-appointment-patient">
+                                                Available
+                                              </div>
                                             </div>
-                                            <div className="week-appointment-patient">
-                                              {apt.patientName}
-                                            </div>
-                                            {apt.appointmentType && (
-                                              <div className="week-appointment-type">
-                                                {formatAppointmentType(apt.appointmentType)}
-                                  </div>
-                                )}
-                                            <div className={`week-appointment-status ${getStatusColor(apt.status)}`}>
-                                              {apt.status}
-                                    </div>
-                                          </div>
                                           </div>
                                         );
                                       })}
-                                    
-                                    {/* Show available slots as subtle indicators */}
-                                    {availableSlots.map((slot) => {
-                                      const timeParts = formatTime(slot.time);
-                                      const position = getAppointmentPosition(slot.time);
-                                      const height = getAppointmentHeight(slot.duration);
-                                      
-                                      return (
-                                        <div
-                                          key={slot.id}
-                                          className="week-appointment-block week-slot-indicator"
-                                          style={{
-                                            top: `${position}px`,
-                                            height: `${height}px`,
-                                          }}
-                                          title={`Available Slot - ${timeParts.time} ${timeParts.period} (${formatDuration(slot.duration)})`}
-                                        >
-                                          <div className="week-appointment-content">
-                                            <div className="week-appointment-time">
-                                              {timeParts.time} {timeParts.period}
-                                            </div>
-                                            <div className="week-appointment-patient">
-                                              Available
+                                    </>
+                                  ) : (
+                                    <>
+                                      {/* Show booked appointments */}
+                                      {bookedAppointments.map((apt) => {
+                                        const timeParts = formatTime(apt.time);
+                                        const position = getAppointmentPosition(apt.time);
+                                        const height = getAppointmentHeight(apt.duration);
+
+                                        return (
+                                          <div
+                                            key={apt.id}
+                                            className={`week-appointment-block ${getStatusColor(apt.status)}`}
+                                            style={{
+                                              top: `${position}px`,
+                                              height: `${height}px`,
+                                            }}
+                                            title={`${apt.patientName} - ${timeParts.time} ${timeParts.period} (${formatDuration(apt.duration)})`}
+                                          >
+                                            <div className="week-appointment-content">
+                                              <div className="week-appointment-header">
+                                                <div className="week-appointment-time">
+                                                  {timeParts.time} {timeParts.period}
+                                                </div>
+                                                {apt.duration && (
+                                                  <div className="week-appointment-duration">
+                                                    <Clock size={12} />
+                                                    <span>{formatDuration(apt.duration)}</span>
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <div className="week-appointment-patient">
+                                                {apt.patientName}
+                                              </div>
+                                              {apt.appointmentType && (
+                                                <div className="week-appointment-type">
+                                                  {formatAppointmentType(apt.appointmentType)}
+                                                </div>
+                                              )}
+                                              <div className={`week-appointment-status ${getStatusColor(apt.status)}`}>
+                                                {apt.status}
+                                              </div>
                                             </div>
                                           </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </>
-                            )}
-                          </div>
+                                        );
+                                      })}
+
+                                      {/* Show available slots as subtle indicators */}
+                                      {availableSlots.map((slot) => {
+                                        const timeParts = formatTime(slot.time);
+                                        const position = getAppointmentPosition(slot.time);
+                                        const height = getAppointmentHeight(slot.duration);
+
+                                        return (
+                                          <div
+                                            key={slot.id}
+                                            className="week-appointment-block week-slot-indicator"
+                                            style={{
+                                              top: `${position}px`,
+                                              height: `${height}px`,
+                                            }}
+                                            title={`Available Slot - ${timeParts.time} ${timeParts.period} (${formatDuration(slot.duration)})`}
+                                          >
+                                            <div className="week-appointment-content">
+                                              <div className="week-appointment-time">
+                                                {timeParts.time} {timeParts.period}
+                                              </div>
+                                              <div className="week-appointment-patient">
+                                                Available
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
                     </div>
-                  </div>
                   )}
                 </div>
               )}

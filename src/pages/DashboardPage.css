@@ -24,6 +24,112 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  gap: var(--spacing-5);
+}
+
+/* Tab Navigation */
+.dashboard-tabs {
+  display: flex;
+  gap: 0;
+  margin-block-end: var(--spacing-5);
+  background: var(--surface-elevated);
+  padding: var(--spacing-1);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+
+.dashboard-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-5);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: var(--transition-base);
+  position: relative;
+  flex: 1;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.dashboard-tab:hover:not(.active) {
+  background: var(--surface-alt);
+  color: var(--text-primary);
+}
+
+.dashboard-tab.active {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+
+.dashboard-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: calc(-1 * var(--spacing-1) - 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40%;
+  height: 2px;
+  background: var(--primary);
+  border-radius: var(--radius-sm);
+}
+
+.dashboard-tab:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.dashboard-tab-panels {
+  width: 100%;
+}
+
+.dashboard-tab-panel {
+  width: 100%;
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 767px) {
+  .dashboard-tabs {
+    flex-direction: column;
+    gap: var(--spacing-1);
+  }
+
+  .dashboard-tab {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .dashboard-tab.active::after {
+    left: 0;
+    transform: none;
+    width: 4px;
+    height: 100%;
+    top: 0;
+    bottom: 0;
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  }
 }
 
 .dashboard-header {
@@ -41,7 +147,7 @@
   width: 100%;
 }
 
-.dashboard-header > div {
+.dashboard-header>div {
   flex: 1;
   min-width: 280px;
 }
@@ -200,8 +306,7 @@
     gap: var(--spacing-3);
   }
 
-  .dashboard-header > div {
+  .dashboard-header>div {
     min-width: 100%;
   }
 }
-

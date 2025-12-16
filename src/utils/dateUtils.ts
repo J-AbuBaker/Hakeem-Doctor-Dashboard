@@ -130,3 +130,28 @@ export function getTodayAppointments(appointments: Appointment[]): Appointment[]
   const today = new Date();
   return getAppointmentsForDate(appointments, today);
 }
+
+/**
+ * Checks if an appointment is in the future (start time is after now)
+ * Uses the full datetime from createdAt and time field for accurate comparison
+ * @param appointment - Appointment object
+ * @returns true if appointment start time is in the future
+ */
+export function isAppointmentInFuture(appointment: Appointment): boolean {
+  const appointmentDate = parseAppointmentDate(appointment);
+
+  if (!appointmentDate) {
+    return false;
+  }
+
+  // If we only have date (no time), combine with time field
+  if (!appointment.createdAt || !appointment.createdAt.includes('T')) {
+    if (appointment.time && appointment.time.includes(':')) {
+      const [hours, minutes] = appointment.time.split(':').map(Number);
+      appointmentDate.setHours(hours || 0, minutes || 0, 0, 0);
+    }
+  }
+
+  const now = new Date();
+  return appointmentDate > now;
+}

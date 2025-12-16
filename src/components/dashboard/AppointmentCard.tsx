@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { format } from 'date-fns';
 import { useAppointments } from '../../context/AppointmentContext';
 import { Appointment } from '../../types';
@@ -9,18 +9,28 @@ import {
   CheckCircle2,
   Loader2,
   FileText,
+  Stethoscope,
+  Tag,
 } from 'lucide-react';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { hasStatus } from '../../utils/statusUtils';
 import { isAppointmentOnDate } from '../../utils/dateUtils';
 import { getErrorMessage } from '../../utils/errorUtils';
+import { formatAppointmentType } from '../../utils/stringUtils';
+import { formatDuration } from '../../utils/durationUtils';
 
 interface AppointmentCardProps {
   appointment: Appointment;
+  hideTime?: boolean;
+  hideDate?: boolean;
+  compact?: boolean;
 }
 
-const AppointmentCard: React.FC<AppointmentCardProps> = ({
+const AppointmentCard = memo<AppointmentCardProps>(({
   appointment,
+  hideTime = false,
+  hideDate = false,
+  compact = false,
 }) => {
   const { completeAppointment } = useAppointments();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -35,6 +45,9 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
     }
     if (hasStatus(status, 'Completed')) {
       return 'status-completed';
+    }
+    if (hasStatus(status, 'Expired')) {
+      return 'status-expired';
     }
     // Default to scheduled for any other status
     return 'status-scheduled';
@@ -115,51 +128,69 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
           </span>
         </div>
 
-        <div className="appointment-info-section">
+        <div className={`appointment-info-section ${compact ? 'compact' : ''}`}>
           <div className="appointment-info-item">
             <User className="info-icon" />
             <span className="info-value" title={appointment.patientId}>{appointment.patientName}</span>
           </div>
-          <div className="appointment-info-item">
-            <Calendar className="info-icon" />
-            <span className="info-value">
-              {(() => {
-                try {
-                  // Handle both YYYY-MM-DD format and full datetime
-                  if (appointment.date.includes('T')) {
-                    return format(new Date(appointment.date), 'MMM dd, yyyy');
-                  }
-                  const [year, month, day] = appointment.date.split('-').map(Number);
-                  const dateObj = new Date(year, month - 1, day);
-                  if (isNaN(dateObj.getTime())) {
+          {!hideDate && (
+            <div className="appointment-info-item">
+              <Calendar className="info-icon" />
+              <span className="info-value">
+                {(() => {
+                  try {
+                    // Handle both YYYY-MM-DD format and full datetime
+                    if (appointment.date.includes('T')) {
+                      return format(new Date(appointment.date), 'MMM dd, yyyy');
+                    }
+                    const [year, month, day] = appointment.date.split('-').map(Number);
+                    const dateObj = new Date(year, month - 1, day);
+                    if (isNaN(dateObj.getTime())) {
+                      return appointment.date;
+                    }
+                    return format(dateObj, 'MMM dd, yyyy');
+                  } catch (error) {
+                    console.error('Error formatting appointment date:', error);
                     return appointment.date;
                   }
-                  return format(dateObj, 'MMM dd, yyyy');
-                } catch (error) {
-                  console.error('Error formatting appointment date:', error);
-                  return appointment.date;
-                }
-              })()}
-            </span>
-          </div>
-          <div className="appointment-info-item">
-            <Clock className="info-icon" />
-            <span className="info-value">
-              {(() => {
-                try {
-                  if (!appointment.time || !appointment.time.includes(':')) {
+                })()}
+              </span>
+            </div>
+          )}
+          {!hideTime && (
+            <div className="appointment-info-item">
+              <Clock className="info-icon" />
+              <span className="info-value">
+                {(() => {
+                  try {
+                    if (!appointment.time || !appointment.time.includes(':')) {
+                      return appointment.time;
+                    }
+                    const [hours, minutes] = appointment.time.split(':').map(Number);
+                    const hour12 = hours % 12 || 12;
+                    const period = hours >= 12 ? 'PM' : 'AM';
+                    const formattedHour = String(hour12).padStart(2, '0');
+                    const formattedMinutes = String(minutes).padStart(2, '0');
+                    return `${formattedHour}:${formattedMinutes} ${period}`;
+                  } catch (error) {
                     return appointment.time;
                   }
-                  const [hours, minutes] = appointment.time.split(':').map(Number);
-                  const hour12 = hours % 12 || 12;
-                  const period = hours >= 12 ? 'PM' : 'AM';
-                  const formattedHour = String(hour12).padStart(2, '0');
-                  const formattedMinutes = String(minutes).padStart(2, '0');
-                  return `${formattedHour}:${formattedMinutes} ${period}`;
-                } catch (error) {
-                  return appointment.time;
-                }
-              })()}
+                })()}
+              </span>
+            </div>
+          )}
+          <div className="appointment-info-item appointment-type-item">
+            <Stethoscope className="info-icon" />
+            <span className="info-value">
+              {appointment.appointmentType
+                ? formatAppointmentType(appointment.appointmentType)
+                : 'General Consultation'}
+            </span>
+          </div>
+          <div className="appointment-info-item appointment-duration-item">
+            <Clock className="info-icon" size={14} />
+            <span className="info-value duration-value">
+              {formatDuration(appointment.duration)}
             </span>
           </div>
           {appointment.notes && (
@@ -189,13 +220,6 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 <CheckCircle2 size={18} />
               )}
             </button>
-          </div>
-        )}
-
-        {hasStatus(appointment.status, 'Completed') && (
-          <div className="appointment-status-indicator">
-            <CheckCircle2 className="completed-icon" size={20} />
-            <span className="completed-text">Completed</span>
           </div>
         )}
       </div>
@@ -246,7 +270,9 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
       />
     </div>
   );
-};
+});
+
+AppointmentCard.displayName = 'AppointmentCard';
 
 export default AppointmentCard;
 

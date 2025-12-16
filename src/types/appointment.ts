@@ -9,7 +9,7 @@ export interface Appointment {
   patientName: string;
   date: string;
   time: string;
-  status: 'Scheduled' | 'Approved' | 'Completed' | 'Cancelled';
+  status: 'Scheduled' | 'Approved' | 'Completed' | 'Cancelled' | 'Expired';
   appointmentType?: string;
   duration?: number; // Duration in minutes
   notes?: string;

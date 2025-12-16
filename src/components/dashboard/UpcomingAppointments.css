@@ -1,0 +1,311 @@
+.upcoming-appointments-week-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.upcoming-week-empty {
+  padding: var(--spacing-8);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.upcoming-week-empty .empty-message {
+  font-size: var(--font-size-base);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.upcoming-days-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.upcoming-day-group {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  background: var(--surface-alt);
+  padding: var(--spacing-4);
+  transition: var(--transition-base);
+}
+
+.upcoming-day-group:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.upcoming-day-header-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-block-end: var(--spacing-4);
+  padding-block-end: var(--spacing-3);
+  border-bottom: 1px solid var(--border-light);
+  gap: var(--spacing-3);
+}
+
+.upcoming-day-header-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.upcoming-day-label {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+  margin-block-end: var(--spacing-1);
+  line-height: var(--line-height-tight);
+}
+
+.upcoming-day-date {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+.upcoming-day-header-badges {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.upcoming-day-count-badge {
+  padding: var(--spacing-1) var(--spacing-3);
+  background: var(--primary-lightest);
+  color: var(--primary);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.upcoming-day-scheduled-badge {
+  padding: var(--spacing-1) var(--spacing-3);
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--status-scheduled);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.upcoming-day-appointments {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.upcoming-appointment-item {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: var(--spacing-5);
+  align-items: center;
+  padding: var(--spacing-4) 0;
+  border-bottom: 1px solid var(--border-light);
+  position: relative;
+}
+
+.upcoming-appointment-item.in-progress {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.03) 0%, transparent 100%);
+}
+
+.upcoming-appointment-item:last-child {
+  border-bottom: none;
+}
+
+.upcoming-appointment-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3);
+  background: linear-gradient(135deg, var(--surface-elevated) 0%, var(--surface-alt) 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  min-width: 120px;
+  box-shadow: var(--shadow-xs);
+  align-self: stretch;
+}
+
+.time-display-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-1);
+  width: 100%;
+}
+
+.upcoming-appointment-time .time-icon {
+  flex-shrink: 0;
+  opacity: 0.8;
+  width: 18px;
+  height: 18px;
+  color: var(--primary);
+}
+
+.upcoming-appointment-time .time-text {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: 1.2;
+}
+
+/* Scheduled appointments - ensure no red color */
+.upcoming-appointment-time.status-scheduled {
+  background: linear-gradient(135deg, var(--surface-elevated) 0%, var(--surface-alt) 100%);
+  border-color: var(--border-light);
+}
+
+.upcoming-appointment-time.status-scheduled .time-icon {
+  color: var(--primary);
+}
+
+.upcoming-appointment-time.status-scheduled .time-text {
+  color: var(--text-primary);
+}
+
+/* In-progress appointments - professional info color (blue) */
+/* Using !important and higher specificity to ensure it overrides all status classes */
+.upcoming-appointment-item.in-progress {
+  background: linear-gradient(90deg, hsla(var(--info-hue), 100%, 50%, 0.03) 0%, transparent 100%) !important;
+  border-left: 2px solid var(--info) !important;
+}
+
+/* Override all status classes when in-progress */
+.upcoming-appointment-time.in-progress,
+.upcoming-appointment-time.status-scheduled.in-progress,
+.upcoming-appointment-time.status-expired.in-progress,
+.upcoming-appointment-time.status-completed.in-progress,
+.upcoming-appointment-time.status-cancelled.in-progress {
+  background: linear-gradient(135deg, hsla(var(--info-hue), 100%, 50%, 0.1) 0%, hsla(var(--info-hue), 100%, 50%, 0.05) 100%) !important;
+  border-color: var(--info) !important;
+}
+
+.upcoming-appointment-time.in-progress .time-icon,
+.upcoming-appointment-time.status-scheduled.in-progress .time-icon,
+.upcoming-appointment-time.status-expired.in-progress .time-icon,
+.upcoming-appointment-time.status-completed.in-progress .time-icon,
+.upcoming-appointment-time.status-cancelled.in-progress .time-icon {
+  color: var(--info) !important;
+}
+
+.upcoming-appointment-time.in-progress .time-text,
+.upcoming-appointment-time.status-scheduled.in-progress .time-text,
+.upcoming-appointment-time.status-expired.in-progress .time-text,
+.upcoming-appointment-time.status-completed.in-progress .time-text,
+.upcoming-appointment-time.status-cancelled.in-progress .time-text {
+  color: var(--info) !important;
+  font-weight: var(--font-weight-bold) !important;
+}
+
+/* Expired appointments */
+.upcoming-appointment-time.status-expired {
+  background: linear-gradient(135deg, rgba(156, 163, 175, 0.1) 0%, rgba(156, 163, 175, 0.05) 100%);
+  border-color: var(--status-expired);
+}
+
+.upcoming-appointment-time.status-expired .time-icon {
+  color: var(--status-expired);
+}
+
+.upcoming-appointment-time.status-expired .time-text {
+  color: var(--status-expired);
+}
+
+/* Completed appointments */
+.upcoming-appointment-time.status-completed {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+  border-color: var(--success);
+}
+
+.upcoming-appointment-time.status-completed .time-icon {
+  color: var(--success);
+}
+
+.upcoming-appointment-time.status-completed .time-text {
+  color: var(--success);
+}
+
+/* Cancelled appointments */
+.upcoming-appointment-time.status-cancelled {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
+  border-color: var(--danger);
+}
+
+.upcoming-appointment-time.status-cancelled .time-icon {
+  color: var(--danger);
+}
+
+.upcoming-appointment-time.status-cancelled .time-text {
+  color: var(--danger);
+}
+
+.upcoming-appointment-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.upcoming-appointment-card .appointment-card {
+  margin: 0;
+  box-shadow: none;
+  border: 1px solid var(--border-light);
+}
+
+.upcoming-appointment-card .appointment-card:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-xs);
+}
+
+.upcoming-appointment-card .appointment-status-section {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+}
+
+.upcoming-appointment-card .appointment-info-section.compact {
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.upcoming-appointment-card .appointment-info-section.compact .appointment-info-item {
+  height: 32px;
+  padding: var(--spacing-2) var(--spacing-3);
+  margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+  .upcoming-day-header-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-2);
+  }
+
+  .upcoming-day-header-badges {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .upcoming-appointment-item {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-2);
+  }
+
+  .upcoming-appointment-time {
+    width: 100%;
+    padding-bottom: var(--spacing-2);
+    border-bottom: 1px solid var(--border-light);
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}

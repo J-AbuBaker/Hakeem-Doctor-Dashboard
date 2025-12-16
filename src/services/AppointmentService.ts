@@ -4,7 +4,7 @@ import {
   ScheduledAppointmentResponse,
   OpenSlotRequest,
 } from '../types';
-import { mapBackendStatusToFrontend } from '../utils/statusUtils';
+import { mapBackendStatusToFrontend, isExpiredAppointment } from '../utils/statusUtils';
 import {
   parseDateTimeString,
   formatDateToString,
@@ -33,7 +33,9 @@ class AppointmentService {
     const dateStr = formatDateToString(appointmentDate);
     const timeStr = formatTimeToString(appointmentDate);
 
-    let status = mapBackendStatusToFrontend(apiAppointment.appointmentStatus);
+    // Map API status (lowercase: "scheduled", "completed", "cancelled") to frontend format (capitalized)
+    // This preserves the exact status from the API - "completed" becomes "Completed", etc.
+    const status = mapBackendStatusToFrontend(apiAppointment.appointmentStatus);
 
     const appointmentType = apiAppointment.appointmentType || '';
     const formattedType = formatAppointmentType(appointmentType);
@@ -55,28 +57,19 @@ class AppointmentService {
     }
 
     const patientId = (apiAppointment.patientId != null) ? apiAppointment.patientId.toString() : '0';
-    
+
     let patientName: string;
-    
-    if (apiAppointment.patientName != null && 
-        typeof apiAppointment.patientName === 'string' && 
-        apiAppointment.patientName.trim() !== '') {
+
+    if (apiAppointment.patientName != null &&
+      typeof apiAppointment.patientName === 'string' &&
+      apiAppointment.patientName.trim() !== '') {
       patientName = apiAppointment.patientName.trim();
-    } 
+    }
     else if (apiAppointment.patientId != null && apiAppointment.patientId !== 0) {
       patientName = `Patient #${apiAppointment.patientId}`;
-    } 
+    }
     else {
       patientName = 'Available Slot';
-    }
-
-    const validStatuses: Array<'Scheduled' | 'Completed' | 'Cancelled'> = ['Scheduled', 'Completed', 'Cancelled'];
-    if (!validStatuses.includes(status)) {
-      console.error(`Invalid status after mapping: "${status}". Defaulting to "Scheduled".`, {
-        originalStatus: apiAppointment.appointmentStatus,
-        appointmentId: apiAppointment.id,
-      });
-      status = 'Scheduled';
     }
 
     const mappedAppointment: Appointment = {
@@ -86,13 +79,20 @@ class AppointmentService {
       patientName: patientName,
       date: dateStr,
       time: timeStr,
-      status: status,
+      status: status, // Status from API, mapped to frontend format
       appointmentType: formattedType || undefined,
       duration: duration,
       notes: notesParts.length > 0 ? notesParts.join(' • ') : undefined,
       createdAt: apiAppointment.appointmentDate,
       updatedAt: apiAppointment.appointmentDate,
     };
+
+    // Check if appointment should be marked as expired (past date + no patient)
+    // CRITICAL: Never override Completed or Cancelled status from API - preserve them exactly as returned
+    // Only Scheduled appointments without patients can become Expired
+    if (status !== 'Completed' && status !== 'Cancelled' && isExpiredAppointment(mappedAppointment)) {
+      mappedAppointment.status = 'Expired';
+    }
 
     return mappedAppointment;
   }
@@ -164,12 +164,12 @@ class AppointmentService {
       await api.post<OpenSlotRequest>(API_ENDPOINTS.APPOINTMENT.DOCTOR_SCHEDULE, request);
     } catch (error: unknown) {
       const axiosError = error as TypedAxiosError;
-      const errorMessage = 
+      const errorMessage =
         (typeof axiosError.response?.data === 'object' && axiosError.response.data && 'message' in axiosError.response.data)
           ? (axiosError.response.data as { message?: string }).message
           : typeof axiosError.response?.data === 'string'
-          ? axiosError.response.data
-          : axiosError.message || 'Failed to open slot';
+            ? axiosError.response.data
+            : axiosError.message || 'Failed to open slot';
       throw new Error(`Failed to schedule slot at ${appointmentDate}: ${errorMessage}`);
     }
   }
@@ -199,9 +199,9 @@ class AppointmentService {
       try {
         const mappedAppointment = this.mapScheduledAppointmentToAppointment(response.data);
 
-        if (mappedAppointment.status !== 'Completed') {
-          mappedAppointment.status = 'Completed';
-        }
+        // Always ensure Completed status is preserved, even if expiration logic runs
+        // This ensures Completed appointments stay Completed regardless of date/time
+        mappedAppointment.status = 'Completed';
 
         return mappedAppointment;
       } catch (mappingError: unknown) {
@@ -216,12 +216,12 @@ class AppointmentService {
       if (axiosError.response) {
         const status = axiosError.response.status;
         const errorData = axiosError.response.data;
-        const errorMessage = 
+        const errorMessage =
           (typeof errorData === 'object' && errorData && 'message' in errorData)
             ? (errorData as { message?: string }).message
             : typeof errorData === 'string'
-            ? errorData
-            : undefined;
+              ? errorData
+              : undefined;
 
         switch (status) {
           case 400:
