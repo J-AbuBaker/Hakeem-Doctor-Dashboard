@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LogIn, Loader2, Eye, EyeOff, Mail, Lock, Shield, AlertCircle } from 'lucide-react';
+import { ArrowRight, Loader2, Eye, EyeOff, Mail, Lock, AlertCircle, Shield } from 'lucide-react';
 import { getErrorMessage, getErrorResponseData, getErrorStatus } from '../../utils/errorUtils';
 import './AuthShared.css';
 import './AuthForms.css';
@@ -170,7 +170,7 @@ const LoginForm: React.FC = () => {
               </>
             ) : (
               <>
-                <LogIn size={20} />
+                <ArrowRight size={20} />
                 Sign In
               </>
             )}
