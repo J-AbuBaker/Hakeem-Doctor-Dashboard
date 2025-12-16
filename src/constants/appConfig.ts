@@ -21,5 +21,11 @@ export const APP_CONFIG = {
     PATIENT: 'PATIENT',
     PARAMEDIC: 'PARAMEDIC',
   },
+
+  // Auto-completion settings
+  AUTO_COMPLETE: {
+    CHECK_INTERVAL_MS: 60000, // 1 minute
+    GRACE_PERIOD_MINUTES: 5, // 5 minutes after end time
+  },
 } as const;
 
