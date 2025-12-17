@@ -4,7 +4,7 @@ import * as Yup from 'yup';
 import { Link } from 'react-router-dom';
 import { AuthService } from '../../features/auth';
 import { getErrorMessage } from '../../shared/utils/error/handlers';
-import { Mail, Loader2, ArrowLeft, AlertCircle, CheckCircle2, RefreshCw, Lock } from 'lucide-react';
+import { Mail, Loader2, ArrowLeft, AlertCircle, CheckCircle2, KeyRound, Lock } from 'lucide-react';
 import './AuthShared.css';
 import './AuthForms.css';
 
@@ -140,7 +140,7 @@ const ForgotPasswordForm: React.FC = () => {
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-icon-wrapper forgot-password-icon-wrapper">
-            <RefreshCw className="auth-icon refresh-icon" />
+            <KeyRound className="auth-icon refresh-icon" />
             <Lock className="auth-icon lock-icon" />
           </div>
           <h1>Forgot Password?</h1>

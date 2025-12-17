@@ -291,7 +291,7 @@ const SignupForm: React.FC = () => {
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-icon-wrapper">
-            <Shield className="auth-icon" />
+            <Stethoscope className="auth-icon" />
           </div>
           <h1>Doctor Registration</h1>
           <p>Create your professional account to get started</p>

@@ -56,8 +56,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     switch (type) {
       case 'delete':
       case 'cancel':
-        return 'var(--danger)';
       case 'logout':
+        return 'var(--danger)';
       case 'warning':
         return 'var(--warning)';
       case 'update':
@@ -73,8 +73,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     switch (type) {
       case 'delete':
       case 'cancel':
-        return 'btn-danger';
       case 'logout':
+        return 'btn-danger';
       case 'warning':
         return 'btn-warning';
       case 'update':
@@ -112,12 +112,24 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <div
             className="confirm-dialog-icon-wrapper"
             style={{
-              backgroundColor: type === 'logout'
-                ? 'rgba(245, 158, 11, 0.1)'
-                : `${getIconColor()}15`,
-              borderColor: type === 'logout'
-                ? 'rgba(245, 158, 11, 0.3)'
-                : `${getIconColor()}30`
+              backgroundColor: type === 'logout' || type === 'delete'
+                ? 'hsla(var(--danger-hue), 72%, 50%, 0.12)'
+                : type === 'warning'
+                  ? 'hsla(var(--warning-hue), 92%, 50%, 0.12)'
+                  : type === 'update'
+                    ? 'hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.12)'
+                    : type === 'approve' || type === 'success'
+                      ? 'hsla(var(--success-hue), 71%, 45%, 0.12)'
+                      : 'hsla(var(--info-hue), 100%, 50%, 0.12)',
+              borderColor: type === 'logout' || type === 'delete'
+                ? 'hsla(var(--danger-hue), 72%, 50%, 0.3)'
+                : type === 'warning'
+                  ? 'hsla(var(--warning-hue), 92%, 50%, 0.3)'
+                  : type === 'update'
+                    ? 'hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.3)'
+                    : type === 'approve' || type === 'success'
+                      ? 'hsla(var(--success-hue), 71%, 45%, 0.3)'
+                      : 'hsla(var(--info-hue), 100%, 50%, 0.3)'
             }}
           >
             <div style={{ color: getIconColor() }}>

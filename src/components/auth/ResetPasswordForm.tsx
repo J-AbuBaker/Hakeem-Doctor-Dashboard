@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { AuthService } from '../../features/auth';
-import { KeyRound, Loader2, CheckCircle, User, Lock, Eye, EyeOff, Shield, ArrowLeft, AlertCircle, CheckCircle2, Mail } from 'lucide-react';
+import { KeyRound, Loader2, CheckCircle, User, Lock, Eye, EyeOff, ArrowLeft, AlertCircle, CheckCircle2, Mail } from 'lucide-react';
 import { LocationState } from '../../shared/types/common/errors';
 import { getErrorMessage, getErrorStatus } from '../../shared/utils/error/handlers';
 import './AuthShared.css';
@@ -275,7 +275,7 @@ const ResetPasswordForm: React.FC = () => {
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-icon-wrapper">
-            <Shield className="auth-icon" />
+            <KeyRound className="auth-icon" />
           </div>
           <h1>Reset Password</h1>
           <p>Enter your username, reset code, and create a new secure password</p>

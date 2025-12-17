@@ -17,7 +17,6 @@ import {
   AlertCircle,
   UserCircle,
   Users,
-  GraduationCap,
   CheckCircle2
 } from 'lucide-react';
 import './DoctorProfile.css';
@@ -109,7 +108,7 @@ const DoctorProfile: React.FC = () => {
 
   const formattedCoordinates = `${Number.isFinite(user.y) ? user.y.toFixed(2) : '--'}, ${Number.isFinite(user.x) ? user.x.toFixed(2) : '--'
     }`;
-  const formattedPhone = user.ph_num.toString();
+  const formattedPhone = user.ph_num ? `0${user.ph_num.toString()}` : '';
 
   return (
     <div className="doctor-profile">
@@ -235,7 +234,7 @@ const DoctorProfile: React.FC = () => {
             <div className="info-grid-modern">
               <div className="info-item-modern">
                 <div className="info-item-icon">
-                  <GraduationCap size={18} />
+                  <Stethoscope size={18} />
                 </div>
                 <div className="info-item-content">
                   <span className="info-item-label">Specialization</span>

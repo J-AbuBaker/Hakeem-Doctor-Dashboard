@@ -3,7 +3,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../app/providers';
-import { ArrowRight, Loader2, Eye, EyeOff, Mail, Lock, AlertCircle, Shield } from 'lucide-react';
+import { ArrowRight, Loader2, Eye, EyeOff, Mail, Lock, AlertCircle, Stethoscope } from 'lucide-react';
 import { getErrorMessage, getErrorResponseData, getErrorStatus } from '../../shared/utils/error/handlers';
 import './AuthShared.css';
 import './AuthForms.css';
@@ -72,7 +72,7 @@ const LoginForm: React.FC = () => {
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-icon-wrapper">
-            <Shield className="auth-icon" />
+            <Stethoscope className="auth-icon" />
           </div>
           <h1>Doctor Login</h1>
           <p>Welcome back! Please sign in to access your dashboard</p>

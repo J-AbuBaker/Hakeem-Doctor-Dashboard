@@ -7,7 +7,13 @@ import {
   Clock,
   ArrowRight,
   Heart,
-  FileText
+  FileText,
+  LayoutDashboard,
+  User,
+  LogIn,
+  UserPlus,
+  KeyRound,
+  ChevronRight
 } from 'lucide-react';
 import './LandingPage.css';
 
@@ -147,36 +153,72 @@ const LandingPage: React.FC = () => {
       {/* Footer */}
       <footer className="landing-footer">
         <div className="landing-container">
-          <div className="footer-content">
-            <div className="footer-brand">
-              <div className="logo-container small">
-                <img
-                  src="/hakeem-logo.png"
-                  alt="HAKEEM"
-                  className="logo-image small"
-                />
+          <div className="footer-main">
+            <div className="footer-brand-section">
+              <div className="footer-logo-wrapper">
+                <div className="footer-logo-container">
+                  <img
+                    src="/hakeem-logo.png"
+                    alt="HAKEEM"
+                    className="footer-logo-image"
+                  />
+                </div>
               </div>
-              <p className="footer-tagline">
-                Professional healthcare management for modern medical practices.
+              <p className="footer-brand-description">
+                Professional healthcare management platform designed for modern medical practices. Empowering doctors with advanced tools to deliver exceptional patient care.
               </p>
             </div>
-            <div className="footer-links">
-              <div className="footer-column">
-                <h4>Product</h4>
-                <Link to="/dashboard">Dashboard</Link>
-                <Link to="/dashboard/appointments">Appointments</Link>
-                <Link to="/dashboard/profile">Profile</Link>
+
+            <div className="footer-navigation">
+              <div className="footer-nav-group">
+                <h5 className="footer-nav-title">Product</h5>
+                <nav className="footer-nav-horizontal">
+                  <Link to="/dashboard" className="footer-nav-item">
+                    <LayoutDashboard size={18} className="footer-item-icon" />
+                    <span className="footer-item-text">Dashboard</span>
+                  </Link>
+                  <Link to="/dashboard/appointments" className="footer-nav-item">
+                    <Calendar size={18} className="footer-item-icon" />
+                    <span className="footer-item-text">Appointments</span>
+                  </Link>
+                  <Link to="/dashboard/profile" className="footer-nav-item">
+                    <User size={18} className="footer-item-icon" />
+                    <span className="footer-item-text">Profile</span>
+                  </Link>
+                </nav>
               </div>
-              <div className="footer-column">
-                <h4>Account</h4>
-                <Link to="/login">Sign In</Link>
-                <Link to="/signup">Sign Up</Link>
-                <Link to="/forgot-password">Forgot Password</Link>
+
+              <div className="footer-nav-group">
+                <h5 className="footer-nav-title">Account</h5>
+                <nav className="footer-nav-horizontal">
+                  <Link to="/login" className="footer-nav-item">
+                    <LogIn size={18} className="footer-item-icon" />
+                    <span className="footer-item-text">Sign In</span>
+                  </Link>
+                  <Link to="/signup" className="footer-nav-item">
+                    <UserPlus size={18} className="footer-item-icon" />
+                    <span className="footer-item-text">Sign Up</span>
+                  </Link>
+                  <Link to="/forgot-password" className="footer-nav-item">
+                    <KeyRound size={18} className="footer-item-icon" />
+                    <span className="footer-item-text">Forgot Password</span>
+                  </Link>
+                </nav>
               </div>
             </div>
           </div>
+
+          <div className="footer-divider"></div>
+
           <div className="footer-bottom">
-            <p>&copy; {new Date().getFullYear()} HAKEEM. All rights reserved.</p>
+            <div className="footer-bottom-left">
+              <p className="footer-copyright">
+                &copy; {new Date().getFullYear()} <strong>HAKEEM</strong>. All rights reserved.
+              </p>
+            </div>
+            <div className="footer-bottom-right">
+              <span className="footer-platform-badge">Healthcare Management Platform</span>
+            </div>
           </div>
         </div>
       </footer>
