@@ -1,6 +1,6 @@
-import React, { useState, memo } from 'react';
+import { useState, memo } from 'react';
 import { format } from 'date-fns';
-import { useAppointments } from '../../context/AppointmentContext';
+import { useAppointments } from '../../app/providers';
 import { Appointment } from '../../types';
 import {
   Calendar,
@@ -11,12 +11,11 @@ import {
   FileText,
 } from 'lucide-react';
 import ConfirmDialog from '../common/ConfirmDialog';
-import { hasStatus } from '../../utils/statusUtils';
-import { isAppointmentOnDate } from '../../utils/dateUtils';
-import { getErrorMessage } from '../../utils/errorUtils';
-import { formatAppointmentType } from '../../utils/stringUtils';
-import { formatDuration } from '../../utils/durationUtils';
-import { getAppointmentTypeIcon, getAppointmentTypeLabel, getAppointmentTypeOption } from '../../utils/appointmentTypeUtils';
+import { hasStatus } from '../../utils/appointment/status';
+import { isAppointmentOnDate } from '../../shared/utils/date/utils';
+import { getErrorMessage } from '../../shared/utils/error/handlers';
+import { formatDuration } from '../../utils/appointment/duration';
+import { getAppointmentTypeIcon, getAppointmentTypeLabel, getAppointmentTypeOption } from '../../utils/appointment/type';
 
 interface AppointmentCardProps {
   appointment: Appointment;

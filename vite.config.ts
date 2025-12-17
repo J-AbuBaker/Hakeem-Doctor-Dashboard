@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -19,6 +20,14 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    resolve: {
+      alias: {
+        '@shared': path.resolve(__dirname, './src/shared'),
+        '@features': path.resolve(__dirname, './src/features'),
+        '@app': path.resolve(__dirname, './src/app'),
+        '@infrastructure': path.resolve(__dirname, './src/infrastructure'),
+      },
+    },
     server: {
       port: 3001,
       strictPort: false, // Automatically use next available port if 3001 is in use

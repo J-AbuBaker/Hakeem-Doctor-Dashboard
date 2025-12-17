@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import DoctorSidebar from '../components/dashboard/DoctorSidebar';
 import AppointmentCalendar from '../components/dashboard/AppointmentCalendar';
 import OpenSlotModal from '../components/dashboard/OpenSlotModal';
-import { useAppointments } from '../context/AppointmentContext';
+import { useAppointments } from '../app/providers';
 import { Calendar, Plus } from 'lucide-react';
 import './DashboardPage.css';
 
@@ -42,10 +42,10 @@ const AppointmentsPage: React.FC = () => {
             <button
               className="btn btn-primary btn-icon"
               onClick={handleOpenSlot}
-              title="Open New Slot"
+              title="Open New Slots"
             >
               <Plus size={20} />
-              <span>Open Slot</span>
+              <span>Open Slots</span>
             </button>
           </div>
           <AppointmentCalendar

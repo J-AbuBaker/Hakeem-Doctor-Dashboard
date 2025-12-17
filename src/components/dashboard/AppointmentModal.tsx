@@ -5,7 +5,7 @@ import { Appointment, UpdateAppointmentDto } from '../../types';
 import { X, Loader2, Calendar, User, Clock, FileText, AlertCircle } from 'lucide-react';
 import TimeSlotPicker from './TimeSlotPicker';
 import ConfirmDialog from '../common/ConfirmDialog';
-import { getErrorMessage, getErrorStatus } from '../../utils/errorUtils';
+import { getErrorMessage, getErrorStatus } from '../../shared/utils/error/handlers';
 
 interface AppointmentModalProps {
   appointment?: Appointment;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Doctor, UserInfo } from '../../types';
-import AuthService from '../../services/AuthService';
-import { getErrorMessage } from '../../utils/errorUtils';
+import { AuthService } from '../../features/auth';
+import { getErrorMessage } from '../../shared/utils/error/handlers';
 import {
   MapPin,
   Phone,
@@ -107,9 +107,8 @@ const DoctorProfile: React.FC = () => {
     );
   }
 
-  const formattedCoordinates = `${Number.isFinite(user.y) ? user.y.toFixed(2) : '--'}, ${
-    Number.isFinite(user.x) ? user.x.toFixed(2) : '--'
-  }`;
+  const formattedCoordinates = `${Number.isFinite(user.y) ? user.y.toFixed(2) : '--'}, ${Number.isFinite(user.x) ? user.x.toFixed(2) : '--'
+    }`;
   const formattedPhone = user.ph_num.toString();
 
   return (
@@ -126,10 +125,10 @@ const DoctorProfile: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="profile-header-info">
               <h1 className="profile-name-modern">Dr. {user.name}</h1>
-              
+
               <div className="profile-badges-modern">
                 <div className="profile-badge-modern badge-specialization">
                   <Stethoscope size={14} />
@@ -144,7 +143,7 @@ const DoctorProfile: React.FC = () => {
                   <span>Verified</span>
                 </div>
               </div>
-              
+
               {user.description && (
                 <p className="profile-description-modern">
                   {user.description}

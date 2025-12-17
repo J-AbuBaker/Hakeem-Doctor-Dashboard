@@ -7,10 +7,9 @@ import {
   User,
   AlertCircle
 } from 'lucide-react';
-import { hasStatus } from '../../utils/statusUtils';
-import { parseAppointmentDate } from '../../utils/dateUtils';
-import { formatAppointmentType } from '../../utils/stringUtils';
-import { getAppointmentTypeLabel } from '../../utils/appointmentTypeUtils';
+import { hasStatus } from '../../utils/appointment/status';
+import { parseAppointmentDate } from '../../utils/date/utils';
+import { getAppointmentTypeLabel } from '../../utils/appointment/type';
 import './BookingList.css';
 
 interface BookingListProps {

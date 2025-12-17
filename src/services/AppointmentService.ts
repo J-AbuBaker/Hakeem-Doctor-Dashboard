@@ -1,23 +1,24 @@
-import api from '../utils/api';
+import api from '../utils/api/client';
 import {
   Appointment,
   ScheduledAppointmentResponse,
   OpenSlotRequest,
 } from '../types';
-import { mapBackendStatusToFrontend, isExpiredAppointment } from '../utils/statusUtils';
+import { mapBackendStatusToFrontend, isExpiredAppointment } from '../utils/appointment/status';
 import {
   parseDateTimeString,
   formatDateToString,
   formatTimeToString,
   isValidDateTime,
-} from '../utils/dateParsing';
-import { formatAppointmentType } from '../utils/stringUtils';
-import { API_ENDPOINTS } from '../constants/apiEndpoints';
-import { APP_CONFIG } from '../constants/appConfig';
-import { TypedAxiosError } from '../types/errors';
-import { getDuration } from '../utils/durationCache';
+} from '../shared/utils/date/parsing';
+import { formatAppointmentType } from '../shared/utils/string/stringUtils';
+import { API_ENDPOINTS } from '../shared/constants/apiEndpoints';
+import { APP_CONFIG } from '../shared/constants/appConfig';
+import { TypedAxiosError } from '../shared/types/common/errors';
+import { getDuration } from '../utils/appointment/durationCache';
+import { IAppointmentService } from './interfaces/IAppointmentService';
 
-class AppointmentService {
+class AppointmentService implements IAppointmentService {
 
   private mapScheduledAppointmentToAppointment(apiAppointment: ScheduledAppointmentResponse): Appointment {
     if (!apiAppointment) {

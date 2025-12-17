@@ -1,17 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { format, isSameDay, startOfDay } from 'date-fns';
 import { Calendar, Clock } from 'lucide-react';
-import { useAppointments } from '../../context/AppointmentContext';
-import { parseAppointmentDate } from '../../utils/dateUtils';
-import { hasStatus } from '../../utils/statusUtils';
-import { sortAppointmentsByDateTime } from '../../utils/appointmentSorting';
+import { useAppointments } from '../../app/providers';
+import { parseAppointmentDate } from '../../shared/utils/date/utils';
+import { hasStatus } from '../../utils/appointment/status';
+import { sortAppointmentsByDateTime } from '../../utils/appointment/sorting';
 import {
   getWeeksWithAppointments,
   groupAppointmentsByDay,
   getCurrentWeekStart,
   isDateInWeek,
   findWeekIndex,
-} from '../../utils/weekUtils';
+} from '../../shared/utils/date/week';
 import AppointmentCard from './AppointmentCard';
 import WeekNavigation from './WeekNavigation';
 import SectionModule from './SectionModule';
@@ -144,7 +144,9 @@ const UpcomingAppointments: React.FC = () => {
         emptySubtitle="You have no appointments scheduled for upcoming weeks."
         emptyIcon={Calendar}
         aria-label="Upcoming Appointments"
-      />
+      >
+        {null}
+      </SectionModule>
     );
   }
 

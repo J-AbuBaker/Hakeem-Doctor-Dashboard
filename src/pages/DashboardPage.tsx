@@ -6,7 +6,7 @@ import DashboardStats from '../components/dashboard/DashboardStats';
 import TodaySchedule from '../components/dashboard/TodaySchedule';
 import UpcomingAppointments from '../components/dashboard/UpcomingAppointments';
 import ExpiredAppointments from '../components/dashboard/ExpiredAppointments';
-import { useAppointments } from '../context/AppointmentContext';
+import { useAppointments } from '../app/providers';
 import './DashboardPage.css';
 
 type DashboardTab = 'today' | 'upcoming' | 'expired';
@@ -47,10 +47,10 @@ const DashboardPage: React.FC = () => {
             <button
               className="btn btn-primary btn-icon"
               onClick={handleOpenSlot}
-              title="Open New Slot"
+              title="Open New Slots"
             >
               <span>+</span>
-              <span>Open Slot</span>
+              <span>Open Slots</span>
             </button>
           </div>
           <DashboardStats />

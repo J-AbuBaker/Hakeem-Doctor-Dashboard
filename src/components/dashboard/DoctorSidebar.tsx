@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../app/providers';
 import {
   LayoutDashboard,
   Calendar,
   User,
   LogOut,
   Menu,
-  X,
   KeyRound,
 } from 'lucide-react';
 import ConfirmDialog from '../common/ConfirmDialog';
 import ResetPasswordModal from './ResetPasswordModal';
-import AuthService from '../../services/AuthService';
+import { AuthService } from '../../features/auth';
 
 interface DoctorSidebarProps {
   isOpen: boolean;
@@ -60,9 +59,6 @@ const DoctorSidebar: React.FC<DoctorSidebarProps> = ({ isOpen, onToggle }) => {
             />
             <span className="sidebar-portal-label">Doctor Portal</span>
           </div>
-          <button className="sidebar-close" onClick={onToggle} aria-label="Close sidebar">
-            <X size={18} />
-          </button>
         </div>
 
         <div className="sidebar-user">

@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from 'react';
 import AppointmentService from '../services/AppointmentService';
 import { Appointment } from '../types';
-import { hasStatus } from '../utils/statusUtils';
-import { getStoredToken, decodeToken } from '../utils/jwtUtils';
-import { TypedAxiosError } from '../types/errors';
-import { getAppointmentsToAutoComplete } from '../utils/appointmentAutoComplete';
-import { APP_CONFIG } from '../constants/appConfig';
+import { hasStatus } from '../utils/appointment/status';
+import { getStoredToken } from '../infrastructure/storage';
+import { decodeToken } from '../shared/utils/auth/jwt';
+import { TypedAxiosError } from '../shared/types/common/errors';
+import { getAppointmentsToAutoComplete } from '../utils/appointment/autoComplete';
+import { APP_CONFIG } from '../shared/constants/appConfig';
+import { extractErrorMessage } from '../shared/utils/error/handlers';
 
 interface LoadingState {
   fetching: boolean;
@@ -59,20 +61,6 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
 
   // Track appointments currently being processed for auto-completion to prevent duplicates
   const processingAppointmentsRef = useRef<Set<string>>(new Set());
-
-  // Helper function to extract error message
-  const extractErrorMessage = useCallback((err: unknown): string => {
-    const error = err as TypedAxiosError;
-    if (error.response?.data) {
-      if (typeof error.response.data === 'object' && 'message' in error.response.data) {
-        return (error.response.data as { message?: string }).message || 'An error occurred';
-      }
-      if (typeof error.response.data === 'string') {
-        return error.response.data;
-      }
-    }
-    return error.message || 'An unexpected error occurred';
-  }, []);
 
   // Fetch appointments with proper state tracking
   const fetchAppointments = useCallback(async (params?: { status?: 'Scheduled' | 'Completed' | 'Cancelled' | 'All'; date?: string }) => {
@@ -151,7 +139,7 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
     } finally {
       setLoadingState(prev => ({ ...prev, fetching: false }));
     }
-  }, [extractErrorMessage]);
+  }, []);
 
   // Open slot with proper state tracking
   const openSlot = useCallback(async (appointmentDate: string) => {
@@ -183,7 +171,7 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
     } finally {
       setLoadingState(prev => ({ ...prev, openingSlot: false }));
     }
-  }, [fetchAppointments, extractErrorMessage]);
+  }, [fetchAppointments]);
 
   // Version without automatic refresh - for batch operations
   const openSlotWithoutRefresh = useCallback(async (appointmentDate: string) => {
@@ -300,7 +288,7 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
     } finally {
       setLoadingState(prev => ({ ...prev, completing: false }));
     }
-  }, [extractErrorMessage]);
+  }, []);
 
 
   // Refresh appointments - force fetch from API

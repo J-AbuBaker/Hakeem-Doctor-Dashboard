@@ -1,4 +1,4 @@
-import api from '../utils/api';
+import api from '../utils/api/client';
 import {
   SignUpUserDto,
   LoginUserDto,
@@ -10,24 +10,27 @@ import {
   UserInfo,
 } from '../types';
 import {
+  getUsernameFromToken,
+  hasRole,
+} from '../shared/utils/auth/jwt';
+import {
   storeToken,
   removeStoredToken,
   getStoredToken,
   isAuthenticated as checkAuth,
-  getUsernameFromToken,
-  hasRole,
-} from '../utils/jwtUtils';
+} from '../infrastructure/storage';
 import {
   isErrorResponse,
   extractErrorFromResponse,
   createResetPasswordError,
-} from '../utils/errorHandlers';
-import { API_ENDPOINTS } from '../constants/apiEndpoints';
-import { APP_CONFIG } from '../constants/appConfig';
-import { TypedAxiosError } from '../types/errors';
+} from '../shared/utils/error/handlers';
+import { API_ENDPOINTS } from '../shared/constants/apiEndpoints';
+import { APP_CONFIG } from '../shared/constants/appConfig';
+import { TypedAxiosError } from '../shared/types/common/errors';
 import { Role } from '../types/auth';
+import { IAuthService } from './interfaces/IAuthService';
 
-class AuthService {
+class AuthService implements IAuthService {
   async signup(data: SignUpUserDto): Promise<SignupResponse> {
     const response = await api.post<SignupResponse>(API_ENDPOINTS.AUTH.SIGNUP, data);
     if (response.data.token) {
@@ -76,8 +79,8 @@ class AuthService {
             (typeof error.response.data === 'object' && error.response.data && 'message' in error.response.data)
               ? (error.response.data as { message?: string }).message
               : typeof error.response.data === 'string'
-              ? error.response.data
-              : 'Invalid verification code or expired code';
+                ? error.response.data
+                : 'Invalid verification code or expired code';
           throw createResetPasswordError(errorMessage || 'Invalid verification code or expired code', 400);
         }
         // For other status codes, re-throw as is
@@ -159,7 +162,7 @@ class AuthService {
       if (username) {
         const user = await this.getUserByUsername(username);
         if (user) {
-          const role: string = 
+          const role: string =
             typeof user.role === 'string'
               ? user.role.toUpperCase()
               : (user.role as Role)?.role?.toUpperCase() || '';

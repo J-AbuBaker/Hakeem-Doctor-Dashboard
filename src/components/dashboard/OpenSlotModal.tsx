@@ -1,16 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { useAppointments } from '../../context/AppointmentContext';
+import { useAppointments } from '../../app/providers';
 import { X, Loader2, Calendar, Clock, AlertCircle, Plus, Minus, CheckCircle2, Info, AlertTriangle } from 'lucide-react';
 import TimeSlotPicker from './TimeSlotPicker';
 import SlotDatePicker from './SlotDatePicker';
 import { format } from 'date-fns';
-import { getErrorMessage, getErrorStatus } from '../../utils/errorUtils';
-import { storeDurations } from '../../utils/durationCache';
-import { checkMultipleSlotsConflicts, getBlockedTimeRanges, getMaxDurationBeforeNextAppointment } from '../../utils/appointmentConflict';
-import { parseDateTimeString } from '../../utils/dateParsing';
-import { APP_CONFIG } from '../../constants/appConfig';
+import { getErrorMessage, getErrorStatus } from '../../shared/utils/error/handlers';
+import { storeDurations } from '../../utils/appointment/durationCache';
+import { checkMultipleSlotsConflicts, getBlockedTimeRanges, getMaxDurationBeforeNextAppointment } from '../../utils/appointment/conflict';
+import { parseDateTimeString } from '../../shared/utils/date/parsing';
+import { APP_CONFIG } from '../../shared/constants/appConfig';
 
 interface OpenSlotModalProps {
   isOpen: boolean;
@@ -22,6 +22,7 @@ interface CalculatedSlot {
   displayTime: string;
   index: number;
   duration: number; // Duration in minutes for this slot
+  error?: string; // Optional error message if slot creation failed
 }
 
 // Slot duration options in minutes (controlled selection)
@@ -379,12 +380,17 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
         // Log failure with detailed information
         const errorMessage = err instanceof Error ? err.message : String(err);
         if (import.meta.env.DEV) {
-          console.warn(`Failed to create slot ${slot.index} at ${slot.displayTime} (${slot.datetime}):`, {
+          console.error(`Failed to create slot ${slot.index} at ${slot.displayTime} (${slot.datetime}):`, {
             error: errorMessage,
             errorObject: err,
+            slotDetails: slot,
           });
         }
-        failedSlots.push(slot);
+        // Store the slot with error message for better user feedback
+        failedSlots.push({
+          ...slot,
+          error: errorMessage, // Add error message to slot for display
+        });
       }
     }
 
@@ -707,6 +713,11 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                       {failedSlots.map((slot) => (
                         <li key={slot.index}>
                           Slot {slot.index}: {slot.displayTime}
+                          {slot.error && (
+                            <span className="slot-error-detail" style={{ display: 'block', fontSize: '0.875rem', color: '#dc2626', marginTop: '0.25rem' }}>
+                              {slot.error}
+                            </span>
+                          )}
                         </li>
                       ))}
                     </ul>
@@ -914,9 +925,11 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                       const isSelected = formik.values.slotDuration === option.value;
                       // Check if this duration option exceeds max allowed for selected time (considering both next appointment and 6 PM)
                       // Note: Break duration doesn't affect single slot duration validation, only affects max slots calculation
-                      const exceedsMax = maxDurationBeforeNext !== undefined &&
+                      const exceedsMax = Boolean(
+                        maxDurationBeforeNext !== undefined &&
                         formik.values.startTime &&
-                        option.value > maxDurationBeforeNext;
+                        option.value > maxDurationBeforeNext
+                      );
                       const isDisabled = isSubmitting || exceedsMax;
 
                       return (
@@ -931,7 +944,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                           }}
                           className={`duration-box ${isSelected ? 'selected' : ''} ${formik.touched.slotDuration && formik.errors.slotDuration ? 'error' : ''} ${exceedsMax ? 'duration-exceeds-max' : ''}`}
                           disabled={isDisabled}
-                          data-max-duration={exceedsMax ? `Max: ${maxDurationBeforeNext}m` : ''}
+                          data-max-duration={exceedsMax ? `Max: ${maxDurationBeforeNext}m` : undefined}
                           title={exceedsMax ? (() => {
                             // Check if limit is due to 6 PM or next appointment
                             const [startHours, startMinutes] = formik.values.startTime.split(':').map(Number);

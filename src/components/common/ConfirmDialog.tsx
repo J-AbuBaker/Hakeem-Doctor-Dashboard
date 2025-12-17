@@ -111,7 +111,14 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <div className="confirm-dialog-header">
           <div
             className="confirm-dialog-icon-wrapper"
-            style={{ backgroundColor: `${getIconColor()}15`, borderColor: `${getIconColor()}30` }}
+            style={{
+              backgroundColor: type === 'logout'
+                ? 'rgba(245, 158, 11, 0.1)'
+                : `${getIconColor()}15`,
+              borderColor: type === 'logout'
+                ? 'rgba(245, 158, 11, 0.3)'
+                : `${getIconColor()}30`
+            }}
           >
             <div style={{ color: getIconColor() }}>
               {getIcon()}

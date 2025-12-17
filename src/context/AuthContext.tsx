@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import AuthService from '../services/AuthService';
 import { Doctor, SignUpUserDto } from '../types';
-import { TypedAxiosError } from '../types/errors';
+import { extractErrorMessage } from '../shared/utils/error/handlers';
 
 interface LoadingState {
   initializing: boolean;
@@ -48,30 +48,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updating: false,
   });
   const [error, setError] = useState<string | null>(null);
-  
+
   // Store previous state for rollback
   const previousUserRef = useRef<Doctor | null>(null);
-
-  // Helper function to extract error message
-  const extractErrorMessage = useCallback((err: unknown): string => {
-    const error = err as TypedAxiosError;
-    if (error.response?.data) {
-      if (typeof error.response.data === 'object' && 'message' in error.response.data) {
-        return (error.response.data as { message?: string }).message || 'An error occurred';
-      }
-      if (typeof error.response.data === 'string') {
-        return error.response.data;
-      }
-    }
-    return error.message || 'An unexpected error occurred';
-  }, []);
 
   // Initialize authentication state from token
   useEffect(() => {
     const initAuth = async () => {
       setLoadingState(prev => ({ ...prev, initializing: true }));
       setError(null);
-      
+
       if (AuthService.isAuthenticated()) {
         try {
           // Get current user info from token (username extracted from JWT)
@@ -93,25 +79,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Don't set error here as token might still be valid
         }
       }
-      
+
       setLoadingState(prev => ({ ...prev, initializing: false }));
     };
 
     initAuth();
-  }, [extractErrorMessage]);
+  }, []);
 
   // Login with proper state tracking and API response synchronization
   const login = useCallback(async (username: string, password: string) => {
     setLoadingState(prev => ({ ...prev, loggingIn: true }));
     setError(null);
-    
+
     // Store previous state for rollback
     previousUserRef.current = user;
-    
+
     try {
       // Call API to login - this is the source of truth
       const loginResponse = await AuthService.login({ username, password });
-      
+
       // API returns token, username, and expiresIn
       if (!loginResponse.token) {
         throw new Error('Login failed: No token received from server');
@@ -139,27 +125,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (err: unknown) {
       // Rollback to previous state on error
       setUser(previousUserRef.current);
-      
+
       const errorMessage = extractErrorMessage(err);
       setError(errorMessage);
       throw err; // Re-throw to allow UI to handle error
     } finally {
       setLoadingState(prev => ({ ...prev, loggingIn: false }));
     }
-  }, [user, extractErrorMessage]);
+  }, [user]);
 
   // Signup with proper state tracking and API response synchronization
   const signup = useCallback(async (data: SignUpUserDto) => {
     setLoadingState(prev => ({ ...prev, signingUp: true }));
     setError(null);
-    
+
     // Store previous state for rollback
     previousUserRef.current = user;
-    
+
     try {
       // Call API to signup - this is the source of truth
       const signupResponse = await AuthService.signup(data);
-      
+
       // API returns token, username, and role from /auth/signup
       if (!signupResponse.token) {
         throw new Error('Signup failed: No token received from server');
@@ -178,14 +164,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (err: unknown) {
       // Rollback to previous state on error
       setUser(previousUserRef.current);
-      
+
       const errorMessage = extractErrorMessage(err);
       setError(errorMessage);
       throw err; // Re-throw to allow UI to handle error
     } finally {
       setLoadingState(prev => ({ ...prev, signingUp: false }));
     }
-  }, [user, extractErrorMessage]);
+  }, [user]);
 
   // Logout with proper state cleanup
   const logout = useCallback(() => {
@@ -199,7 +185,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const updateUser = useCallback((updatedUser: Doctor) => {
     // Store previous state for rollback
     previousUserRef.current = user;
-    
+
     // Optimistic update
     setUser(updatedUser);
   }, [user]);
@@ -212,10 +198,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     setLoadingState(prev => ({ ...prev, updating: true }));
     setError(null);
-    
+
     // Store previous state for rollback
     previousUserRef.current = user;
-    
+
     try {
       // Fetch user from API - source of truth
       const apiUser = await AuthService.getCurrentUser();
@@ -226,13 +212,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (err: unknown) {
       // Rollback to previous state on error
       setUser(previousUserRef.current);
-      
+
       const errorMessage = extractErrorMessage(err);
       setError(errorMessage);
     } finally {
       setLoadingState(prev => ({ ...prev, updating: false }));
     }
-  }, [user, extractErrorMessage]);
+  }, [user]);
 
   // Clear error state
   const clearError = useCallback(() => {

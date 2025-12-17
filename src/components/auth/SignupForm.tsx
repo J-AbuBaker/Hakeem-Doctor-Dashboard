@@ -2,9 +2,9 @@ import React from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../app/providers';
 import { SPECIALIZATIONS, BLOOD_TYPES } from '../../types';
-import { getErrorMessage, getErrorStatus } from '../../utils/errorUtils';
+import { getErrorMessage, getErrorStatus } from '../../shared/utils/error/handlers';
 import {
   UserPlus,
   Loader2,

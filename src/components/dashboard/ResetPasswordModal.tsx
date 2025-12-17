@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import AuthService from '../../services/AuthService';
-import { getErrorMessage } from '../../utils/errorUtils';
-import { TypedAxiosError } from '../../types/errors';
+import { AuthService } from '../../features/auth';
+import { getErrorMessage } from '../../shared/utils/error/handlers';
+import { TypedAxiosError } from '../../shared/types/common/errors';
 import {
   X,
   Lock,

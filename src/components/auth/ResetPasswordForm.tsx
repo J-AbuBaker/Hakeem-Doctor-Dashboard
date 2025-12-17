@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import AuthService from '../../services/AuthService';
+import { AuthService } from '../../features/auth';
 import { KeyRound, Loader2, CheckCircle, User, Lock, Eye, EyeOff, Shield, ArrowLeft, AlertCircle, CheckCircle2, Mail } from 'lucide-react';
-import { LocationState } from '../../types/errors';
-import { getErrorMessage, getErrorStatus } from '../../utils/errorUtils';
+import { LocationState } from '../../shared/types/common/errors';
+import { getErrorMessage, getErrorStatus } from '../../shared/utils/error/handlers';
 import './AuthShared.css';
 import './AuthForms.css';
 

@@ -221,7 +221,7 @@
 }
 
 .today-appointment-content .appointment-info-section.compact {
-  gap: var(--spacing-2);
+  gap: var(--spacing-6);
   width: 100%;
   flex-wrap: wrap;
   align-items: center;

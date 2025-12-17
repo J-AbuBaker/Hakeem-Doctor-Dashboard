@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useAppointments } from '../../context/AppointmentContext';
+import { useAppointments } from '../../app/providers';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth, isSameMonth, isToday, startOfDay } from 'date-fns';
-import { Calendar as CalendarIcon, Filter, Plus, ChevronLeft, ChevronRight, Clock, User, AlertCircle, Calendar } from 'lucide-react';
-import { getAppointmentsForDate, parseAppointmentDate } from '../../utils/dateUtils';
-import { hasStatus } from '../../utils/statusUtils';
-import { formatAppointmentType } from '../../utils/stringUtils';
-import { getAppointmentTypeLabel } from '../../utils/appointmentTypeUtils';
-import { sortAppointmentsByDateTime } from '../../utils/appointmentSorting';
-import { formatDuration } from '../../utils/durationUtils';
+import { Calendar as CalendarIcon, Filter, Plus, ChevronLeft, ChevronRight, Clock, AlertCircle, Calendar } from 'lucide-react';
+import { getAppointmentsForDate, parseAppointmentDate } from '../../shared/utils/date/utils';
+import { hasStatus } from '../../utils/appointment/status';
+import { getAppointmentTypeLabel } from '../../utils/appointment/type';
+import { sortAppointmentsByDateTime } from '../../utils/appointment/sorting';
+import { formatDuration } from '../../utils/appointment/duration';
 import AppointmentCard from './AppointmentCard';
 import SectionModule from './SectionModule';
 import './BookingList.css';
@@ -68,14 +67,14 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
 
   useEffect(() => {
     fetchAppointments({
-      status: statusFilter !== 'All' ? statusFilter : undefined,
+      status: statusFilter !== 'All' && statusFilter !== 'Expired' ? statusFilter : undefined,
     });
   }, [statusFilter, fetchAppointments]);
 
   // Fetch appointments when week view is active or when week changes
   useEffect(() => {
     fetchAppointments({
-      status: statusFilter !== 'All' ? statusFilter : undefined,
+      status: statusFilter !== 'All' && statusFilter !== 'Expired' ? statusFilter : undefined,
     });
   }, [selectedDate, viewMode, statusFilter, fetchAppointments]);
 
@@ -332,7 +331,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
 
                         {sortedDayAppointments.length > 0 && (
                           <div className="today-schedule-timeline" role="list" aria-label={`Appointments for ${format(selectedDate, 'MMMM dd, yyyy')}`}>
-                            {sortedDayAppointments.map((appointment, index) => {
+                            {sortedDayAppointments.map((appointment) => {
                               const appointmentDate = parseAppointmentDate(appointment);
                               const isUpcoming = isToday &&
                                 appointmentDate &&

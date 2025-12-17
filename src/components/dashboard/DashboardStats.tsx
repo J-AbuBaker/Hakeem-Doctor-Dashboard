@@ -1,81 +1,41 @@
 import React from 'react';
-import { useAppointments } from '../../context/AppointmentContext';
+import { useAppointments } from '../../app/providers';
 import { Calendar, CheckCircle2, Clock, XCircle } from 'lucide-react';
-import { getTodayAppointments, isAppointmentInFuture } from '../../utils/dateUtils';
-import { hasStatus } from '../../utils/statusUtils';
+import { useDashboardStats } from '../../features/appointments';
 
 const DashboardStats: React.FC = () => {
   const { appointments } = useAppointments();
+  const stats = useDashboardStats(appointments);
 
-  // Use robust date comparison utility that uses the original appointmentDate from API
-  const todayAppointments = getTodayAppointments(appointments);
-
-  // Calculate stats with proper status filtering using status utility
-  const totalAppointments = appointments.length;
-  const todayAppointmentsCount = todayAppointments.length;
-  const todayScheduledCount = todayAppointments.filter(a => hasStatus(a.status, 'Scheduled')).length;
-  const completedCount = appointments.filter(a => hasStatus(a.status, 'Completed')).length;
-
-  // Booked count: future scheduled appointments WITH real patients assigned (exclude unbooked slots and past appointments)
-  const bookedCount = appointments.filter(a => {
-    // Must be scheduled (not completed, cancelled, or expired)
-    if (!hasStatus(a.status, 'Scheduled')) {
-      return false;
-    }
-
-    // Must have a real patient assigned (exclude unbooked slots)
-    if (!a.patientId || a.patientId === '0') {
-      return false;
-    }
-
-    // Must be in the future (exclude past appointments)
-    return isAppointmentInFuture(a);
-  }).length;
-
-  // Expired count: past appointments that were never booked
-  const expiredCount = appointments.filter(a => hasStatus(a.status, 'Expired')).length;
-
-  const completedPercentage = totalAppointments > 0
-    ? Math.round((completedCount / totalAppointments) * 100)
-    : 0;
-
-  // Calculate expired percentage (expired slots vs total slots)
-  const totalSlots = appointments.filter(a =>
-    !a.patientId || a.patientId === '0' || a.patientName === 'Available Slot'
-  ).length;
-  const expiredPercentage = totalSlots > 0
-    ? Math.round((expiredCount / totalSlots) * 100)
-    : 0;
-
-  const stats = [
+  const statCards = [
     {
       label: 'Total Appointments',
-      value: totalAppointments,
+      value: stats.totalAppointments,
       icon: Calendar,
       color: 'var(--primary)',
       bgColor: 'rgba(13, 148, 136, 0.1)',
     },
     {
       label: 'Today\'s Appointments',
-      value: todayAppointmentsCount,
+      value: stats.todayAppointmentsCount,
       icon: Clock,
       color: 'var(--status-scheduled)',
       bgColor: 'rgba(59, 130, 246, 0.1)',
-      change: `${todayScheduledCount} scheduled`,
+      change: `${stats.todayScheduledCount} scheduled`,
       trend: 'neutral' as const,
     },
     {
       label: 'Completed',
-      value: completedCount,
+      value: stats.completedCount,
       icon: CheckCircle2,
       color: 'var(--status-completed)',
       bgColor: 'rgba(14, 116, 144, 0.1)',
-      change: `${completedPercentage}%`,
+      change: `${stats.completedPercentage}%`,
       trend: 'up' as const,
     },
     {
       label: 'Booked',
-      value: bookedCount,
+      value: stats.bookedCount,
       icon: Clock,
       color: 'var(--warning)',
       bgColor: 'rgba(217, 119, 6, 0.1)',
@@ -84,18 +44,18 @@ const DashboardStats: React.FC = () => {
     },
     {
       label: 'Expired Slots',
-      value: expiredCount,
+      value: stats.expiredCount,
       icon: XCircle,
       color: '#9ca3af',
       bgColor: 'rgba(156, 163, 175, 0.1)',
-      change: `${expiredPercentage}%`,
+      change: `${stats.expiredPercentage}%`,
       trend: 'neutral' as const,
     },
   ];
 
   return (
     <div className="dashboard-stats">
-      {stats.map((stat, index) => {
+      {statCards.map((stat, index) => {
         const Icon = stat.icon;
         return (
           <div key={index} className="stat-card">

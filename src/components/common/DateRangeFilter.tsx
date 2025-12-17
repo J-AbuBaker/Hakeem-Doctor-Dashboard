@@ -1,4 +1,4 @@
-import React, { useState, useMemo, memo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { subDays, subMonths, format, startOfDay, endOfDay } from 'date-fns';
 import { Calendar, X } from 'lucide-react';
 import DatePicker from './DatePicker';

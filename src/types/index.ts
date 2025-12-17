@@ -12,9 +12,9 @@ export * from './appointment';
 // Doctor types
 export * from './doctor';
 
-// Error types
-export * from './errors';
+// Error types (from common directory)
+export * from './common/errors';
 
-// Logger types
-export * from './logger';
+// Logger types (from common directory)
+export * from './common/logger';
 
