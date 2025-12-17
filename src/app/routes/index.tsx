@@ -10,7 +10,7 @@ import LandingPage from '../../pages/LandingPage';
 import DashboardPage from '../../pages/DashboardPage';
 import AppointmentsPage from '../../pages/AppointmentsPage';
 import ProfilePage from '../../pages/ProfilePage';
-import '../../App.css';
+import '../../styles/index.css';
 
 function AppRoutes() {
   return (

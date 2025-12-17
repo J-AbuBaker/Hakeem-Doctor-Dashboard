@@ -1,0 +1,1545 @@
+/**
+ * Form Component Styles
+ * 
+ * Comprehensive form styling including input fields, selects,
+ * textareas, date pickers, duration boxes, validation states,
+ * error messages, and form layouts (horizontal and vertical).
+ */
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  position: relative;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.form-group .date-picker-wrapper {
+  width: 100%;
+  align-self: stretch;
+}
+
+.form-group .duration-boxes-container {
+  width: 100%;
+  align-self: stretch;
+}
+
+.form-group-horizontal {
+  display: grid;
+  grid-template-columns: minmax(140px, auto) 1fr;
+  align-items: center;
+  gap: 1rem 0.875rem;
+  width: 100%;
+  position: relative;
+  min-width: 0;
+}
+
+.form-group-horizontal>label {
+  grid-column: 1;
+  flex-shrink: 0;
+  min-width: 140px;
+  margin-bottom: 0;
+  white-space: nowrap;
+  align-self: center;
+}
+
+.form-group-horizontal>.input-wrapper,
+.form-group-horizontal>div:not(.field-error):not(.field-hint) {
+  grid-column: 2;
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.form-group-horizontal .field-error,
+.form-group-horizontal .field-hint {
+  grid-column: 2 !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0 !important;
+  padding: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-inline-start: 0 !important;
+  padding-inline-end: 0 !important;
+  align-self: flex-start !important;
+  left: 0 !important;
+  transform: none !important;
+  text-align: left !important;
+  text-align: start !important;
+  text-indent: 0 !important;
+  justify-content: flex-start !important;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.375rem;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+.form-group-horizontal>label {
+  margin-bottom: 0;
+  align-self: center;
+}
+
+.form-group-horizontal>label {
+  margin-bottom: 0;
+}
+
+.label-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--primary);
+  flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+
+.form-group:hover .label-icon {
+  color: var(--primary-dark);
+}
+
+/* Age Display in Label */
+.age-display {
+  margin-left: 0.5rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  opacity: 0.8;
+}
+
+/* Input Wrapper for Icons - Icons Inside Fields */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Password wrapper - no extra padding needed, icon positioning handles it */
+.input-wrapper.password-wrapper {
+  /* Styles handled by parent .input-wrapper */
+  display: flex;
+  /* Inherited from parent, but prevents empty ruleset warning */
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.625rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: var(--transition-base);
+  z-index: 3;
+  border-radius: var(--radius-sm);
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.password-toggle:hover {
+  color: var(--primary);
+  background-color: hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.1);
+}
+
+.password-toggle:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.125rem;
+  height: 1.125rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+  z-index: 2;
+  transition: var(--transition-base);
+}
+
+.input-icon-success {
+  position: absolute;
+  right: 3rem;
+  width: 16px;
+  height: 16px;
+  color: var(--success);
+  pointer-events: none;
+  z-index: 1;
+  animation: checkmark 0.3s ease-out;
+}
+
+@keyframes checkmark {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.password-wrapper .input-icon-success {
+  right: 3rem;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem 0.875rem 0.75rem 2.5rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  background-color: var(--surface-elevated);
+  color: var(--text-primary);
+  min-height: 3rem;
+  height: 3rem;
+  line-height: 1.5;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.form-group select:hover:not(:disabled):not(.error) {
+  border-color: var(--gray-400);
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+}
+
+.form-group input:hover:not(:disabled):not(:focus):not(.error) {
+  border-color: var(--gray-400);
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+}
+
+.password-wrapper input {
+  padding-right: 2.75rem;
+  background-image: none !important;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+  border-width: 2px;
+  box-shadow: 0 0 0 4px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.12),
+    0 4px 12px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.18);
+  background-color: var(--surface-elevated);
+  transform: translateY(-1px);
+}
+
+.form-group input:focus:active,
+.form-group select:focus:active {
+  transform: translateY(0);
+}
+
+.form-group input:not(:placeholder-shown)~.input-icon-success,
+.form-group input:focus~.input-icon-success {
+  display: block;
+}
+
+.form-group input:placeholder-shown~.input-icon-success {
+  display: none;
+}
+
+.form-group input:focus~.input-icon,
+.form-group select:focus~.input-icon {
+  color: var(--primary);
+}
+
+.form-group input.error~.input-icon,
+.form-group select.error~.input-icon {
+  color: var(--danger);
+}
+
+.form-group select:disabled~.input-icon {
+  opacity: 0.5;
+}
+
+/* Code Input - 6 Digit Boxes */
+.code-input-container {
+  display: flex;
+  gap: var(--spacing-3);
+  justify-content: center;
+  align-items: center;
+}
+
+.code-digit-input {
+  width: 3.5rem;
+  height: 3.5rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  background-color: var(--surface-elevated);
+  color: var(--text-primary);
+  transition: var(--transition-all);
+  padding: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin: 0;
+  line-height: 3.5rem !important;
+  box-sizing: border-box;
+  display: block;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+.code-digit-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.1),
+    0 2px 8px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.15);
+  background-color: var(--surface-elevated);
+  transform: scale(1.05);
+}
+
+.code-digit-input.error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px hsla(0, 84%, 51%, 0.1);
+}
+
+.code-digit-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--surface-alt);
+}
+
+@media (max-width: 640px) {
+  .code-digit-input {
+    width: 3rem;
+    height: 3rem;
+    font-size: var(--font-size-xl);
+    line-height: 3rem;
+    padding: 0;
+    margin: 0;
+  }
+
+  .code-input-container {
+    gap: var(--spacing-2);
+  }
+}
+
+/* Textarea Wrapper */
+.textarea-wrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.textarea-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 0.875rem;
+  width: 1rem;
+  height: 1rem;
+  color: var(--text-light);
+  pointer-events: none;
+  z-index: 1;
+  transition: color 0.2s;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 0.625rem 0.875rem 0.625rem 2.5rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  transition: all 0.2s;
+  font-family: inherit;
+  background-color: var(--surface);
+  resize: vertical;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.1);
+}
+
+.form-group textarea:focus~.textarea-icon {
+  color: var(--primary);
+}
+
+.form-group textarea.error~.textarea-icon {
+  color: var(--danger);
+}
+
+/* Hide spinner arrows for number inputs */
+.form-group input[type="number"]::-webkit-inner-spin-button,
+.form-group input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.form-group input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.form-group select {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='M3.5 5.25L7 8.75L10.5 5.25' stroke='%23475569' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  padding-right: 2.75rem;
+  background-size: 14px 14px;
+}
+
+/* Ensure password and text inputs don't get dropdown arrow */
+.form-group input[type="password"],
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="number"],
+.form-group input[type="tel"] {
+  background-image: none !important;
+}
+
+/* Password wrapper inputs should maintain their padding */
+.password-wrapper input[type="password"],
+.password-wrapper input[type="text"] {
+  background-image: none !important;
+  padding-right: 2.75rem;
+}
+
+.form-group select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='M3.5 5.25L7 8.75L10.5 5.25' stroke='%230d9488' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.form-group select:hover:not(:disabled):not(:focus) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none'%3E%3Cpath d='M3.5 5.25L7 8.75L10.5 5.25' stroke='%231e293b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.form-group select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background-color: var(--surface-alt);
+}
+
+/* Duration Boxes - Professional Compact Selection */
+.duration-boxes-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.625rem;
+  align-items: stretch;
+  padding: 0.75rem;
+  background: var(--surface-elevated);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
+  overflow: visible;
+}
+
+.duration-box {
+  flex: 1 1 auto;
+  min-width: 85px;
+  max-width: 110px;
+  height: 2.625rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  padding: 0.5625rem 0.6875rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  font-family: inherit;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.duration-box:hover:not(:disabled):not(.error) {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.1) 0%, hsla(var(--primary-hue), var(--primary-saturation), calc(var(--primary-lightness) + 5%), 0.05) 100%);
+  box-shadow: 0 3px 8px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.duration-box.selected {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--text-inverse);
+  box-shadow: 0 4px 12px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.3), 0 2px 6px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  font-weight: 600;
+}
+
+.duration-box.selected:hover:not(:disabled) {
+  border-color: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+  box-shadow: 0 6px 16px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.35), 0 3px 8px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.duration-box:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.duration-box:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  background-color: var(--surface-alt);
+}
+
+.duration-box.error {
+  border-color: var(--danger);
+}
+
+.duration-box.error:hover:not(:disabled) {
+  border-color: var(--danger-light);
+}
+
+.duration-box-label {
+  text-align: center;
+  line-height: 1.3;
+  font-weight: var(--font-weight-medium);
+  letter-spacing: -0.01em;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.duration-box.selected .duration-box-label {
+  font-weight: var(--font-weight-semibold);
+}
+
+.duration-box.duration-exceeds-max {
+  opacity: 0.65;
+  cursor: not-allowed;
+  border-color: hsla(var(--warning-hue), 92%, 50%, 0.3);
+  background: linear-gradient(135deg, hsla(var(--warning-hue), 75%, 96%, 0.4) 0%, hsla(var(--warning-hue), 75%, 98%, 0.2) 100%);
+  position: relative;
+  height: 2.625rem;
+  box-shadow: 0 1px 3px hsla(var(--warning-hue), 92%, 50%, 0.1);
+}
+
+.duration-box.duration-exceeds-max:hover:not(:disabled) {
+  border-color: hsla(var(--warning-hue), 92%, 50%, 0.4);
+  background: linear-gradient(135deg, hsla(var(--warning-hue), 75%, 95%, 0.5) 0%, hsla(var(--warning-hue), 75%, 97%, 0.3) 100%);
+  transform: none;
+  box-shadow: 0 2px 6px hsla(var(--warning-hue), 92%, 50%, 0.12);
+  padding-bottom: 1.5rem;
+}
+
+.duration-box.duration-exceeds-max::after {
+  content: attr(data-max-duration);
+  position: absolute;
+  bottom: 0.375rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--warning);
+  line-height: 1.2;
+  white-space: nowrap;
+  background: linear-gradient(135deg, hsla(var(--warning-hue), 75%, 94%, 0.9) 0%, hsla(var(--warning-hue), 75%, 94%, 0.7) 100%);
+  padding: 0.1875rem 0.375rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px hsla(var(--warning-hue), 92%, 50%, 0.2);
+  border: 1px solid hsla(var(--warning-hue), 92%, 50%, 0.25);
+  letter-spacing: 0.01em;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 10;
+}
+
+.duration-box.duration-exceeds-max:hover:not(:disabled)::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Responsive adjustments for duration boxes */
+@media (max-width: 768px) {
+  .duration-boxes-container {
+    gap: 0.375rem;
+    overflow: visible;
+  }
+
+  .duration-box {
+    min-width: 75px;
+    max-width: 110px;
+    height: 2.25rem;
+    padding: 0.375rem 0.625rem;
+    font-size: var(--font-size-xs);
+  }
+
+}
+
+/* Date Input Styling - Professional */
+.form-group input[type="date"] {
+  color-scheme: light;
+  position: relative;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.form-group input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 1rem;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.form-group input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.1);
+  transform: scale(1.1);
+}
+
+.form-group input[type="date"]:focus::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  background-color: hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.15);
+}
+
+/* Firefox date input styling */
+.form-group input[type="date"]::-moz-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.form-group input[type="date"]::-moz-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Enhanced date input appearance */
+.form-group input[type="date"]:not(:placeholder-shown) {
+  color: var(--text-primary);
+}
+
+.form-group input[type="date"]:invalid {
+  color: var(--text-secondary);
+}
+
+/* Professional Date Picker Component */
+.date-picker-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Make DatePicker input match standard form input styling */
+.date-picker-wrapper .input-wrapper {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* DatePicker input matches standard form input styling */
+.date-picker-input {
+  width: 100%;
+  padding: 0.75rem 2.75rem 0.75rem 2.5rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  background-color: var(--surface-elevated);
+  color: var(--text-primary);
+  min-height: 3rem;
+  height: 3rem;
+  line-height: 1.5;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  cursor: pointer;
+  margin: 0;
+  outline: none;
+}
+
+.date-picker-input:hover:not(.disabled):not(.error) {
+  border-color: var(--gray-400);
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+}
+
+.date-picker-input:focus,
+.date-picker-input.active:not(.disabled) {
+  outline: none;
+  border-color: var(--primary);
+  border-width: 2px;
+  box-shadow: 0 0 0 4px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.12),
+    0 4px 12px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.18);
+  background-color: var(--surface-elevated);
+  transform: translateY(-1px);
+}
+
+.date-picker-input:focus:active,
+.date-picker-input.active:active {
+  transform: translateY(0);
+}
+
+.date-picker-input.error {
+  border-color: var(--danger);
+  border-width: 2px;
+  box-shadow: 0 0 0 4px hsla(var(--danger-hue), 72%, 50%, 0.12);
+  animation: errorPulse 0.5s ease-out;
+}
+
+.date-picker-input.error:focus {
+  box-shadow: 0 0 0 4px hsla(var(--danger-hue), 72%, 50%, 0.15);
+}
+
+.date-picker-input.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: var(--background);
+}
+
+.date-picker-input::placeholder {
+  color: var(--text-light);
+}
+
+/* DatePicker icon styling - matches form input icon behavior */
+.date-picker-wrapper .input-icon {
+  color: var(--text-light);
+}
+
+.date-picker-input:focus~.input-icon,
+.date-picker-input.active~.input-icon {
+  color: var(--primary);
+}
+
+.date-picker-input.error~.input-icon {
+  color: var(--danger);
+}
+
+.date-picker-clear {
+  position: absolute;
+  right: 2.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text-light);
+  transition: all 0.2s;
+  flex-shrink: 0;
+  z-index: 3;
+  opacity: 0.6;
+}
+
+.date-picker-clear:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--danger);
+  transform: translateY(-50%) scale(1.1);
+  opacity: 1;
+}
+
+.date-picker-chevron {
+  position: absolute;
+  right: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light);
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  z-index: 2;
+  opacity: 0.6;
+}
+
+.date-picker-chevron.open {
+  transform: translateY(-50%) rotate(180deg);
+  opacity: 1;
+}
+
+.date-picker-input:hover:not(.disabled):not(.error)~.date-picker-chevron {
+  opacity: 1;
+  color: var(--text-primary);
+}
+
+.date-picker-input:focus~.date-picker-chevron,
+.date-picker-input.active~.date-picker-chevron {
+  transform: translateY(-50%) rotate(180deg);
+  color: var(--primary);
+  opacity: 1;
+}
+
+.date-picker-input.error~.date-picker-chevron {
+  color: var(--danger);
+}
+
+.date-picker-calendar {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 1.125rem;
+  z-index: 1000;
+  animation: slideDownFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 320px;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  margin: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Ensure calendar doesn't overlap with input focus shadow when active */
+.date-picker-wrapper .input-wrapper+.date-picker-calendar {
+  top: calc(100% + 0.75rem);
+}
+
+@media (max-width: 768px) {
+  .date-picker-calendar {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    max-width: calc(100vw - 2rem);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.date-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--border-light);
+  position: relative;
+  animation: fadeInScale 0.2s ease-out;
+}
+
+.date-picker-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  padding: 0;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.date-picker-nav-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border-color: var(--primary);
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+}
+
+.date-picker-nav-btn:active:not(:disabled) {
+  transform: translateY(0) scale(1);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+}
+
+.date-picker-month-year {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  flex: 1;
+}
+
+/* Month/Year Selector Container */
+.date-picker-month-year-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.date-picker-month-year-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.date-picker-month-year-btn:hover {
+  background: hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.date-picker-chevron-down {
+  transition: transform 0.2s ease;
+  opacity: 0.6;
+}
+
+.date-picker-chevron-down.open {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+/* Dropdown for Month/Year Selection */
+.date-picker-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  z-index: 1001;
+  max-height: 300px;
+  overflow-y: auto;
+  animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 150px;
+  margin-top: 0.5rem;
+}
+
+.date-picker-month-year-container {
+  position: relative;
+}
+
+.date-picker-month-dropdown {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  padding: 0.75rem;
+  left: 0;
+  transform: translateX(0);
+  min-width: 200px;
+}
+
+.date-picker-year-dropdown {
+  padding: 0.5rem;
+  left: auto;
+  right: 0;
+  transform: translateX(0);
+  min-width: 180px;
+}
+
+.date-picker-year-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.25rem;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.date-picker-dropdown-item {
+  padding: 0.625rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.date-picker-dropdown-item:hover {
+  background: hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.1);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: scale(1.05);
+}
+
+.date-picker-dropdown-item.selected {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border-color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 2px 8px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.3);
+}
+
+.date-picker-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.date-picker-nav-btn:disabled:hover {
+  background: var(--surface-elevated);
+  color: var(--text);
+  border-color: var(--border);
+  transform: none;
+}
+
+/* Year and Month Selection Views */
+.date-picker-view-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  flex: 1;
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.date-picker-page-info {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-light);
+  background: var(--surface-alt);
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius);
+  margin-left: 0.5rem;
+}
+
+.date-picker-year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  padding: 0.5rem;
+  min-height: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+  animation: fadeInScale 0.25s ease-out;
+}
+
+.date-picker-month-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.625rem;
+  padding: 0.5rem 0;
+  animation: fadeInScale 0.25s ease-out;
+}
+
+.date-picker-year-item,
+.date-picker-month-item {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  min-height: 44px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.date-picker-year-item:hover:not(.selected):not(:disabled),
+.date-picker-month-item:hover:not(.selected):not(:disabled) {
+  background: linear-gradient(135deg, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.12) 0%, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.08) 100%);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+}
+
+.date-picker-year-item.selected,
+.date-picker-month-item.selected {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border-color: var(--primary);
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  transform: scale(1.05);
+}
+
+.date-picker-year-item:active:not(.selected):not(:disabled),
+.date-picker-month-item:active:not(.selected):not(:disabled) {
+  transform: translateY(0) scale(1);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.1);
+}
+
+.date-picker-back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.date-picker-back-btn:hover {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border-color: var(--primary);
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+}
+
+.date-picker-back-btn:active {
+  transform: translateY(0) scale(1);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+}
+
+.date-picker-month-year-display {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  flex: 1;
+  letter-spacing: -0.01em;
+}
+
+.date-picker-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.date-picker-weekday {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0;
+}
+
+.date-picker-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  animation: fadeInScale 0.3s ease-out;
+}
+
+.date-picker-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  min-height: 40px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.date-picker-day:hover:not(.disabled):not(.selected) {
+  background: linear-gradient(135deg, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.12) 0%, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.08) 100%);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+  font-weight: 600;
+}
+
+.date-picker-day.today {
+  background: linear-gradient(135deg, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.2) 0%, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.15) 100%);
+  border-color: var(--primary);
+  font-weight: 700;
+  color: var(--primary);
+  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+}
+
+.date-picker-day.selected {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  transform: scale(1.08);
+  font-weight: 700;
+}
+
+.date-picker-day:active:not(.disabled):not(.selected) {
+  transform: translateY(0) scale(1);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.1);
+}
+
+.date-picker-day.other-month {
+  color: var(--text-light);
+  opacity: 0.4;
+}
+
+.date-picker-day.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: var(--background);
+}
+
+.date-picker-day.disabled:hover {
+  transform: none;
+  background: var(--background);
+}
+
+/* Slot Date Picker - Calendar View Only */
+/* Slot date picker calendar - ensure calendar view is always shown */
+.slot-date-picker-calendar {
+  /* Calendar view always shown - no year/month selection needed */
+  display: block;
+}
+
+.slot-date-picker-calendar .date-picker-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.slot-date-picker-calendar .date-picker-nav-btn:disabled:hover {
+  background: var(--surface-elevated);
+  color: var(--text);
+  border-color: var(--border);
+  transform: none;
+}
+
+.date-picker-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.date-picker-quick-btn {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-elevated);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.date-picker-quick-btn:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.2);
+}
+
+.date-picker-quick-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.date-picker-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--danger);
+}
+
+.date-picker-error .error-icon {
+  font-size: 0.875rem;
+}
+
+/* Date Picker Error Messages - High Priority Override */
+.date-picker-wrapper {
+  width: 100%;
+  position: relative;
+}
+
+.date-picker-wrapper .field-error {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  width: 100% !important;
+  color: var(--danger) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+  text-align: left !important;
+  animation: fadeInError 0.3s ease-out !important;
+  position: relative !important;
+  left: 0 !important;
+  box-sizing: border-box !important;
+  flex-wrap: nowrap !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  align-self: flex-start !important;
+  justify-content: flex-start !important;
+}
+
+.date-picker-wrapper .field-error .error-icon {
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--danger) !important;
+  margin-top: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.date-picker-wrapper .field-error>*:not(.error-icon) {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  line-height: 1.5 !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+@keyframes fadeInError {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-group input.error,
+.form-group select.error,
+.form-group textarea.error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  animation: errorPulse 0.5s ease-out;
+}
+
+@keyframes errorPulse {
+
+  0%,
+  100% {
+    border-color: var(--danger);
+  }
+
+  50% {
+    border-color: var(--danger);
+  }
+}
+
+.field-error {
+  color: var(--danger) !important;
+  font-size: 0.8125rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  font-weight: 500 !important;
+  animation: fadeIn 0.3s ease-out !important;
+  width: 100% !important;
+  position: relative !important;
+  flex-wrap: nowrap !important;
+  left: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-inline-start: 0 !important;
+  margin-inline-end: 0 !important;
+  padding: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-inline-start: 0 !important;
+  padding-inline-end: 0 !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  text-align: start !important;
+  text-indent: 0 !important;
+  box-sizing: border-box !important;
+  line-height: 1.5 !important;
+  align-self: flex-start !important;
+  transform: none !important;
+  translate: 0 !important;
+  inset-inline-start: 0 !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.field-error .error-icon {
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  margin-left: 0 !important;
+  margin-right: 0.5rem !important;
+  color: var(--danger) !important;
+}
+
+.field-error>*:not(.error-icon) {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  line-height: 1.5 !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.error-icon {
+  flex-shrink: 0;
+  flex-grow: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--danger);
+}
+
+.field-info {
+  color: var(--success);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-weight: 500;
+}
+
+.info-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}

@@ -1,0 +1,16 @@
+/**
+ * CSS Reset and Base Styles
+ * 
+ * Resets default browser styles and imports the Inter font family.
+ * Provides a consistent foundation across all browsers.
+ */
+
+/* Import Professional Medical Enterprise Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}

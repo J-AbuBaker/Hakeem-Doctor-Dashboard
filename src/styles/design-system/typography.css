@@ -1,0 +1,64 @@
+/**
+ * Typography System
+ * 
+ * Defines the typography scale and hierarchy for headings (h1-h6)
+ * and paragraph elements. Uses design system variables for consistent
+ * font sizes, weights, line heights, and letter spacing.
+ */
+
+/* ============================================
+   TYPOGRAPHY SYSTEM - SCALE & HIERARCHY
+   ============================================ */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--letter-spacing-tight);
+  color: var(--text-primary);
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+h1 {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: var(--letter-spacing-tighter);
+}
+
+h2 {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+}
+
+h3 {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+h4 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+h5 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+}
+
+h6 {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+p {
+  line-height: var(--line-height-relaxed);
+  color: var(--text-secondary);
+  margin-block-start: 0;
+  margin-block-end: var(--spacing-4);
+}

@@ -1,0 +1,39 @@
+/**
+ * Main Stylesheet Entry Point
+ * 
+ * This file imports all CSS modules in the correct cascade order:
+ * 1. Design System (variables, typography)
+ * 2. Base styles (reset, body, accessibility)
+ * 3. Component styles
+ * 4. Utilities
+ * 5. Responsive styles
+ */
+
+/* Design System */
+@import './design-system/variables.css';
+@import './design-system/typography.css';
+
+/* Base */
+@import './base/reset.css';
+@import './base/body.css';
+@import './base/accessibility.css';
+
+/* Components */
+@import './components/authentication.css';
+@import './components/forms.css';
+@import './components/buttons.css';
+@import './components/dashboard.css';
+@import './components/calendar.css';
+@import './components/appointments.css';
+@import './components/profile.css';
+@import './components/modals.css';
+@import './components/dialogs.css';
+@import './components/landing.css';
+
+/* Utilities */
+@import './utilities/animations.css';
+@import './utilities/helpers.css';
+
+/* Responsive */
+@import './responsive/breakpoints.css';
+@import './responsive/print.css';

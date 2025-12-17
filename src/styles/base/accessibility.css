@@ -1,0 +1,69 @@
+/**
+ * Accessibility and Interactive States
+ * 
+ * Focus states, reduced motion support, high contrast mode,
+ * and smooth scrolling. Ensures the application is accessible
+ * to all users and follows WCAG guidelines.
+ */
+
+/* ============================================
+   ACCESSIBILITY & INTERACTIVE STATES
+   ============================================ */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+  transition: outline-offset var(--transition-fast);
+}
+
+*:focus-visible:focus-visible {
+  outline-offset: 4px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection styling - Professional */
+::selection {
+  background-color: hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.2);
+  color: var(--text-primary);
+  text-shadow: none;
+}
+
+::-moz-selection {
+  background-color: hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.2);
+  color: var(--text-primary);
+  text-shadow: none;
+}
+
+/* Reduced motion support - Accessibility First */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: var(--gray-400);
+    --border-light: var(--gray-300);
+  }
+}

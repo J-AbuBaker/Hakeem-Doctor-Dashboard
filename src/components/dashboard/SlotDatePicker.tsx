@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, isToday, startOfDay } from 'date-fns';
 import { Calendar, ChevronLeft, ChevronRight, X, ChevronDown, AlertCircle } from 'lucide-react';
-// Styles are in App.css - using date-picker classes
 
 interface SlotDatePickerProps {
   value: string; // YYYY-MM-DD format
@@ -59,7 +58,7 @@ const SlotDatePicker: React.FC<SlotDatePickerProps> = ({
 
     const dateOnly = startOfDay(date);
     const today = startOfDay(new Date());
-    
+
     if (dateOnly < today) {
       return;
     }
