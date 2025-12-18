@@ -5,8 +5,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../app/providers';
 import { SPECIALIZATIONS, BLOOD_TYPES } from '../../types';
 import { getErrorMessage, getErrorStatus } from '../../shared/utils/error/handlers';
-import { useAreasData } from '../../shared/utils/location/useAreasData';
-import { getTownsByCity } from '../../shared/utils/location/areasParser';
 import {
   UserPlus,
   Loader2,
@@ -26,8 +24,6 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  Building2,
-  Locate,
 } from 'lucide-react';
 import DatePicker from '../common/DatePicker';
 import ClinicLocationPickerModal from '../common/ClinicLocationPickerModal';
@@ -46,7 +42,6 @@ const SignupForm: React.FC = () => {
   const [isLocationPickerOpen, setIsLocationPickerOpen] = React.useState(false);
   const [bloodRhFactor, setBloodRhFactor] = React.useState<string>('');
   const [bloodTypeLetter, setBloodTypeLetter] = React.useState<string>('');
-  const { areasData, isLoading: isLoadingAreas } = useAreasData();
 
   // Calculate age from date of birth
   const calculateAge = (dob: string): number => {
@@ -172,8 +167,6 @@ const SignupForm: React.FC = () => {
         const num = parseFloat(value);
         return !isNaN(num) && num >= -90 && num <= 90;
       }),
-    city: Yup.string().required('Please select your city'),
-    town: Yup.string().required('Please select your town'),
   });
 
   const formik = useFormik({
@@ -192,8 +185,6 @@ const SignupForm: React.FC = () => {
       description: '',
       x: '',
       y: '',
-      city: '',
-      town: '',
       role: 'DOCTOR', // Default role for doctor registration (uppercase to match API)
     },
     validationSchema,
@@ -215,15 +206,13 @@ const SignupForm: React.FC = () => {
       description: string;
       x: string;
       y: string;
-      city: string;
-      town: string;
       role: string;
     }) => {
       setIsSubmitting(true);
       setError(null);
       try {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { confirmPassword, city, town, ...signupData } = values;
+        const { confirmPassword, ...signupData } = values;
         const dobISO = new Date(signupData.dob).toISOString();
         const calculatedAge = calculateAge(signupData.dob);
         await signup({
@@ -338,8 +327,6 @@ const SignupForm: React.FC = () => {
       description: true,
       x: true,
       y: true,
-      city: true,
-      town: true,
     });
 
     // Validate the form
@@ -479,54 +466,6 @@ const SignupForm: React.FC = () => {
                   {formik.errors.password}
                 </div>
               )}
-
-              {/* Password Requirements */}
-              {formik.values.password && (() => {
-                const passwordRequirements = checkPasswordRequirements(formik.values.password);
-                return (
-                  <div className="password-requirements">
-                    <h3 className="password-requirements-title">PASSWORD REQUIREMENTS</h3>
-                    <div className="password-requirements-list">
-                      <div className={`password-requirement-item ${passwordRequirements.minLength ? 'met' : ''}`}>
-                        <div className="requirement-icon-wrapper">
-                          {passwordRequirements.minLength ? (
-                            <CheckCircle2 size={16} className="requirement-icon-check" />
-                          ) : (
-                            <div className="requirement-icon-empty"></div>
-                          )}
-                        </div>
-                        <span className={`requirement-text ${passwordRequirements.minLength ? 'met' : ''}`}>
-                          At least 8 characters
-                        </span>
-                      </div>
-                      <div className={`password-requirement-item ${passwordRequirements.hasUppercase ? 'met' : ''}`}>
-                        <div className="requirement-icon-wrapper">
-                          {passwordRequirements.hasUppercase ? (
-                            <CheckCircle2 size={16} className="requirement-icon-check" />
-                          ) : (
-                            <div className="requirement-icon-empty"></div>
-                          )}
-                        </div>
-                        <span className={`requirement-text ${passwordRequirements.hasUppercase ? 'met' : ''}`}>
-                          One uppercase letter
-                        </span>
-                      </div>
-                      <div className={`password-requirement-item ${passwordRequirements.hasSpecialChar ? 'met' : ''}`}>
-                        <div className="requirement-icon-wrapper">
-                          {passwordRequirements.hasSpecialChar ? (
-                            <CheckCircle2 size={16} className="requirement-icon-check" />
-                          ) : (
-                            <div className="requirement-icon-empty"></div>
-                          )}
-                        </div>
-                        <span className={`requirement-text ${passwordRequirements.hasSpecialChar ? 'met' : ''}`}>
-                          One special character
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
             </div>
 
             <div className="form-group">
@@ -572,6 +511,54 @@ const SignupForm: React.FC = () => {
               )}
             </div>
           </div>
+
+          {/* Password Requirements - Outside form-group/form-row to span full form width */}
+          {formik.values.password && (() => {
+            const passwordRequirements = checkPasswordRequirements(formik.values.password);
+            return (
+              <div className="password-requirements">
+                <h3 className="password-requirements-title">PASSWORD REQUIREMENTS</h3>
+                <div className="password-requirements-list">
+                  <div className={`password-requirement-item ${passwordRequirements.minLength ? 'met' : ''}`}>
+                    <div className="requirement-icon-wrapper">
+                      {passwordRequirements.minLength ? (
+                        <CheckCircle2 size={16} className="requirement-icon-check" />
+                      ) : (
+                        <div className="requirement-icon-empty"></div>
+                      )}
+                    </div>
+                    <span className={`requirement-text ${passwordRequirements.minLength ? 'met' : ''}`}>
+                      At least 8 characters
+                    </span>
+                  </div>
+                  <div className={`password-requirement-item ${passwordRequirements.hasUppercase ? 'met' : ''}`}>
+                    <div className="requirement-icon-wrapper">
+                      {passwordRequirements.hasUppercase ? (
+                        <CheckCircle2 size={16} className="requirement-icon-check" />
+                      ) : (
+                        <div className="requirement-icon-empty"></div>
+                      )}
+                    </div>
+                    <span className={`requirement-text ${passwordRequirements.hasUppercase ? 'met' : ''}`}>
+                      One uppercase letter
+                    </span>
+                  </div>
+                  <div className={`password-requirement-item ${passwordRequirements.hasSpecialChar ? 'met' : ''}`}>
+                    <div className="requirement-icon-wrapper">
+                      {passwordRequirements.hasSpecialChar ? (
+                        <CheckCircle2 size={16} className="requirement-icon-check" />
+                      ) : (
+                        <div className="requirement-icon-empty"></div>
+                      )}
+                    </div>
+                    <span className={`requirement-text ${passwordRequirements.hasSpecialChar ? 'met' : ''}`}>
+                      One special character
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Section 2: Personal Information */}
           <div className="form-row">
@@ -697,6 +684,9 @@ const SignupForm: React.FC = () => {
               )}
             </div>
 
+          </div>
+
+          <div className="form-row">
             <div className="form-group">
               <label htmlFor="weight">
                 <Weight className="label-icon" />
@@ -726,39 +716,7 @@ const SignupForm: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Section 4: Professional Information */}
-          <div className="form-group">
-            <label htmlFor="specialization">
-              <Stethoscope className="label-icon" />
-              Medical Specialization *
-            </label>
-            <SelectDropdown
-              id="specialization"
-              name="specialization"
-              value={formik.values.specialization}
-              onChange={(value) => {
-                formik.setFieldValue('specialization', value);
-                formik.setFieldTouched('specialization', true, false);
-              }}
-              onBlur={() => formik.setFieldTouched('specialization', true)}
-              options={SPECIALIZATIONS.map((spec) => ({ value: spec, label: spec }))}
-              placeholder="Search and select your specialization"
-              error={formik.touched.specialization && !!formik.errors.specialization}
-              icon={Stethoscope}
-              searchable={true}
-              emptyMessage="No specialization found"
-            />
-            {formik.touched.specialization && formik.errors.specialization && (
-              <div className="field-error">
-                <AlertCircle className="error-icon" size={16} />
-                {formik.errors.specialization}
-              </div>
-            )}
-          </div>
-
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="ph_num">
                 <Phone className="label-icon" />
@@ -784,6 +742,38 @@ const SignupForm: React.FC = () => {
                 <div className="field-error">
                   <AlertCircle className="error-icon" size={16} />
                   {formik.errors.ph_num}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Section 4: Professional Information */}
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="specialization">
+                <Stethoscope className="label-icon" />
+                Medical Specialization *
+              </label>
+              <SelectDropdown
+                id="specialization"
+                name="specialization"
+                value={formik.values.specialization}
+                onChange={(value) => {
+                  formik.setFieldValue('specialization', value);
+                  formik.setFieldTouched('specialization', true, false);
+                }}
+                onBlur={() => formik.setFieldTouched('specialization', true)}
+                options={SPECIALIZATIONS.map((spec) => ({ value: spec, label: spec }))}
+                placeholder="Search and select your specialization"
+                error={formik.touched.specialization && !!formik.errors.specialization}
+                icon={Stethoscope}
+                searchable={true}
+                emptyMessage="No specialization found"
+              />
+              {formik.touched.specialization && formik.errors.specialization && (
+                <div className="field-error">
+                  <AlertCircle className="error-icon" size={16} />
+                  {formik.errors.specialization}
                 </div>
               )}
             </div>
@@ -846,77 +836,6 @@ const SignupForm: React.FC = () => {
 
           {/* Section 6: Clinic Location */}
           <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="city">
-                <Building2 className="label-icon" />
-                City *
-              </label>
-              <SelectDropdown
-                id="city"
-                name="city"
-                value={formik.values.city}
-                onChange={(value) => {
-                  formik.setFieldValue('city', value);
-                  formik.setFieldValue('town', ''); // Reset town when city changes
-                  formik.setFieldTouched('city', true, false);
-                  formik.setFieldTouched('town', false, false);
-                }}
-                onBlur={() => formik.setFieldTouched('city', true)}
-                options={areasData.map((city) => ({
-                  value: city.name,
-                  label: city.name,
-                }))}
-                placeholder="Select City"
-                disabled={isLoadingAreas}
-                error={formik.touched.city && !!formik.errors.city}
-                icon={Building2}
-                searchable={true}
-                emptyMessage="No cities available"
-              />
-              {formik.touched.city && formik.errors.city && (
-                <div className="field-error">
-                  <AlertCircle className="error-icon" size={16} />
-                  {formik.errors.city}
-                </div>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="town">
-                <Locate className="label-icon" />
-                Town *
-              </label>
-              <SelectDropdown
-                id="town"
-                name="town"
-                value={formik.values.town}
-                onChange={(value) => {
-                  formik.setFieldValue('town', value);
-                  formik.setFieldTouched('town', true, false);
-                }}
-                onBlur={() => formik.setFieldTouched('town', true)}
-                options={
-                  formik.values.city
-                    ? getTownsByCity(areasData, formik.values.city).map((town) => ({
-                      value: town.name,
-                      label: town.name,
-                    }))
-                    : []
-                }
-                placeholder={formik.values.city ? 'Select Town' : 'Select a city first'}
-                disabled={!formik.values.city || isLoadingAreas}
-                error={formik.touched.town && !!formik.errors.town}
-                icon={Locate}
-                searchable={true}
-                emptyMessage={formik.values.city ? 'No towns available' : 'Select a city first'}
-              />
-              {formik.touched.town && formik.errors.town && (
-                <div className="field-error">
-                  <AlertCircle className="error-icon" size={16} />
-                  {formik.errors.town}
-                </div>
-              )}
-            </div>
           </div>
 
           <div className="form-group">

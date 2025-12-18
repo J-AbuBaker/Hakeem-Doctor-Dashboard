@@ -1,24 +1,24 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
-import { X, MapPin, Search, Navigation, Crosshair, Navigation2, ArrowLeftRight } from 'lucide-react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
+import { Autocomplete } from '@react-google-maps/api';
+import { X, MapPin, Search, Navigation, Crosshair, Navigation2, ArrowLeftRight, Loader2, AlertCircle } from 'lucide-react';
 import './ClinicLocationPickerModal.css';
 
-// Fix Leaflet default icon issue
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+// Google Maps configuration
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
-const DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
+const mapContainerStyle = {
+  width: '100%',
+  height: '100%',
+  borderRadius: 'var(--radius-xl)',
+};
 
-L.Marker.prototype.options.icon = DefaultIcon;
+const defaultCenter = {
+  lat: 31.9522,
+  lng: 35.2332,
+};
+
+const defaultZoom = 6;
 
 interface ClinicLocationPickerModalProps {
   isOpen: boolean;
@@ -26,34 +26,8 @@ interface ClinicLocationPickerModalProps {
   initialLongitude?: number;
   onConfirm: (latitude: number, longitude: number) => void;
   onCancel: () => void;
-  onChange?: (latitude: number, longitude: number) => void; // Real-time updates as map cursor changes
+  onChange?: (latitude: number, longitude: number) => void;
 }
-
-// Component to handle map clicks and updates
-const MapClickHandler: React.FC<{
-  onMapClick: (lat: number, lng: number) => void;
-}> = ({ onMapClick }) => {
-  useMapEvents({
-    click: (e) => {
-      onMapClick(e.latlng.lat, e.latlng.lng);
-    },
-  });
-  return null;
-};
-
-// Component to handle map center changes
-const MapCenterUpdater: React.FC<{
-  center: [number, number];
-  zoom: number;
-}> = ({ center, zoom }) => {
-  const map = useMap();
-
-  useEffect(() => {
-    map.setView(center, zoom, { animate: true, duration: 0.5 });
-  }, [center, zoom, map]);
-
-  return null;
-};
 
 const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
   isOpen,
@@ -69,21 +43,34 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [markerPosition, setMarkerPosition] = useState<[number, number] | null>(null);
-  const mapRef = useRef<L.Map | null>(null);
+  const [mapCenter, setMapCenter] = useState<google.maps.LatLngLiteral>(defaultCenter);
+  const [zoom, setZoom] = useState<number>(defaultZoom);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const mapRef = useRef<HTMLDivElement | null>(null);
+
+  // Load Google Maps API
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: ['places'],
+  });
 
   // Initialize coordinates when modal opens
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !isLoaded) return;
 
     // If initial coordinates exist, use them
     if (initialLatitude !== undefined && initialLongitude !== undefined) {
-      setSelectedLat(initialLatitude);
-      setSelectedLng(initialLongitude);
-      setMarkerPosition([initialLatitude, initialLongitude]);
-      // Update form values if onChange is provided
+      const lat = initialLatitude;
+      const lng = initialLongitude;
+      setSelectedLat(lat);
+      setSelectedLng(lng);
+      setMapCenter({ lat, lng });
+      setZoom(15);
       if (onChange) {
-        onChange(initialLatitude, initialLongitude);
+        onChange(lat, lng);
       }
       return;
     }
@@ -91,137 +78,236 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
     // Otherwise, try to get user's current location
     setIsGeolocationLoading(true);
     if (navigator.geolocation) {
+      const geolocationOptions: PositionOptions = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0, // Always get fresh location
+      };
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
+
+          // Validate coordinates
+          if (isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
+            // Fallback to default if invalid
+            setSelectedLat(defaultCenter.lat);
+            setSelectedLng(defaultCenter.lng);
+            setMapCenter(defaultCenter);
+            setZoom(defaultZoom);
+            if (onChange) {
+              onChange(defaultCenter.lat, defaultCenter.lng);
+            }
+            setIsGeolocationLoading(false);
+            return;
+          }
+
           setSelectedLat(lat);
           setSelectedLng(lng);
-          setMarkerPosition([lat, lng]);
-          // Update form values in real-time
+          setMapCenter({ lat, lng });
+          setZoom(15);
           if (onChange) {
             onChange(lat, lng);
           }
           setIsGeolocationLoading(false);
         },
         () => {
-          // If geolocation fails, use a default center (Middle East region)
-          const defaultLat = 31.9522;
-          const defaultLng = 35.2332;
-          setSelectedLat(defaultLat);
-          setSelectedLng(defaultLng);
-          setMarkerPosition([defaultLat, defaultLng]);
-          // Update form values if onChange is provided
+          // If geolocation fails, use default center
+          setSelectedLat(defaultCenter.lat);
+          setSelectedLng(defaultCenter.lng);
+          setMapCenter(defaultCenter);
+          setZoom(defaultZoom);
           if (onChange) {
-            onChange(defaultLat, defaultLng);
+            onChange(defaultCenter.lat, defaultCenter.lng);
           }
           setIsGeolocationLoading(false);
-        }
+        },
+        geolocationOptions
       );
     } else {
       // Default to Middle East region if geolocation not available
-      const defaultLat = 31.9522;
-      const defaultLng = 35.2332;
-      setSelectedLat(defaultLat);
-      setSelectedLng(defaultLng);
-      setMarkerPosition([defaultLat, defaultLng]);
-      // Update form values if onChange is provided
+      setSelectedLat(defaultCenter.lat);
+      setSelectedLng(defaultCenter.lng);
+      setMapCenter(defaultCenter);
+      setZoom(defaultZoom);
       if (onChange) {
-        onChange(defaultLat, defaultLng);
+        onChange(defaultCenter.lat, defaultCenter.lng);
       }
       setIsGeolocationLoading(false);
     }
-  }, [isOpen, initialLatitude, initialLongitude, onChange]);
+  }, [isOpen, initialLatitude, initialLongitude, onChange, isLoaded]);
 
-  const handleMapClick = useCallback((lat: number, lng: number) => {
-    setSelectedLat(lat);
-    setSelectedLng(lng);
-    setMarkerPosition([lat, lng]);
-    // Update form values in real-time
-    if (onChange) {
-      onChange(lat, lng);
+  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      setSelectedLat(lat);
+      setSelectedLng(lng);
+      setMapCenter({ lat, lng });
+      setZoom(15);
+      if (onChange) {
+        onChange(lat, lng);
+      }
     }
   }, [onChange]);
 
-  const handleMarkerDragEnd = useCallback((e: L.DragEndEvent) => {
-    const marker = e.target;
-    const position = marker.getLatLng();
-    setSelectedLat(position.lat);
-    setSelectedLng(position.lng);
-    setMarkerPosition([position.lat, position.lng]);
-    // Update form values in real-time
-    if (onChange) {
-      onChange(position.lat, position.lng);
+  const handleMarkerDragEnd = useCallback((e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
+      setSelectedLat(lat);
+      setSelectedLng(lng);
+      setMapCenter({ lat, lng });
+      if (onChange) {
+        onChange(lat, lng);
+      }
     }
   }, [onChange]);
+
+  const handlePlaceSelect = useCallback(() => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      if (place.geometry?.location) {
+        const lat = place.geometry.location.lat();
+        const lng = place.geometry.location.lng();
+        const location = new google.maps.LatLng(lat, lng);
+
+        // Pan map smoothly to the selected location if map is loaded
+        if (map) {
+          map.panTo(location);
+          map.setZoom(15);
+        }
+
+        setSelectedLat(lat);
+        setSelectedLng(lng);
+        setMapCenter({ lat, lng });
+        setZoom(15);
+        setSearchQuery(place.formatted_address || '');
+        setSearchError(null);
+        if (onChange) {
+          onChange(lat, lng);
+        }
+      } else {
+        setSearchError('Location not found. Please try a different search term.');
+      }
+    }
+  }, [onChange, map]);
 
   const handleSearch = useCallback(async () => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim() || !isLoaded) return;
 
     setIsSearching(true);
     setSearchError(null);
 
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`,
-        {
-          headers: {
-            'User-Agent': 'Doctor-Dashboard-App/1.0'
-          }
-        }
-      );
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ address: searchQuery }, (results, status) => {
+        setIsSearching(false);
+        if (status === 'OK' && results && results[0] && map) {
+          const location = results[0].geometry.location;
+          const lat = location.lat();
+          const lng = location.lng();
+          const latLng = new google.maps.LatLng(lat, lng);
 
-      const data = await response.json();
+          // Pan map smoothly to the search result location
+          map.panTo(latLng);
+          map.setZoom(15);
 
-      if (data && data.length > 0) {
-        const result = data[0];
-        const lat = parseFloat(result.lat);
-        const lng = parseFloat(result.lon);
-        setSelectedLat(lat);
-        setSelectedLng(lng);
-        setMarkerPosition([lat, lng]);
-        // Update form values in real-time
-        if (onChange) {
-          onChange(lat, lng);
-        }
-        setSearchQuery('');
-      } else {
-        setSearchError('Location not found. Please try a different search term.');
-      }
-    } catch (error) {
-      setSearchError('Search failed. Please try again.');
-      console.error('Geocoding error:', error);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [searchQuery]);
-
-  const handleCurrentLocation = useCallback(() => {
-    setIsGeolocationLoading(true);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
           setSelectedLat(lat);
           setSelectedLng(lng);
-          setMarkerPosition([lat, lng]);
-          // Update form values in real-time
+          setMapCenter({ lat, lng });
+          setZoom(15);
           if (onChange) {
             onChange(lat, lng);
           }
-          setIsGeolocationLoading(false);
-        },
-        () => {
-          setSearchError('Unable to get your location. Please enable location services.');
-          setIsGeolocationLoading(false);
+          setSearchQuery('');
+        } else {
+          setSearchError('Location not found. Please try a different search term.');
         }
-      );
-    } else {
+      });
+    } catch (error) {
+      setIsSearching(false);
+      setSearchError('Search failed. Please try again.');
+      console.error('Geocoding error:', error);
+    }
+  }, [searchQuery, isLoaded, onChange, map]);
+
+  const handleCurrentLocation = useCallback(() => {
+    setIsGeolocationLoading(true);
+    setSearchError(null);
+
+    if (!navigator.geolocation) {
       setSearchError('Geolocation is not supported by your browser.');
       setIsGeolocationLoading(false);
+      return;
     }
-  }, [onChange]);
+
+    // Geolocation options for accurate device location
+    const geolocationOptions: PositionOptions = {
+      enableHighAccuracy: true, // Use GPS if available for better accuracy
+      timeout: 10000, // 10 seconds timeout
+      maximumAge: 0, // Don't use cached position, always get fresh location
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const accuracy = position.coords.accuracy; // Accuracy in meters
+
+        // Validate coordinates are valid numbers
+        if (isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
+          setSearchError('Invalid location data received. Please try again.');
+          setIsGeolocationLoading(false);
+          return;
+        }
+
+        const location = new google.maps.LatLng(lat, lng);
+
+        // Pan map smoothly to current location
+        if (map) {
+          map.panTo(location);
+          // Adjust zoom based on accuracy - more accurate = closer zoom
+          const zoomLevel = accuracy < 100 ? 17 : accuracy < 500 ? 15 : 13;
+          map.setZoom(zoomLevel);
+          setZoom(zoomLevel);
+        } else {
+          setZoom(15);
+        }
+
+        setSelectedLat(lat);
+        setSelectedLng(lng);
+        setMapCenter({ lat, lng });
+
+        if (onChange) {
+          onChange(lat, lng);
+        }
+        setIsGeolocationLoading(false);
+      },
+      (error) => {
+        // Provide specific error messages based on error code
+        let errorMessage = 'Unable to get your location. ';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage += 'Please enable location permissions in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage += 'Location information is unavailable. Please check your device settings.';
+            break;
+          case error.TIMEOUT:
+            errorMessage += 'Location request timed out. Please try again.';
+            break;
+          default:
+            errorMessage += 'An unknown error occurred. Please try again.';
+            break;
+        }
+        setSearchError(errorMessage);
+        setIsGeolocationLoading(false);
+      },
+      geolocationOptions
+    );
+  }, [onChange, map]);
 
   const handleConfirm = () => {
     if (selectedLat !== null && selectedLng !== null) {
@@ -233,17 +319,98 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
     onCancel();
   };
 
-  if (!isOpen) return null;
+  const onMapLoad = useCallback((mapInstance: google.maps.Map) => {
+    setMap(mapInstance);
+  }, []);
 
-  const mapCenter: [number, number] =
-    markerPosition || (selectedLat !== null && selectedLng !== null
-      ? [selectedLat, selectedLng]
-      : [31.9522, 35.2332]); // Default center
+  const onUnmount = useCallback(() => {
+    setMap(null);
+  }, []);
+
+  if (!isOpen) return null;
 
   const hasSelection = selectedLat !== null && selectedLng !== null;
 
+  // Show error if Google Maps API key is missing
+  if (!GOOGLE_MAPS_API_KEY) {
+    return (
+      <div className="modal-overlay clinic-location-modal-overlay" onClick={handleCancel}>
+        <div className="modal-content clinic-location-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>Choose Clinic Location</h2>
+            <button className="modal-close" onClick={handleCancel} aria-label="Close">
+              <X size={20} />
+            </button>
+          </div>
+          <div className="modal-body clinic-location-modal-body">
+            <div className="map-error-message">
+              <AlertCircle size={48} />
+              <h3>Google Maps API Key Required</h3>
+              <p>Please configure VITE_GOOGLE_MAPS_API_KEY in your .env file to use the map feature.</p>
+            </div>
+          </div>
+          <div className="modal-actions">
+            <button type="button" className="btn btn-secondary" onClick={handleCancel}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state while Google Maps API loads
+  if (!isLoaded) {
+    return (
+      <div className="modal-overlay clinic-location-modal-overlay" onClick={handleCancel}>
+        <div className="modal-content clinic-location-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>Choose Clinic Location</h2>
+            <button className="modal-close" onClick={handleCancel} aria-label="Close">
+              <X size={20} />
+            </button>
+          </div>
+          <div className="modal-body clinic-location-modal-body">
+            <div className="map-loading-state">
+              <Loader2 className="loading-spinner" size={48} />
+              <p>Loading map...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if Google Maps API failed to load
+  if (loadError) {
+    return (
+      <div className="modal-overlay clinic-location-modal-overlay" onClick={handleCancel}>
+        <div className="modal-content clinic-location-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>Choose Clinic Location</h2>
+            <button className="modal-close" onClick={handleCancel} aria-label="Close">
+              <X size={20} />
+            </button>
+          </div>
+          <div className="modal-body clinic-location-modal-body">
+            <div className="map-error-message">
+              <AlertCircle size={48} />
+              <h3>Failed to Load Map</h3>
+              <p>Unable to load Google Maps. Please check your internet connection and try again.</p>
+            </div>
+          </div>
+          <div className="modal-actions">
+            <button type="button" className="btn btn-secondary" onClick={handleCancel}>
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="modal-overlay" onClick={handleCancel}>
+    <div className="modal-overlay clinic-location-modal-overlay" onClick={handleCancel}>
       <div className="modal-content clinic-location-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>Choose Clinic Location</h2>
@@ -265,27 +432,39 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
             </div>
           </div>
 
-          {/* Search Bar */}
+          {/* Search Bar with Google Places Autocomplete */}
           <div className="map-search-container">
             <div className="map-search-input-wrapper">
               <Search className="search-icon" size={18} />
-              <input
-                type="text"
-                className="map-search-input"
-                placeholder="Search for an address, city, or place..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setSearchError(null);
+              <Autocomplete
+                onLoad={(autocomplete) => {
+                  autocompleteRef.current = autocomplete;
                 }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !isSearching) {
-                    e.preventDefault();
-                    handleSearch();
-                  }
+                onPlaceChanged={handlePlaceSelect}
+                options={{
+                  componentRestrictions: { country: ['ps', 'il', 'jo'] }, // Palestine, Israel, Jordan
+                  fields: ['geometry', 'formatted_address', 'name'],
+                  types: ['establishment', 'geocode'],
                 }}
-                disabled={isSearching}
-              />
+              >
+                <input
+                  type="text"
+                  className="map-search-input"
+                  placeholder="Search for an address, city, or place..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSearchError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !isSearching) {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
+                  disabled={isSearching}
+                />
+              </Autocomplete>
               {searchQuery && (
                 <button
                   type="button"
@@ -293,6 +472,9 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
                   onClick={() => {
                     setSearchQuery('');
                     setSearchError(null);
+                    if (autocompleteRef.current) {
+                      autocompleteRef.current.set('place', null);
+                    }
                   }}
                   aria-label="Clear search"
                 >
@@ -353,41 +535,61 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
           )}
 
           <div className="map-container-wrapper">
-            <div className="map-container">
+            <div className="map-container" ref={mapRef}>
               {!hasSelection && (
                 <div className="map-overlay-instruction">
                   <Crosshair size={16} />
                   <span>Click on map to select location</span>
                 </div>
               )}
-              <MapContainer
+              <GoogleMap
+                mapContainerStyle={mapContainerStyle}
                 center={mapCenter}
-                zoom={hasSelection ? 15 : 6}
-                style={{ height: '600px', width: '100%', minHeight: '500px' }}
-                scrollWheelZoom={true}
-                zoomControl={true}
-                ref={(map) => {
-                  if (map) mapRef.current = map;
+                zoom={zoom}
+                onClick={handleMapClick}
+                onLoad={onMapLoad}
+                onUnmount={onUnmount}
+                options={{
+                  disableDefaultUI: false,
+                  zoomControl: true,
+                  streetViewControl: false,
+                  mapTypeControl: true,
+                  fullscreenControl: true,
+                  draggable: true,
+                  scrollwheel: true,
+                  gestureHandling: 'greedy', // Allows free panning and dragging
+                  keyboardShortcuts: true,
+                  clickableIcons: true,
+                  restriction: undefined, // No map bounds restrictions - allow full world navigation
+                  minZoom: 1, // Allow zooming out to see entire world
+                  maxZoom: 20, // Allow zooming in for detailed view
+                  styles: [
+                    {
+                      featureType: 'poi',
+                      elementType: 'labels',
+                      stylers: [{ visibility: 'on' }],
+                    },
+                  ],
                 }}
               >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                {markerPosition && (
+                {hasSelection && (
                   <Marker
-                    position={markerPosition}
+                    position={{ lat: selectedLat!, lng: selectedLng! }}
                     draggable={true}
-                    eventHandlers={{
-                      dragend: handleMarkerDragEnd,
+                    onDragEnd={handleMarkerDragEnd}
+                    icon={{
+                      url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20 0C9 0 0 9 0 20c0 15 20 30 20 30s20-15 20-30c0-11-9-20-20-20z" fill="#4285F4"/>
+                          <circle cx="20" cy="20" r="8" fill="white"/>
+                        </svg>
+                      `),
+                      scaledSize: new google.maps.Size(40, 50),
+                      anchor: new google.maps.Point(20, 50),
                     }}
                   />
                 )}
-                <MapClickHandler onMapClick={handleMapClick} />
-                {markerPosition && (
-                  <MapCenterUpdater center={markerPosition} zoom={hasSelection ? 15 : 6} />
-                )}
-              </MapContainer>
+              </GoogleMap>
             </div>
           </div>
 

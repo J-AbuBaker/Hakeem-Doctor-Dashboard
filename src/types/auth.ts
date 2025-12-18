@@ -70,7 +70,5 @@ export interface UserInfo {
   latitude: number;
   longitude: number;
   role: string; // "DOCTOR", "PARAMEDIC", "PATIENT", etc.
-  city?: string; // City name (optional - not returned by API yet)
-  town?: string; // Town name (optional - not returned by API yet)
 }
 

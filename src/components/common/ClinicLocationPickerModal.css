@@ -3,31 +3,53 @@
  * Professional map picker UI with enhanced UX
  */
 
+/* Override modal overlay padding for full-screen-like experience */
+.clinic-location-modal-overlay {
+  padding: 40px !important;
+}
+
+@media (max-width: 768px) {
+  .clinic-location-modal-overlay {
+    padding: 20px !important;
+  }
+}
+
 .clinic-location-modal {
-  max-width: 1000px;
-  width: 95%;
+  max-width: calc(100vw - 80px);
+  width: calc(100vw - 80px);
+  max-height: calc(100vh - 80px);
+  height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  margin: 0;
 }
 
 .clinic-location-modal-body {
-  padding: 2rem;
+  padding: 1.5rem;
   max-height: calc(100vh - 200px);
   overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (max-width: 768px) {
   .clinic-location-modal {
-    max-width: 95%;
+    max-width: calc(100vw - 40px);
+    width: calc(100vw - 40px);
+    max-height: calc(100vh - 40px);
+    height: calc(100vh - 40px);
   }
 
   .clinic-location-modal-body {
-    padding: 1.5rem;
-    max-height: calc(100vh - 150px);
+    padding: 1rem;
+    max-height: calc(100vh - 160px);
   }
 }
 
 @media (min-height: 900px) {
   .clinic-location-modal-body {
-    max-height: calc(100vh - 180px);
+    max-height: calc(100vh - 200px);
   }
 }
 
@@ -139,10 +161,21 @@
   margin-bottom: 1.5rem;
   border-radius: var(--radius-xl);
   overflow: hidden;
+  /* Keep hidden for wrapper to maintain border-radius */
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 0 6px 16px rgba(0, 0, 0, 0.1);
   border: 2px solid var(--border);
   background: var(--surface);
   transition: box-shadow 0.3s ease;
+  flex: 1;
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure Google Maps can display fully within the container */
+.map-container-wrapper>.map-container>div {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .map-container-wrapper:hover {
@@ -152,10 +185,14 @@
 .map-container {
   position: relative;
   width: 100%;
-  height: 600px;
+  height: 100%;
   min-height: 500px;
+  flex: 1;
   overflow: hidden;
+  /* Keep hidden for border-radius, Google Maps handles its own rendering */
   border-radius: var(--radius-xl);
+  pointer-events: auto;
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 .map-overlay-instruction {
@@ -199,7 +236,6 @@
 
 @media (max-width: 768px) {
   .map-container {
-    height: 450px;
     min-height: 400px;
   }
 
@@ -211,14 +247,7 @@
 
 @media (max-width: 480px) {
   .map-container {
-    height: 400px;
     min-height: 350px;
-  }
-}
-
-@media (min-width: 1200px) {
-  .map-container {
-    height: 650px;
   }
 }
 
@@ -476,48 +505,95 @@
   }
 }
 
-/* Fix Leaflet marker icon issue */
-.leaflet-container {
+/* Google Maps Styles */
+.map-container .gm-style {
   font-family: inherit;
-  background: #f8f9fa;
 }
 
-.leaflet-marker-icon {
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.3));
+.map-container .gm-style-cc {
+  display: none;
+}
+
+/* Google Maps Controls Styling */
+.map-container .gm-control-active,
+.map-container .gm-svpc,
+.map-container .gm-fullscreen-control,
+.map-container .gm-style-cc {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.map-container .gm-control-active:hover {
+  background: var(--primary) !important;
+  color: white !important;
+}
+
+/* Google Maps Marker Styling */
+.map-container .gm-marker {
+  cursor: grab;
   transition: transform 0.2s ease;
 }
 
-.leaflet-marker-icon:hover {
+.map-container .gm-marker:hover {
   transform: scale(1.1);
 }
 
-.leaflet-control-zoom {
-  border: none !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-  border-radius: var(--radius-lg) !important;
-  overflow: hidden;
+.map-container .gm-marker:active {
+  cursor: grabbing;
 }
 
-.leaflet-control-zoom a {
-  background: white !important;
-  border: 1px solid var(--border) !important;
-  color: var(--text) !important;
-  font-weight: 600 !important;
-  transition: all 0.2s ease !important;
+/* Map Loading State */
+.map-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem 2rem;
+  min-height: 400px;
 }
 
-.leaflet-control-zoom a:hover {
-  background: var(--primary) !important;
-  color: white !important;
-  border-color: var(--primary) !important;
+.map-loading-state .loading-spinner {
+  animation: spin 1s linear infinite;
+  color: var(--primary);
 }
 
-.leaflet-control-attribution {
-  background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(10px) !important;
-  border-radius: var(--radius) !important;
-  font-size: 0.6875rem !important;
-  padding: 0.25rem 0.5rem !important;
+.map-loading-state p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Map Error State */
+.map-error-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem 2rem;
+  text-align: center;
+  min-height: 400px;
+}
+
+.map-error-message svg {
+  color: var(--danger);
+}
+
+.map-error-message h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.map-error-message p {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 500px;
 }
 
 /* Map Search Container */
@@ -732,13 +808,45 @@
   }
 }
 
-/* Enhanced Marker Styling */
-.leaflet-marker-draggable {
-  cursor: grab !important;
+/* Google Places Autocomplete Dropdown Styling */
+.pac-container {
+  background: var(--surface-elevated) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+  margin-top: 0.5rem !important;
+  font-family: inherit !important;
 }
 
-.leaflet-marker-draggable:active {
-  cursor: grabbing !important;
+.pac-item {
+  padding: 0.75rem 1rem !important;
+  border-top: 1px solid var(--border-light) !important;
+  cursor: pointer !important;
+  transition: background 0.2s ease !important;
+}
+
+.pac-item:first-child {
+  border-top: none !important;
+}
+
+.pac-item:hover,
+.pac-item-selected {
+  background: hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.1) !important;
+}
+
+.pac-item-query {
+  color: var(--text-primary) !important;
+  font-size: 0.9375rem !important;
+  font-weight: 500 !important;
+}
+
+.pac-matched {
+  color: var(--primary) !important;
+  font-weight: 600 !important;
+}
+
+.pac-icon {
+  margin-right: 0.75rem !important;
 }
 
 /* Enhanced Modal Actions */
