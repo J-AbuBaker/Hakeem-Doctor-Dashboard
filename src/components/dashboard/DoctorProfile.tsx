@@ -17,7 +17,9 @@ import {
   AlertCircle,
   UserCircle,
   Users,
-  CheckCircle2
+  CheckCircle2,
+  Building2,
+  Locate
 } from 'lucide-react';
 import './DoctorProfile.css';
 
@@ -38,7 +40,9 @@ const mapUserInfoToDoctor = (userInfo: UserInfo): Doctor => {
     description: userInfo.description || '',
     x: userInfo.longitude,
     y: userInfo.latitude,
-    role: userInfo.role
+    role: userInfo.role,
+    city: userInfo.city,
+    town: userInfo.town
   };
 };
 
@@ -283,6 +287,28 @@ const DoctorProfile: React.FC = () => {
                   <span className="info-item-value">{formattedCoordinates}</span>
                 </div>
               </div>
+              {user.city && (
+                <div className="info-item-modern">
+                  <div className="info-item-icon">
+                    <Building2 size={18} />
+                  </div>
+                  <div className="info-item-content">
+                    <span className="info-item-label">City</span>
+                    <span className="info-item-value value-location">{user.city}</span>
+                  </div>
+                </div>
+              )}
+              {user.town && (
+                <div className="info-item-modern">
+                  <div className="info-item-icon">
+                    <Locate size={18} />
+                  </div>
+                  <div className="info-item-content">
+                    <span className="info-item-label">Town</span>
+                    <span className="info-item-value value-location">{user.town}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

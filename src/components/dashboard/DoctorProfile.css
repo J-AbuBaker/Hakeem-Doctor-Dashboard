@@ -357,6 +357,11 @@
   font-weight: 600;
 }
 
+.info-item-value.value-location {
+  color: var(--primary);
+  font-weight: 600;
+}
+
 /* Loading State */
 .profile-loading-state {
   display: flex;
@@ -384,6 +389,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }

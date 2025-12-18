@@ -223,7 +223,7 @@ const SignupForm: React.FC = () => {
       setError(null);
       try {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { confirmPassword, ...signupData } = values;
+        const { confirmPassword, city, town, ...signupData } = values;
         const dobISO = new Date(signupData.dob).toISOString();
         const calculatedAge = calculateAge(signupData.dob);
         await signup({

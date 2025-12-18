@@ -18,6 +18,8 @@ export interface Doctor {
   x: number;
   y: number;
   role: string;
+  city?: string; // City name (optional - not returned by API yet)
+  town?: string; // Town name (optional - not returned by API yet)
 }
 
 export const SPECIALIZATIONS = [
