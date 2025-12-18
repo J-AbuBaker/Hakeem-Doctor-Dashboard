@@ -86,6 +86,60 @@
   width: 100% !important;
 }
 
+/* Textarea wrapper styling to match input-wrapper */
+.auth-container .form-group .textarea-wrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+.auth-container .form-group .textarea-wrapper .input-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 0.875rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+  z-index: 2;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.auth-container .form-group .textarea-wrapper textarea {
+  width: 100%;
+  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  font-family: inherit;
+  background-color: var(--surface-elevated);
+  color: var(--text-primary);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 100px;
+  line-height: 1.5;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+}
+
+.auth-container .form-group .textarea-wrapper textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  border-width: 2px;
+  box-shadow: 0 0 0 4px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.15),
+    0 4px 6px -2px rgba(0, 0, 0, 0.1);
+}
+
+.auth-container .form-group .textarea-wrapper:has(textarea:focus) .input-icon {
+  color: var(--primary);
+  transform: scale(1.1);
+}
+
 /* Ensure error messages align at the start of the input field - consolidated and comprehensive */
 .auth-container .form-group .field-error {
   align-self: stretch !important;
@@ -121,7 +175,7 @@
 }
 
 /* Ensure error text content has no left margin/padding */
-.auth-container .form-group .field-error > *:not(.error-icon) {
+.auth-container .form-group .field-error>*:not(.error-icon) {
   margin-left: 0 !important;
   padding-left: 0 !important;
   text-indent: 0 !important;
@@ -395,4 +449,68 @@
   width: 16px;
   height: 16px;
   border-width: 2px;
+}
+
+/* Location Picker Styles */
+.location-picker-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.location-picker-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 48px;
+  width: 100%;
+}
+
+.location-picker-btn:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+}
+
+.location-picker-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+}
+
+.location-helper-text {
+  font-size: 0.8125rem;
+  color: var(--text-light);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Readonly Input Styles */
+.readonly-input {
+  background-color: var(--surface-alt) !important;
+  cursor: not-allowed !important;
+  color: var(--text) !important;
+  opacity: 0.9;
+}
+
+.readonly-input:focus {
+  outline: none;
+  border-color: var(--border) !important;
+  box-shadow: none !important;
+}
+
+.readonly-input::placeholder {
+  color: var(--text-light);
+  opacity: 0.7;
 }

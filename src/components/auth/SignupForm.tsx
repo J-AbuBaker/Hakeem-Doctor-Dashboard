@@ -5,6 +5,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../app/providers';
 import { SPECIALIZATIONS, BLOOD_TYPES } from '../../types';
 import { getErrorMessage, getErrorStatus } from '../../shared/utils/error/handlers';
+import { useAreasData } from '../../shared/utils/location/useAreasData';
+import { getTownsByCity } from '../../shared/utils/location/areasParser';
 import {
   UserPlus,
   Loader2,
@@ -24,9 +26,13 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  Shield,
+  Building2,
+  Locate,
 } from 'lucide-react';
 import DatePicker from '../common/DatePicker';
+import ClinicLocationPickerModal from '../common/ClinicLocationPickerModal';
+import SelectDropdown from '../common/SelectDropdown';
+import type { SelectOption, SelectOptionGroup } from '../common/SelectDropdown';
 import './AuthShared.css';
 import './AuthForms.css';
 
@@ -37,6 +43,10 @@ const SignupForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = React.useState(false);
+  const [bloodRhFactor, setBloodRhFactor] = React.useState<string>('');
+  const [bloodTypeLetter, setBloodTypeLetter] = React.useState<string>('');
+  const { areasData, isLoading: isLoadingAreas } = useAreasData();
 
   // Calculate age from date of birth
   const calculateAge = (dob: string): number => {
@@ -123,7 +133,7 @@ const SignupForm: React.FC = () => {
         const age = calculateAge(value);
         return age < 100;
       }),
-    gender: Yup.boolean().required('Please select your gender'),
+    gender: Yup.boolean().nullable().test('required', 'Please select your gender', (value) => value !== null && value !== undefined),
     blood_type: Yup.string().oneOf(BLOOD_TYPES).required('Please select your blood type'),
     weight: Yup.string()
       .required('Weight is required')
@@ -149,17 +159,21 @@ const SignupForm: React.FC = () => {
       .min(10, 'Professional description must be at least 10 characters long')
       .required('Professional description is required'),
     x: Yup.string()
+      .required('Longitude is required. Please select clinic location from map.')
       .test('is-number', 'Longitude must be a number between -180 and 180', (value) => {
-        if (!value) return true; // Optional field
+        if (!value) return false;
         const num = parseFloat(value);
         return !isNaN(num) && num >= -180 && num <= 180;
       }),
     y: Yup.string()
+      .required('Latitude is required. Please select clinic location from map.')
       .test('is-number', 'Latitude must be a number between -90 and 90', (value) => {
-        if (!value) return true; // Optional field
+        if (!value) return false;
         const num = parseFloat(value);
         return !isNaN(num) && num >= -90 && num <= 90;
       }),
+    city: Yup.string().required('Please select your city'),
+    town: Yup.string().required('Please select your town'),
   });
 
   const formik = useFormik({
@@ -169,7 +183,7 @@ const SignupForm: React.FC = () => {
       confirmPassword: '',
       name: '',
       dob: '',
-      gender: true,
+      gender: null as any,
       blood_type: '',
       weight: '',
       ph_num: '',
@@ -178,6 +192,8 @@ const SignupForm: React.FC = () => {
       description: '',
       x: '',
       y: '',
+      city: '',
+      town: '',
       role: 'DOCTOR', // Default role for doctor registration (uppercase to match API)
     },
     validationSchema,
@@ -190,7 +206,7 @@ const SignupForm: React.FC = () => {
       confirmPassword?: string;
       name: string;
       dob: string;
-      gender: boolean;
+      gender: boolean | null;
       blood_type: string;
       weight: string;
       ph_num: string;
@@ -199,6 +215,8 @@ const SignupForm: React.FC = () => {
       description: string;
       x: string;
       y: string;
+      city: string;
+      town: string;
       role: string;
     }) => {
       setIsSubmitting(true);
@@ -252,6 +270,54 @@ const SignupForm: React.FC = () => {
     },
   });
 
+  // Initialize GPS location on component mount
+  React.useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          // Only set if form values are empty (not overwriting user selections)
+          if (!formik.values.y && !formik.values.x) {
+            formik.setFieldValue('y', lat.toString());
+            formik.setFieldValue('x', lng.toString());
+          }
+        },
+        () => {
+          // If geolocation fails, use default values (Middle East region)
+          if (!formik.values.y && !formik.values.x) {
+            formik.setFieldValue('y', '31.9522');
+            formik.setFieldValue('x', '35.2332');
+          }
+        }
+      );
+    } else {
+      // Default to Middle East region if geolocation not available
+      if (!formik.values.y && !formik.values.x) {
+        formik.setFieldValue('y', '31.9522');
+        formik.setFieldValue('x', '35.2332');
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
+
+  // Initialize blood type components from formik value if it exists
+  React.useEffect(() => {
+    if (formik.values.blood_type && formik.values.blood_type.length >= 2) {
+      const rhFactor = formik.values.blood_type.slice(-1); // Get last character (+ or -)
+      const letter = formik.values.blood_type.slice(0, -1); // Get everything except last character
+      if ((rhFactor === '+' || rhFactor === '-') && ['A', 'B', 'AB', 'O'].includes(letter)) {
+        setBloodRhFactor(rhFactor);
+        setBloodTypeLetter(letter);
+      }
+    } else if (!formik.values.blood_type) {
+      // Clear local state if formik value is cleared
+      setBloodRhFactor('');
+      setBloodTypeLetter('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.blood_type]); // Update when blood_type changes
+
   // Custom submit handler that validates and shows errors
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -272,6 +338,8 @@ const SignupForm: React.FC = () => {
       description: true,
       x: true,
       y: true,
+      city: true,
+      town: true,
     });
 
     // Validate the form
@@ -309,6 +377,36 @@ const SignupForm: React.FC = () => {
         )}
 
         <form onSubmit={handleFormSubmit} className="auth-form" noValidate>
+          {/* Section 1: Account Credentials */}
+          <div className="form-group">
+            <label htmlFor="name">
+              <User className="label-icon" />
+              Full Name *
+            </label>
+            <div className="input-wrapper">
+              <User className="input-icon" />
+              <input
+                id="name"
+                name="name"
+                type="text"
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.name}
+                className={formik.touched.name && formik.errors.name ? 'error' : ''}
+                placeholder="Enter your full name"
+              />
+              {formik.touched.name && !formik.errors.name && formik.values.name && (
+                <CheckCircle2 className="input-icon-success" />
+              )}
+            </div>
+            {formik.touched.name && formik.errors.name && (
+              <div className="field-error">
+                <AlertCircle className="error-icon" size={16} />
+                {formik.errors.name}
+              </div>
+            )}
+          </div>
+
           <div className="form-group">
             <label htmlFor="username">
               <Mail className="label-icon" />
@@ -475,35 +573,7 @@ const SignupForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="name">
-              <User className="label-icon" />
-              Full Name *
-            </label>
-            <div className="input-wrapper">
-              <User className="input-icon" />
-              <input
-                id="name"
-                name="name"
-                type="text"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.name}
-                className={formik.touched.name && formik.errors.name ? 'error' : ''}
-                placeholder="Enter your full name"
-              />
-              {formik.touched.name && !formik.errors.name && formik.values.name && (
-                <CheckCircle2 className="input-icon-success" />
-              )}
-            </div>
-            {formik.touched.name && formik.errors.name && (
-              <div className="field-error">
-                <AlertCircle className="error-icon" size={16} />
-                {formik.errors.name}
-              </div>
-            )}
-          </div>
-
+          {/* Section 2: Personal Information */}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="dob">
@@ -526,20 +596,26 @@ const SignupForm: React.FC = () => {
                 <Users className="label-icon" />
                 Gender *
               </label>
-              <div className="input-wrapper">
-                <Users className="input-icon" />
-                <select
-                  id="gender"
-                  name="gender"
-                  onChange={(e) => formik.setFieldValue('gender', e.target.value === 'true')}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.gender.toString()}
-                  className={formik.touched.gender && formik.errors.gender ? 'error' : ''}
-                >
-                  <option value="true">Male</option>
-                  <option value="false">Female</option>
-                </select>
-              </div>
+              <SelectDropdown
+                id="gender"
+                name="gender"
+                value={formik.values.gender !== undefined && formik.values.gender !== null ? String(formik.values.gender) : ''}
+                onChange={(value) => {
+                  formik.setFieldValue('gender', value === 'true');
+                  formik.setFieldTouched('gender', true, false);
+                }}
+                onBlur={() => formik.setFieldTouched('gender', true)}
+                options={[
+                  { value: 'true', label: 'Male' },
+                  { value: 'false', label: 'Female' },
+                ]}
+                placeholder="Select your gender"
+                error={formik.touched.gender && !!formik.errors.gender}
+                icon={Users}
+                searchable={false}
+                emptyMessage="No options available"
+                showClear={false}
+              />
               {formik.touched.gender && formik.errors.gender && (
                 <div className="field-error">
                   <AlertCircle className="error-icon" size={16} />
@@ -549,30 +625,70 @@ const SignupForm: React.FC = () => {
             </div>
           </div>
 
+          {/* Section 5: Health Information */}
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="blood_type">
+              <label htmlFor="blood_rh_factor">
+                <Droplet className="label-icon" />
+                Rh Factor *
+              </label>
+              <SelectDropdown
+                id="blood_rh_factor"
+                name="blood_rh_factor"
+                value={bloodRhFactor}
+                onChange={(value) => {
+                  setBloodRhFactor(value);
+                  // Reset blood type letter when Rh factor changes
+                  setBloodTypeLetter('');
+                  // Clear combined blood type if Rh changes
+                  formik.setFieldValue('blood_type', '');
+                  formik.setFieldTouched('blood_type', true, false);
+                }}
+                onBlur={() => formik.setFieldTouched('blood_type', true)}
+                options={[
+                  { value: '+', label: 'Rh Positive (+)' },
+                  { value: '-', label: 'Rh Negative (-)' },
+                ]}
+                placeholder="Select Rh factor"
+                error={formik.touched.blood_type && !!formik.errors.blood_type && !bloodRhFactor}
+                icon={Droplet}
+                searchable={false}
+                emptyMessage="No options available"
+                showClear={false}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="blood_type_letter">
                 <Droplet className="label-icon" />
                 Blood Type *
               </label>
-              <div className="input-wrapper">
-                <Droplet className="input-icon" />
-                <select
-                  id="blood_type"
-                  name="blood_type"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.blood_type}
-                  className={formik.touched.blood_type && formik.errors.blood_type ? 'error' : ''}
-                >
-                  <option value="">Select Blood Type</option>
-                  {BLOOD_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <SelectDropdown
+                id="blood_type_letter"
+                name="blood_type_letter"
+                value={bloodTypeLetter}
+                onChange={(value) => {
+                  setBloodTypeLetter(value);
+                  // Combine Rh factor and blood type letter
+                  const combinedBloodType = `${value}${bloodRhFactor}`;
+                  formik.setFieldValue('blood_type', combinedBloodType);
+                  formik.setFieldTouched('blood_type', true, false);
+                }}
+                onBlur={() => formik.setFieldTouched('blood_type', true)}
+                options={[
+                  { value: 'A', label: 'A' },
+                  { value: 'B', label: 'B' },
+                  { value: 'AB', label: 'AB' },
+                  { value: 'O', label: 'O' },
+                ]}
+                placeholder={bloodRhFactor ? 'Select blood type' : 'Select Rh factor first'}
+                error={formik.touched.blood_type && !!formik.errors.blood_type && !bloodTypeLetter}
+                icon={Droplet}
+                searchable={false}
+                emptyMessage="No options available"
+                disabled={!bloodRhFactor}
+                showClear={false}
+              />
               {formik.touched.blood_type && formik.errors.blood_type && (
                 <div className="field-error">
                   <AlertCircle className="error-icon" size={16} />
@@ -581,39 +697,6 @@ const SignupForm: React.FC = () => {
               )}
             </div>
 
-            <div className="form-group">
-              <label htmlFor="specialization">
-                <Stethoscope className="label-icon" />
-                Specialization *
-              </label>
-              <div className="input-wrapper">
-                <Stethoscope className="input-icon" />
-                <select
-                  id="specialization"
-                  name="specialization"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.specialization}
-                  className={formik.touched.specialization && formik.errors.specialization ? 'error' : ''}
-                >
-                  <option value="">Select Specialization</option>
-                  {SPECIALIZATIONS.map((spec) => (
-                    <option key={spec} value={spec}>
-                      {spec}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {formik.touched.specialization && formik.errors.specialization && (
-                <div className="field-error">
-                  <AlertCircle className="error-icon" size={16} />
-                  {formik.errors.specialization}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="form-row">
             <div className="form-group">
               <label htmlFor="weight">
                 <Weight className="label-icon" />
@@ -643,7 +726,39 @@ const SignupForm: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
 
+          {/* Section 4: Professional Information */}
+          <div className="form-group">
+            <label htmlFor="specialization">
+              <Stethoscope className="label-icon" />
+              Medical Specialization *
+            </label>
+            <SelectDropdown
+              id="specialization"
+              name="specialization"
+              value={formik.values.specialization}
+              onChange={(value) => {
+                formik.setFieldValue('specialization', value);
+                formik.setFieldTouched('specialization', true, false);
+              }}
+              onBlur={() => formik.setFieldTouched('specialization', true)}
+              options={SPECIALIZATIONS.map((spec) => ({ value: spec, label: spec }))}
+              placeholder="Search and select your specialization"
+              error={formik.touched.specialization && !!formik.errors.specialization}
+              icon={Stethoscope}
+              searchable={true}
+              emptyMessage="No specialization found"
+            />
+            {formik.touched.specialization && formik.errors.specialization && (
+              <div className="field-error">
+                <AlertCircle className="error-icon" size={16} />
+                {formik.errors.specialization}
+              </div>
+            )}
+          </div>
+
+          <div className="form-row">
             <div className="form-group">
               <label htmlFor="ph_num">
                 <Phone className="label-icon" />
@@ -654,13 +769,12 @@ const SignupForm: React.FC = () => {
                 <input
                   id="ph_num"
                   name="ph_num"
-                  type="text"
-                  inputMode="numeric"
+                  type="tel"
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   value={formik.values.ph_num}
                   className={formik.touched.ph_num && formik.errors.ph_num ? 'error' : ''}
-                  placeholder="e.g., 1234567890"
+                  placeholder="Enter your phone number"
                 />
                 {formik.touched.ph_num && !formik.errors.ph_num && formik.values.ph_num && (
                   <CheckCircle2 className="input-icon-success" />
@@ -673,36 +787,35 @@ const SignupForm: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
 
-          <div className="form-group">
-            <label htmlFor="license">
-              <Award className="label-icon" />
-              License Number *
-            </label>
-            <div className="input-wrapper">
-              <Award className="input-icon" />
-              <input
-                id="license"
-                name="license"
-                type="text"
-                inputMode="numeric"
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                value={formik.values.license}
-                className={formik.touched.license && formik.errors.license ? 'error' : ''}
-                placeholder="e.g., 12345"
-              />
-              {formik.touched.license && !formik.errors.license && formik.values.license && (
-                <CheckCircle2 className="input-icon-success" />
+            <div className="form-group">
+              <label htmlFor="license">
+                <Award className="label-icon" />
+                Medical License Number *
+              </label>
+              <div className="input-wrapper">
+                <Award className="input-icon" />
+                <input
+                  id="license"
+                  name="license"
+                  type="text"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.license}
+                  className={formik.touched.license && formik.errors.license ? 'error' : ''}
+                  placeholder="Enter your license number"
+                />
+                {formik.touched.license && !formik.errors.license && formik.values.license && (
+                  <CheckCircle2 className="input-icon-success" />
+                )}
+              </div>
+              {formik.touched.license && formik.errors.license && (
+                <div className="field-error">
+                  <AlertCircle className="error-icon" size={16} />
+                  {formik.errors.license}
+                </div>
               )}
             </div>
-            {formik.touched.license && formik.errors.license && (
-              <div className="field-error">
-                <AlertCircle className="error-icon" size={16} />
-                {formik.errors.license}
-              </div>
-            )}
           </div>
 
           <div className="form-group">
@@ -711,16 +824,16 @@ const SignupForm: React.FC = () => {
               Professional Description *
             </label>
             <div className="textarea-wrapper">
-              <FileText className="textarea-icon" />
+              <FileText className="input-icon" />
               <textarea
                 id="description"
                 name="description"
-                rows={4}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.description}
                 className={formik.touched.description && formik.errors.description ? 'error' : ''}
                 placeholder="Describe your professional background and expertise..."
+                rows={4}
               />
             </div>
             {formik.touched.description && formik.errors.description && (
@@ -731,41 +844,106 @@ const SignupForm: React.FC = () => {
             )}
           </div>
 
+          {/* Section 6: Clinic Location */}
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="x">
-                <MapPin className="label-icon" />
-                Longitude (x)
+              <label htmlFor="city">
+                <Building2 className="label-icon" />
+                City *
               </label>
-              <div className="input-wrapper">
-                <MapPin className="input-icon" />
-                <input
-                  id="x"
-                  name="x"
-                  type="text"
-                  inputMode="decimal"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.x}
-                  className={formik.touched.x && formik.errors.x ? 'error' : ''}
-                  placeholder="e.g., -122.4194"
-                />
-                {formik.touched.x && !formik.errors.x && formik.values.x && (
-                  <CheckCircle2 className="input-icon-success" />
-                )}
-              </div>
-              {formik.touched.x && formik.errors.x && (
+              <SelectDropdown
+                id="city"
+                name="city"
+                value={formik.values.city}
+                onChange={(value) => {
+                  formik.setFieldValue('city', value);
+                  formik.setFieldValue('town', ''); // Reset town when city changes
+                  formik.setFieldTouched('city', true, false);
+                  formik.setFieldTouched('town', false, false);
+                }}
+                onBlur={() => formik.setFieldTouched('city', true)}
+                options={areasData.map((city) => ({
+                  value: city.name,
+                  label: city.name,
+                }))}
+                placeholder="Select City"
+                disabled={isLoadingAreas}
+                error={formik.touched.city && !!formik.errors.city}
+                icon={Building2}
+                searchable={true}
+                emptyMessage="No cities available"
+              />
+              {formik.touched.city && formik.errors.city && (
                 <div className="field-error">
                   <AlertCircle className="error-icon" size={16} />
-                  {formik.errors.x}
+                  {formik.errors.city}
                 </div>
               )}
             </div>
 
             <div className="form-group">
+              <label htmlFor="town">
+                <Locate className="label-icon" />
+                Town *
+              </label>
+              <SelectDropdown
+                id="town"
+                name="town"
+                value={formik.values.town}
+                onChange={(value) => {
+                  formik.setFieldValue('town', value);
+                  formik.setFieldTouched('town', true, false);
+                }}
+                onBlur={() => formik.setFieldTouched('town', true)}
+                options={
+                  formik.values.city
+                    ? getTownsByCity(areasData, formik.values.city).map((town) => ({
+                      value: town.name,
+                      label: town.name,
+                    }))
+                    : []
+                }
+                placeholder={formik.values.city ? 'Select Town' : 'Select a city first'}
+                disabled={!formik.values.city || isLoadingAreas}
+                error={formik.touched.town && !!formik.errors.town}
+                icon={Locate}
+                searchable={true}
+                emptyMessage={formik.values.city ? 'No towns available' : 'Select a city first'}
+              />
+              {formik.touched.town && formik.errors.town && (
+                <div className="field-error">
+                  <AlertCircle className="error-icon" size={16} />
+                  {formik.errors.town}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>
+              <MapPin className="label-icon" />
+              Clinic Location *
+            </label>
+            <div className="location-picker-section">
+              <button
+                type="button"
+                className="btn btn-outline location-picker-btn"
+                onClick={() => setIsLocationPickerOpen(true)}
+              >
+                <MapPin size={18} />
+                Select Clinic Location
+              </button>
+              <p className="location-helper-text">
+                Pick clinic location from map to auto-fill coordinates.
+              </p>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
               <label htmlFor="y">
                 <MapPin className="label-icon" />
-                Latitude (y)
+                Clinic Latitude (y) *
               </label>
               <div className="input-wrapper">
                 <MapPin className="input-icon" />
@@ -773,12 +951,10 @@ const SignupForm: React.FC = () => {
                   id="y"
                   name="y"
                   type="text"
-                  inputMode="decimal"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
+                  readOnly
                   value={formik.values.y}
-                  className={formik.touched.y && formik.errors.y ? 'error' : ''}
-                  placeholder="e.g., 37.7749"
+                  className={`readonly-input ${formik.touched.y && formik.errors.y ? 'error' : ''}`}
+                  placeholder="Select location from map"
                 />
                 {formik.touched.y && !formik.errors.y && formik.values.y && (
                   <CheckCircle2 className="input-icon-success" />
@@ -791,7 +967,56 @@ const SignupForm: React.FC = () => {
                 </div>
               )}
             </div>
+
+            <div className="form-group">
+              <label htmlFor="x">
+                <MapPin className="label-icon" />
+                Clinic Longitude (x) *
+              </label>
+              <div className="input-wrapper">
+                <MapPin className="input-icon" />
+                <input
+                  id="x"
+                  name="x"
+                  type="text"
+                  readOnly
+                  value={formik.values.x}
+                  className={`readonly-input ${formik.touched.x && formik.errors.x ? 'error' : ''}`}
+                  placeholder="Select location from map"
+                />
+                {formik.touched.x && !formik.errors.x && formik.values.x && (
+                  <CheckCircle2 className="input-icon-success" />
+                )}
+              </div>
+              {formik.touched.x && formik.errors.x && (
+                <div className="field-error">
+                  <AlertCircle className="error-icon" size={16} />
+                  {formik.errors.x}
+                </div>
+              )}
+            </div>
           </div>
+
+          <ClinicLocationPickerModal
+            isOpen={isLocationPickerOpen}
+            initialLatitude={formik.values.y ? parseFloat(formik.values.y) : undefined}
+            initialLongitude={formik.values.x ? parseFloat(formik.values.x) : undefined}
+            onChange={(latitude, longitude) => {
+              // Update form values in real-time as map cursor changes
+              formik.setFieldValue('y', latitude.toString());
+              formik.setFieldValue('x', longitude.toString());
+              formik.setFieldTouched('y', true, false);
+              formik.setFieldTouched('x', true, false);
+            }}
+            onConfirm={(latitude, longitude) => {
+              formik.setFieldValue('y', latitude.toString());
+              formik.setFieldValue('x', longitude.toString());
+              formik.setFieldTouched('y', true, false);
+              formik.setFieldTouched('x', true, false);
+              setIsLocationPickerOpen(false);
+            }}
+            onCancel={() => setIsLocationPickerOpen(false)}
+          />
 
           <button
             type="submit"
