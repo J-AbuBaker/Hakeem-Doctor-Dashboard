@@ -149,12 +149,13 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
         setSuccessCount(results.successCount);
         setFailedSlots(results.failedSlots);
         if (results.failedSlots.length === 0) {
-          setTimeout(() => {
-            onClose();
-            formik.resetForm();
-            setSuccessCount(0);
-            setFailedSlots([]);
-          }, 1500);
+          // Show success dialog with details
+          setSuccessDetails({
+            count: results.successCount,
+            date: values.date,
+            startTime: values.startTime,
+          });
+          setShowSuccessDialog(true);
         } else if (results.successCount === 0) {
           // All failed
           setError(`Failed to create all ${calculatedSlots.length} slots. Please try again.`);
@@ -603,6 +604,34 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxDurationBeforeNext, formik.values.startTime, formik.values.slotDuration, formik.values.breakDuration, maxSlotsInFreeTime]); // Adjust when time, duration, break, max duration, or max slots change
+
+  // Reset success dialog state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShowSuccessDialog(false);
+      setSuccessDetails(null);
+      setSuccessCount(0);
+      setFailedSlots([]);
+      setError(null);
+    }
+  }, [isOpen]);
+
+  // Auto-dismiss success dialog after 5 seconds
+  useEffect(() => {
+    if (showSuccessDialog && successDetails) {
+      const timer = setTimeout(() => {
+        setShowSuccessDialog(false);
+        setSuccessDetails(null);
+        onClose();
+        formik.resetForm();
+        setSuccessCount(0);
+        setFailedSlots([]);
+      }, 5000); // 5 seconds
+
+      return () => clearTimeout(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSuccessDialog, successDetails]);
 
   if (!isOpen) return null;
 

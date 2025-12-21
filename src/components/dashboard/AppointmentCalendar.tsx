@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppointments } from '../../app/providers';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth, isSameMonth, isToday, startOfDay } from 'date-fns';
-import { Calendar as CalendarIcon, Filter, Plus, ChevronLeft, ChevronRight, Clock, AlertCircle, Calendar } from 'lucide-react';
+import { Calendar as CalendarIcon, Filter, Plus, ChevronLeft, ChevronRight, Clock, AlertCircle } from 'lucide-react';
 import { getAppointmentsForDate, parseAppointmentDate } from '../../shared/utils/date/utils';
 import { hasStatus } from '../../utils/appointment/status';
 import { getAppointmentTypeLabel } from '../../utils/appointment/type';
@@ -380,7 +380,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                 <div className="week-view">
                   <div className="week-header">
                     <button
-                      className="date-nav-btn"
+                      className="week-nav-btn week-nav-prev"
                       onClick={() => {
                         const newDate = new Date(selectedDate);
                         newDate.setDate(newDate.getDate() - 7);
@@ -388,12 +388,11 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                       }}
                       aria-label="Previous Week"
                     >
-                      <ChevronLeft size={18} className="nav-arrow-icon" />
-                      <span>Previous Week</span>
+                      <ChevronLeft size={20} />
                     </button>
                     <div className="week-header-center">
                       <div className="week-header-title-section">
-                        <h3>
+                        <h3 className="week-title">
                           {format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'MMM dd')} -{' '}
                           {format(endOfWeek(selectedDate, { weekStartsOn: 1 }), 'MMM dd, yyyy')}
                         </h3>
@@ -421,15 +420,16 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                         })()}
                       </div>
                       <button
-                        className="date-nav-btn today-btn"
+                        className="week-today-btn"
                         onClick={() => setSelectedDate(new Date())}
                         aria-label="Go to Today"
                       >
+                        <CalendarIcon size={16} />
                         Today
                       </button>
                     </div>
                     <button
-                      className="date-nav-btn"
+                      className="week-nav-btn week-nav-next"
                       onClick={() => {
                         const newDate = new Date(selectedDate);
                         newDate.setDate(newDate.getDate() + 7);
@@ -437,8 +437,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                       }}
                       aria-label="Next Week"
                     >
-                      <span>Next Week</span>
-                      <ChevronRight size={18} className="nav-arrow-icon" />
+                      <ChevronRight size={20} />
                     </button>
                   </div>
 
@@ -695,7 +694,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                 <div className="month-view">
                   <div className="month-header">
                     <button
-                      className="date-nav-btn"
+                      className="month-nav-btn month-nav-prev"
                       onClick={() => {
                         const newDate = new Date(selectedDate);
                         newDate.setMonth(newDate.getMonth() - 1);
@@ -703,21 +702,21 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                       }}
                       aria-label="Previous Month"
                     >
-                      <ChevronLeft size={18} />
-                      Previous Month
+                      <ChevronLeft size={20} />
                     </button>
                     <div className="month-header-center">
-                      <h3>{format(selectedDate, 'MMMM yyyy')}</h3>
+                      <h3 className="month-title">{format(selectedDate, 'MMMM yyyy')}</h3>
                       <button
-                        className="date-nav-btn today-btn"
+                        className="month-today-btn"
                         onClick={() => setSelectedDate(new Date())}
                         aria-label="Go to Today"
                       >
+                        <CalendarIcon size={16} />
                         Today
                       </button>
                     </div>
                     <button
-                      className="date-nav-btn"
+                      className="month-nav-btn month-nav-next"
                       onClick={() => {
                         const newDate = new Date(selectedDate);
                         newDate.setMonth(newDate.getMonth() + 1);
@@ -725,8 +724,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                       }}
                       aria-label="Next Month"
                     >
-                      Next Month
-                      <ChevronRight size={18} />
+                      <ChevronRight size={20} />
                     </button>
                   </div>
                   <div className="month-calendar-grid">
@@ -763,7 +761,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                           return (
                             <div
                               key={day.toISOString()}
-                              className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isTodayDate ? 'today' : ''} ${dayAppointments.length > 0 ? 'has-appointments' : ''}`}
+                              className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} ${isTodayDate ? 'today' : ''} ${dayAppointments.length > 0 ? 'has-appointments' : ''} ${isCurrentMonth ? 'current-month' : ''}`}
                               onClick={() => {
                                 if (isCurrentMonth) {
                                   setSelectedDate(day);
@@ -772,11 +770,14 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                               }}
                               style={{ cursor: isCurrentMonth ? 'pointer' : 'default' }}
                             >
-                              <div className="calendar-day-number">
-                                {format(day, 'd')}
+                              <div className="calendar-day-header">
+                                <div className={`calendar-day-number ${isTodayDate ? 'today-number' : ''}`}>
+                                  {format(day, 'd')}
+                                </div>
+                                {isTodayDate && <div className="today-badge">Today</div>}
                               </div>
                               <div className="calendar-day-content">
-                                {dayAppointments.length > 0 && (
+                                {dayAppointments.length > 0 ? (
                                   <div className="calendar-day-appointments">
                                     {bookedCount > 0 && (
                                       <div
@@ -789,6 +790,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                                         }}
                                       >
                                         <span className="indicator-dot"></span>
+                                        <span className="indicator-label">Booked</span>
                                         <span className="indicator-count">{bookedCount}</span>
                                       </div>
                                     )}
@@ -803,9 +805,14 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                                         }}
                                       >
                                         <span className="indicator-dot"></span>
+                                        <span className="indicator-label">Available</span>
                                         <span className="indicator-count">{availableCount}</span>
                                       </div>
                                     )}
+                                  </div>
+                                ) : (
+                                  <div className="calendar-day-empty">
+                                    <span className="empty-day-text">No appointments</span>
                                   </div>
                                 )}
                               </div>
