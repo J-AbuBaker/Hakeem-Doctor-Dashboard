@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
-import { formatWeekRange } from '../../shared/utils/date/week';
+import { formatWeekRange } from '@shared/utils/date/week';
 import './WeekNavigation.css';
 
 interface WeekNavigationProps {

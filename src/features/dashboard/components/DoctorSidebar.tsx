@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../app/providers';
+import { useAuth } from '@app/providers';
 import {
   LayoutDashboard,
   Calendar,
@@ -8,10 +8,11 @@ import {
   LogOut,
   Menu,
   KeyRound,
+  FileText,
 } from 'lucide-react';
-import ConfirmDialog from '../common/ConfirmDialog';
+import ConfirmDialog from '@shared/components/common/ConfirmDialog';
 import ResetPasswordModal from './ResetPasswordModal';
-import { AuthService } from '../../features/auth';
+import { AuthService } from '@features/auth';
 
 interface DoctorSidebarProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ const DoctorSidebar: React.FC<DoctorSidebarProps> = ({ isOpen, onToggle }) => {
   const menuItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/dashboard/appointments', icon: Calendar, label: 'Appointments' },
+    { path: '/dashboard/medical-records', icon: FileText, label: 'Medical Health Records' },
     { path: '/dashboard/profile', icon: User, label: 'Profile' },
   ];
 

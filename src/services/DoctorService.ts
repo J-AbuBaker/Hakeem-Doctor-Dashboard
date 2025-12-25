@@ -1,7 +1,7 @@
-import api from '../utils/api/client';
+import api from '../infrastructure/api/client';
 import { Doctor } from '../types';
 import { API_ENDPOINTS } from '../shared/constants/apiEndpoints';
-import { IDoctorService } from './interfaces/IDoctorService';
+import { IDoctorService } from '../shared/services/interfaces/IDoctorService';
 
 class DoctorService implements IDoctorService {
   async getDoctorById(id: string): Promise<Doctor> {

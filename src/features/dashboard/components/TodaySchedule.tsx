@@ -1,10 +1,10 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Clock, Calendar } from 'lucide-react';
-import { useAppointments } from '../../app/providers';
-import { getTodayAppointments, parseAppointmentDate } from '../../shared/utils/date/utils';
-import { hasStatus } from '../../utils/appointment/status';
-import { sortAppointmentsByDateTime } from '../../utils/appointment/sorting';
+import { useAppointments } from '@app/providers';
+import { getTodayAppointments, parseAppointmentDate } from '@shared/utils/date/utils';
+import { hasStatus } from '@features/appointments/utils/status';
+import { sortAppointmentsByDateTime } from '@features/appointments/utils/sorting';
 import AppointmentCard from './AppointmentCard';
 import SectionModule from './SectionModule';
 import './TodaySchedule.css';

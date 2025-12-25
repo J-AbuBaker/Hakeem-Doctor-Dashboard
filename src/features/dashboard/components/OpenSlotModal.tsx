@@ -1,16 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { useAppointments } from '../../app/providers';
+import { useAppointments } from '@app/providers';
 import { X, Loader2, Calendar, Clock, AlertCircle, Plus, Minus, CheckCircle2, Info, AlertTriangle } from 'lucide-react';
 import TimeSlotPicker from './TimeSlotPicker';
 import SlotDatePicker from './SlotDatePicker';
 import { format } from 'date-fns';
-import { getErrorMessage, getErrorStatus } from '../../shared/utils/error/handlers';
-import { storeDurations } from '../../utils/appointment/durationCache';
-import { checkMultipleSlotsConflicts, getBlockedTimeRanges, getMaxDurationBeforeNextAppointment } from '../../utils/appointment/conflict';
-import { parseDateTimeString } from '../../shared/utils/date/parsing';
-import { APP_CONFIG } from '../../shared/constants/appConfig';
+import { getErrorMessage, getErrorStatus } from '@shared/utils/error/handlers';
+import { storeDurations } from '@features/appointments/utils/durationCache';
+import { checkMultipleSlotsConflicts, getBlockedTimeRanges, getMaxDurationBeforeNextAppointment } from '@features/appointments/utils/conflict';
+import { parseDateTimeString } from '@shared/utils/date/parsing';
+import { APP_CONFIG } from '@shared/constants/appConfig';
 
 interface OpenSlotModalProps {
   isOpen: boolean;

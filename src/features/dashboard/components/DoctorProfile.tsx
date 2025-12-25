@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Doctor, UserInfo } from '../../types';
-import { AuthService } from '../../features/auth';
-import { getErrorMessage } from '../../shared/utils/error/handlers';
+import { Doctor, UserInfo } from '../../../types';
+import { AuthService } from '@features/auth';
+import { getErrorMessage } from '@shared/utils/error/handlers';
 import {
   MapPin,
   Phone,

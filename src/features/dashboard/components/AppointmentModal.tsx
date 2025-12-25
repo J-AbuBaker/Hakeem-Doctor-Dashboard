@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { Appointment, UpdateAppointmentDto } from '../../types';
+import { Appointment, UpdateAppointmentDto } from '../../../types';
 import { X, Loader2, Calendar, User, Clock, FileText, AlertCircle } from 'lucide-react';
 import TimeSlotPicker from './TimeSlotPicker';
-import ConfirmDialog from '../common/ConfirmDialog';
-import { getErrorMessage, getErrorStatus } from '../../shared/utils/error/handlers';
+import ConfirmDialog from '@shared/components/common/ConfirmDialog';
+import { getErrorMessage, getErrorStatus } from '@shared/utils/error/handlers';
 
 interface AppointmentModalProps {
   appointment?: Appointment;
@@ -110,7 +110,6 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
     setError(null);
     try {
-      // Note: Doctors cannot update appointments - this functionality is deprecated
       throw new Error('Updating appointments is not supported.');
       setShowUpdateDialog(false);
       setPendingUpdate(null);

@@ -89,11 +89,18 @@
   --primary-lighter: hsl(var(--primary-hue), calc(var(--primary-saturation) - 15%), calc(var(--primary-lightness) + 18%));
   --primary-lightest: hsl(var(--primary-hue), calc(var(--primary-saturation) - 30%), calc(var(--primary-lightness) + 32%));
 
+  /* Primary Gradient Variables - For consistent gradient usage */
+  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--primary-lighter) 100%);
+  --gradient-primary-dark: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
+  --gradient-primary-hover: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-lighter) 50%, hsl(var(--primary-hue), calc(var(--primary-saturation) - 20%), calc(var(--primary-lightness) + 25%)) 100%);
+
   /* Semantic Colors - Professional Medical Enterprise Palette */
   --success-hue: 142;
   --success: hsl(var(--success-hue), 71%, 45%);
   --success-light: hsl(var(--success-hue), 71%, 52%);
   --success-lighter: hsl(var(--success-hue), 50%, 94%);
+  --success-dark: hsl(var(--success-hue), 71%, 38%);
+  --gradient-success: linear-gradient(135deg, var(--success) 0%, var(--success-light) 50%, hsl(var(--success-hue), 71%, 60%) 100%);
 
   --danger-hue: 0;
   --danger: hsl(var(--danger-hue), 72%, 50%);
@@ -131,7 +138,7 @@
   /* Surface Colors */
   --surface: var(--gray-50);
   --surface-alt: var(--gray-100);
-  --surface-elevated: #ffffff;
+  --surface-elevated: var(--text-inverse);
   --background: var(--primary-lightest);
 
   /* Text Colors */
@@ -154,7 +161,7 @@
   --status-cancelled: var(--danger);
   --status-completed: var(--success);
   --status-pending: var(--warning);
-  --status-expired: #9ca3af;
+  --status-expired: var(--gray-400);
 
   /* Shadow System - Layered Depth */
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);

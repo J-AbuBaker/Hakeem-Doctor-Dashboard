@@ -1,5 +1,5 @@
 import React from 'react';
-import { APPOINTMENT_TYPES, AppointmentTypeValue, DEFAULT_APPOINTMENT_TYPE } from '../../utils/appointment/type';
+import { APPOINTMENT_TYPES, AppointmentTypeValue, DEFAULT_APPOINTMENT_TYPE } from '@features/appointments/utils/type';
 import './AppointmentTypeSelector.css';
 
 interface AppointmentTypeSelectorProps {

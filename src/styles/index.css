@@ -29,6 +29,7 @@
 @import './components/modals.css';
 @import './components/dialogs.css';
 @import './components/landing.css';
+@import './components/medical-records.css';
 
 /* Utilities */
 @import './utilities/animations.css';

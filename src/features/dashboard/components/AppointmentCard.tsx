@@ -1,15 +1,15 @@
 import { memo } from 'react';
 import { format } from 'date-fns';
-import { Appointment } from '../../types';
+import { Appointment } from '../../../types';
 import {
   Calendar,
   Clock,
   User,
   FileText,
 } from 'lucide-react';
-import { hasStatus } from '../../utils/appointment/status';
-import { formatDuration } from '../../utils/appointment/duration';
-import { getAppointmentTypeIcon, getAppointmentTypeLabel, getAppointmentTypeOption } from '../../utils/appointment/type';
+import { hasStatus } from '@features/appointments/utils/status';
+import { formatDuration } from '@features/appointments/utils/duration';
+import { getAppointmentTypeIcon, getAppointmentTypeLabel, getAppointmentTypeOption } from '@features/appointments/utils/type';
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -52,7 +52,7 @@ const AppointmentCard = memo<AppointmentCardProps>(({
         <div className={`appointment-info-section ${compact ? 'compact' : ''}`}>
           <div className="appointment-info-item">
             <User className="info-icon" />
-            <span className="info-value" title={appointment.patientId}>{appointment.patientName}</span>
+            <span className="info-value">{appointment.patientName}</span>
           </div>
           {!hideDate && (
             <div className="appointment-info-item">

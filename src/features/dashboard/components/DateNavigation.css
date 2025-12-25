@@ -106,7 +106,7 @@
 
 .date-nav-pill.today {
   border-color: var(--primary);
-  background: linear-gradient(135deg, var(--primary-lightest) 0%, rgba(13, 148, 136, 0.05) 100%);
+  background: linear-gradient(135deg, var(--primary-lightest) 0%, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.05) 100%);
 }
 
 .date-nav-pill.today .date-pill-number {

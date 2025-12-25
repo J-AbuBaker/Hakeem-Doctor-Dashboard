@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { format, addDays, isToday, isSameDay, startOfDay } from 'date-fns';
 import { Calendar } from 'lucide-react';
-import { useAppointments } from '../../app/providers';
-import { getAppointmentsForDate } from '../../shared/utils/date/utils';
+import { useAppointments } from '@app/providers';
+import { getAppointmentsForDate } from '@shared/utils/date/utils';
 import './DateNavigation.css';
 
 interface DateNavigationProps {

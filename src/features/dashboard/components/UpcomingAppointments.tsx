@@ -1,54 +1,36 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { format, isBefore, startOfDay, isSameDay } from 'date-fns';
-import { History, Clock } from 'lucide-react';
-import { useAppointments } from '../../app/providers';
-import { parseAppointmentDate } from '../../shared/utils/date/utils';
-import { hasStatus } from '../../utils/appointment/status';
-import { sortAppointmentsByDateTime } from '../../utils/appointment/sorting';
+import { format, isSameDay, startOfDay } from 'date-fns';
+import { Calendar, Clock } from 'lucide-react';
+import { useAppointments } from '@app/providers';
+import { parseAppointmentDate } from '@shared/utils/date/utils';
+import { hasStatus } from '@features/appointments/utils/status';
+import { sortAppointmentsByDateTime } from '@features/appointments/utils/sorting';
 import {
   getWeeksWithAppointments,
   groupAppointmentsByDay,
-} from '../../shared/utils/date/week';
+  getCurrentWeekStart,
+  isDateInWeek,
+  findWeekIndex,
+} from '@shared/utils/date/week';
 import AppointmentCard from './AppointmentCard';
 import WeekNavigation from './WeekNavigation';
 import SectionModule from './SectionModule';
-import './ExpiredAppointments.css';
+import './UpcomingAppointments.css';
 
-const ExpiredAppointments: React.FC = () => {
+const UpcomingAppointments: React.FC = () => {
   const { appointments } = useAppointments();
   const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
-  const today = startOfDay(new Date());
 
-  // Get all weeks with past appointments (expired + past due)
+  // Get all weeks with appointments (only weeks that have appointments)
   const weeksWithAppointments = useMemo(() => {
-    // Filter to only past appointments (expired status or past dates)
-    const pastAppointments = appointments.filter((apt) => {
+    // Filter to only future appointments
+    const futureAppointments = appointments.filter((apt) => {
       const aptDate = parseAppointmentDate(apt);
       if (!aptDate) return false;
-
-      // Include expired status
-      if (hasStatus(apt.status, 'Expired')) return true;
-
-      // Include past due: scheduled appointments that are past their date
-      const aptStartOfDay = startOfDay(aptDate);
-      if (isBefore(aptStartOfDay, today)) {
-        // Only include if it's scheduled and has a patient (not just an unbooked slot)
-        if (hasStatus(apt.status, 'Scheduled') && apt.patientId && apt.patientId !== '0' && apt.patientName !== 'Available Slot') {
-          return true;
-        }
-        // Or if it's completed/cancelled and in the past
-        if (hasStatus(apt.status, 'Completed') || hasStatus(apt.status, 'Cancelled')) {
-          return true;
-        }
-      }
-
-      return false;
+      return aptDate > startOfDay(new Date());
     });
-
-    // Sort weeks in reverse chronological order (most recent first)
-    const weeks = getWeeksWithAppointments(pastAppointments);
-    return weeks.sort((a, b) => b.start.getTime() - a.start.getTime());
-  }, [appointments, today]);
+    return getWeeksWithAppointments(futureAppointments);
+  }, [appointments]);
 
   // Get current week's appointments
   const currentWeek = useMemo(() => {
@@ -66,26 +48,39 @@ const ExpiredAppointments: React.FC = () => {
     return groupAppointmentsByDay(currentWeek.appointments);
   }, [currentWeek]);
 
-  // Initialize to most recent week (index 0 after reverse sort)
+  // Initialize to current week or first available week
   useEffect(() => {
     if (weeksWithAppointments.length === 0) return;
-    // Always start with the most recent week (index 0)
-    setCurrentWeekIndex(0);
+
+    const currentWeekStart = getCurrentWeekStart();
+    const currentWeekIdx = findWeekIndex(weeksWithAppointments, currentWeekStart);
+
+    if (currentWeekIdx >= 0) {
+      setCurrentWeekIndex(currentWeekIdx);
+    } else {
+      // If current week has no appointments, go to first available week
+      setCurrentWeekIndex(0);
+    }
   }, [weeksWithAppointments]);
 
   const handlePreviousWeek = () => {
+    if (currentWeekIndex > 0) {
+      setCurrentWeekIndex(currentWeekIndex - 1);
+    }
+  };
+
+  const handleNextWeek = () => {
     if (currentWeekIndex < weeksWithAppointments.length - 1) {
       setCurrentWeekIndex(currentWeekIndex + 1);
     }
   };
 
-  const handleNextWeek = () => {
-    // Not used for past appointments - always disabled
-  };
-
   const handleGoToCurrentWeek = () => {
-    // Go to most recent week (index 0)
-    setCurrentWeekIndex(0);
+    const currentWeekStart = getCurrentWeekStart();
+    const currentWeekIdx = findWeekIndex(weeksWithAppointments, currentWeekStart);
+    if (currentWeekIdx >= 0) {
+      setCurrentWeekIndex(currentWeekIdx);
+    }
   };
 
   const formatTime = (timeString: string): string => {
@@ -115,19 +110,19 @@ const ExpiredAppointments: React.FC = () => {
   };
 
   const formatDayLabel = (date: Date): { label: string; subtitle: string } => {
-    const todayDate = startOfDay(new Date());
-    const yesterday = startOfDay(new Date(todayDate.getTime() - 24 * 60 * 60 * 1000));
+    const today = startOfDay(new Date());
+    const tomorrow = startOfDay(new Date(today.getTime() + 24 * 60 * 60 * 1000));
 
-    if (isSameDay(date, todayDate)) {
+    if (isSameDay(date, today)) {
       return {
         label: 'Today',
         subtitle: format(date, 'EEEE, MMMM d'),
       };
     }
 
-    if (isSameDay(date, yesterday)) {
+    if (isSameDay(date, tomorrow)) {
       return {
-        label: 'Yesterday',
+        label: 'Tomorrow',
         subtitle: format(date, 'EEEE, MMMM d'),
       };
     }
@@ -138,58 +133,53 @@ const ExpiredAppointments: React.FC = () => {
     };
   };
 
-  // Separate completed vs missed/expired
-  const categorizeAppointments = (apts: typeof appointments) => {
-    return {
-      expired: apts.filter(a => hasStatus(a.status, 'Expired')),
-      completed: apts.filter(a => hasStatus(a.status, 'Completed')),
-      missed: apts.filter(a => !hasStatus(a.status, 'Completed') && !hasStatus(a.status, 'Expired')),
-    };
-  };
-
   if (weeksWithAppointments.length === 0) {
     return (
       <SectionModule
-        title="Previous Appointments"
+        title="Upcoming Appointments"
         subtitle="Weekly view"
-        icon={History}
+        icon={Calendar}
         empty={true}
-        emptyTitle="No previous appointments"
-        emptySubtitle="You have no past appointments."
-        emptyIcon={History}
-        aria-label="Previous Appointments"
+        emptyTitle="No upcoming appointments"
+        emptySubtitle="You have no appointments scheduled for upcoming weeks."
+        emptyIcon={Calendar}
+        aria-label="Upcoming Appointments"
       >
-        <></>
+        {null}
       </SectionModule>
     );
   }
 
-  // Sort days chronologically (oldest to newest within week)
+  const isCurrentWeek = currentWeek
+    ? isDateInWeek(new Date(), currentWeek.start)
+    : false;
+
+  // Sort days chronologically
   const sortedDays = Array.from(appointmentsByDay.entries())
     .map(([dateKey, apts]) => ({
       date: new Date(dateKey),
       dateKey,
       appointments: sortAppointmentsByDateTime(apts),
     }))
-    .sort((a, b) => b.date.getTime() - a.date.getTime()); // Most recent first within week
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   return (
     <SectionModule
-      title="Previous Appointments"
+      title="Upcoming Appointments"
       subtitle="Weekly view"
-      icon={History}
-      aria-label="Previous Appointments"
+      icon={Calendar}
+      aria-label="Upcoming Appointments"
     >
       <WeekNavigation
         weekStart={currentWeek!.start}
         weekEnd={currentWeek!.end}
         onPreviousWeek={handlePreviousWeek}
         onNextWeek={handleNextWeek}
-        canGoPrevious={currentWeekIndex < weeksWithAppointments.length - 1}
-        canGoNext={false}
+        canGoPrevious={currentWeekIndex > 0}
+        canGoNext={currentWeekIndex < weeksWithAppointments.length - 1}
         onGoToCurrentWeek={handleGoToCurrentWeek}
-        showCurrentWeekButton={currentWeekIndex !== 0}
-        isCurrentWeek={false}
+        showCurrentWeekButton={!isCurrentWeek}
+        isCurrentWeek={isCurrentWeek}
       />
 
       <div className="upcoming-appointments-week-view">
@@ -201,7 +191,9 @@ const ExpiredAppointments: React.FC = () => {
           <div className="upcoming-days-list">
             {sortedDays.map(({ date, dateKey, appointments: dayAppointments }) => {
               const dayLabel = formatDayLabel(date);
-              const dayCategorized = categorizeAppointments(dayAppointments);
+              const scheduledCount = dayAppointments.filter((a) =>
+                hasStatus(a.status, 'Scheduled')
+              ).length;
 
               return (
                 <div key={dateKey} className="upcoming-day-group">
@@ -215,14 +207,9 @@ const ExpiredAppointments: React.FC = () => {
                         {dayAppointments.length}{' '}
                         {dayAppointments.length === 1 ? 'appointment' : 'appointments'}
                       </span>
-                      {dayCategorized.completed.length > 0 && (
+                      {scheduledCount > 0 && (
                         <span className="upcoming-day-scheduled-badge">
-                          {dayCategorized.completed.length} completed
-                        </span>
-                      )}
-                      {dayCategorized.expired.length > 0 && (
-                        <span className="expired-badge expired">
-                          {dayCategorized.expired.length} expired
+                          {scheduledCount} scheduled
                         </span>
                       )}
                     </div>
@@ -267,4 +254,4 @@ const ExpiredAppointments: React.FC = () => {
   );
 };
 
-export default ExpiredAppointments;
+export default UpcomingAppointments;

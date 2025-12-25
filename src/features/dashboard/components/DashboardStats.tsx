@@ -1,7 +1,7 @@
 import React from 'react';
-import { useAppointments } from '../../app/providers';
+import { useAppointments } from '@app/providers';
 import { Calendar, CheckCircle2, Clock, XCircle } from 'lucide-react';
-import { useDashboardStats } from '../../features/appointments';
+import { useDashboardStats } from '@features/appointments';
 
 const DashboardStats: React.FC = () => {
   const { appointments } = useAppointments();

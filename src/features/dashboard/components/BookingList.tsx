@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Appointment } from '../../types';
+import { Appointment } from '../../../types';
 import { format, isToday, isTomorrow, isYesterday, startOfDay } from 'date-fns';
 import {
   Calendar,
@@ -7,9 +7,9 @@ import {
   User,
   AlertCircle
 } from 'lucide-react';
-import { hasStatus } from '../../utils/appointment/status';
-import { parseAppointmentDate } from '../../utils/date/utils';
-import { getAppointmentTypeLabel } from '../../utils/appointment/type';
+import { hasStatus } from '@features/appointments/utils/status';
+import { parseAppointmentDate } from '@shared/utils/date/utils';
+import { getAppointmentTypeLabel } from '@features/appointments/utils/type';
 import './BookingList.css';
 
 interface BookingListProps {
@@ -218,7 +218,7 @@ const BookingList: React.FC<BookingListProps> = ({ appointments }) => {
                           <span className="duration-value">{formatDuration(appointment.duration)}</span>
                         </td>
                         <td className="col-patient">
-                          <span className="patient-name-value" title={appointment.patientId}>
+                          <span className="patient-name-value">
                             {appointment.patientName}
                           </span>
                         </td>

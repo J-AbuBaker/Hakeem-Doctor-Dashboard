@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { AuthService } from '../../features/auth';
-import { getErrorMessage } from '../../shared/utils/error/handlers';
-import { TypedAxiosError } from '../../shared/types/common/errors';
+import { AuthService } from '@features/auth';
+import { getErrorMessage } from '@shared/utils/error/handlers';
+import { TypedAxiosError } from '@shared/types/common/errors';
 import {
   X,
   Lock,
@@ -15,8 +15,8 @@ import {
   Loader2,
   KeyRound
 } from 'lucide-react';
-import '../auth/AuthShared.css';
-import '../auth/AuthForms.css';
+import '../../auth/components/AuthShared.css';
+import '../../auth/components/AuthForms.css';
 
 interface ResetPasswordModalProps {
   isOpen: boolean;

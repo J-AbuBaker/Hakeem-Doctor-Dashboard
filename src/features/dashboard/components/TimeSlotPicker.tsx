@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { Clock, Lock, Timer } from 'lucide-react';
-import { Appointment } from '../../types';
-import { getBlockedTimeRanges, getMaxDurationBeforeNextAppointment } from '../../utils/appointment/conflict';
-import { parseDateTimeString } from '../../shared/utils/date/parsing';
-import { APP_CONFIG } from '../../shared/constants/appConfig';
+import { Appointment } from '../../../types';
+import { getBlockedTimeRanges, getMaxDurationBeforeNextAppointment } from '@features/appointments/utils/conflict';
+import { parseDateTimeString } from '@shared/utils/date/parsing';
+import { APP_CONFIG } from '@shared/constants/appConfig';
 
 interface TimeSlotPickerProps {
   selectedTime: string;

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useAppointments } from '../../app/providers';
+import { useAppointments } from '@app/providers';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, startOfMonth, endOfMonth, isSameMonth, isToday, startOfDay } from 'date-fns';
 import { Calendar as CalendarIcon, Filter, Plus, ChevronLeft, ChevronRight, Clock, AlertCircle } from 'lucide-react';
-import { getAppointmentsForDate, parseAppointmentDate } from '../../shared/utils/date/utils';
-import { hasStatus } from '../../utils/appointment/status';
-import { getAppointmentTypeLabel } from '../../utils/appointment/type';
-import { sortAppointmentsByDateTime } from '../../utils/appointment/sorting';
-import { formatDuration } from '../../utils/appointment/duration';
+import { getAppointmentsForDate, parseAppointmentDate } from '@shared/utils/date/utils';
+import { hasStatus } from '@features/appointments/utils/status';
+import { getAppointmentTypeLabel } from '@features/appointments/utils/type';
+import { sortAppointmentsByDateTime } from '@features/appointments/utils/sorting';
+import { formatDuration } from '@features/appointments/utils/duration';
 import AppointmentCard from './AppointmentCard';
 import SectionModule from './SectionModule';
 import './BookingList.css';
@@ -301,7 +301,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                       <SectionModule
                         title={isToday ? "Today's Schedule" : format(selectedDate, 'EEEE, MMMM d, yyyy')}
                         subtitle={isToday ? format(selectedDate, 'EEEE, MMMM d, yyyy') : undefined}
-                        icon={Calendar}
+                        icon={CalendarIcon}
                         actions={
                           <div className="today-schedule-stats">
                             <div className="today-stat-item">
