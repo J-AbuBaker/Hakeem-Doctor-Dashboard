@@ -1,5 +1,5 @@
-import { Appointment } from '../../types';
-import { parseAppointmentDate } from '../date/utils';
+import { Appointment } from '../../../types';
+import { parseAppointmentDate } from '../../../shared/utils/date/utils';
 
 /**
  * Sorts appointments by date and time
@@ -32,3 +32,4 @@ export function sortAppointmentsByDateTime(appointments: Appointment[]): Appoint
     return timeAMinutes - timeBMinutes;
   });
 }
+

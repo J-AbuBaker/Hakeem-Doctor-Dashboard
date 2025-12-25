@@ -1,4 +1,4 @@
-import api from '../../../infrastructure/api/client';
+import api from '@infrastructure/api/client';
 import {
   SignUpUserDto,
   LoginUserDto,
@@ -12,23 +12,23 @@ import {
 import {
   getUsernameFromToken,
   hasRole,
-} from '../../../shared/utils/auth/jwt';
+} from '@shared/utils/auth/jwt';
 import {
   storeToken,
   removeStoredToken,
   getStoredToken,
   isAuthenticated as checkAuth,
-} from '../../../infrastructure/storage';
+} from '@infrastructure/storage';
 import {
   isErrorResponse,
   extractErrorFromResponse,
   createResetPasswordError,
-} from '../../../shared/utils/error/handlers';
-import { API_ENDPOINTS } from '../../../shared/constants/apiEndpoints';
-import { APP_CONFIG } from '../../../shared/constants/appConfig';
-import { TypedAxiosError } from '../../../shared/types/common/errors';
+} from '@shared/utils/error/handlers';
+import { API_ENDPOINTS } from '@shared/constants/apiEndpoints';
+import { APP_CONFIG } from '@shared/constants/appConfig';
+import { TypedAxiosError } from '@shared/types/common/errors';
 import { Role } from '../../../types/auth';
-import { IAuthService } from '../../../shared/services/interfaces/IAuthService';
+import { IAuthService } from '@shared/services/interfaces/IAuthService';
 
 class AuthService implements IAuthService {
   async signup(data: SignUpUserDto): Promise<SignupResponse> {

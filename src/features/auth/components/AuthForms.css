@@ -387,11 +387,11 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #10b981;
+  color: var(--success);
   font-size: 0.875rem;
   font-weight: 500;
   padding: 0.5rem 0.75rem;
-  background-color: rgba(16, 185, 129, 0.1);
+  background-color: hsla(var(--success-hue), 71%, 45%, 0.1);
   border-radius: 8px;
   width: 100%;
   justify-content: center;
@@ -417,26 +417,26 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%);
-  color: white;
+  background: var(--gradient-primary);
+  color: var(--text-inverse);
   border: none;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.2);
+  box-shadow: 0 2px 8px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.2);
 }
 
 .resend-code-button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
-  background: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 50%, #5eead4 100%);
+  box-shadow: 0 4px 12px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.3);
+  background: var(--gradient-primary-hover);
 }
 
 .resend-code-button:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+  box-shadow: 0 2px 6px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.2);
 }
 
 .resend-code-button:disabled {
@@ -481,12 +481,12 @@
   background: var(--primary);
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+  box-shadow: 0 4px 12px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.25);
 }
 
 .location-picker-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(13, 148, 136, 0.2);
+  box-shadow: 0 2px 6px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.2);
 }
 
 .location-helper-text {

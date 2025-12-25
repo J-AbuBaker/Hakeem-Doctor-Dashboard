@@ -1,12 +1,11 @@
 /**
  * Appointments feature utilities barrel export
- * Re-export from shared/utils/appointment for convenience
  */
 
-export * from '../../../utils/appointment/autoComplete';
-export * from '../../../utils/appointment/conflict';
-export * from '../../../utils/appointment/duration';
-export * from '../../../utils/appointment/durationCache';
-export * from '../../../utils/appointment/sorting';
-export * from '../../../utils/appointment/status';
-export * from '../../../utils/appointment/type';
+export * from './autoComplete';
+export * from './conflict';
+export * from './duration';
+export * from './durationCache';
+export * from './sorting';
+export * from './status';
+export * from './type';

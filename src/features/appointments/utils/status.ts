@@ -165,3 +165,4 @@ export function isExpiredAppointment(appointment: { status: string; patientId: s
     return false;
   }
 }
+

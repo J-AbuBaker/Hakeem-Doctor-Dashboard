@@ -2,9 +2,9 @@ import React from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../app/providers';
+import { useAuth } from '@app/providers';
 import { ArrowRight, Loader2, Eye, EyeOff, Mail, Lock, AlertCircle, Stethoscope } from 'lucide-react';
-import { getErrorMessage, getErrorResponseData, getErrorStatus } from '../../shared/utils/error/handlers';
+import { getErrorMessage, getErrorResponseData, getErrorStatus } from '@shared/utils/error/handlers';
 import './AuthShared.css';
 import './AuthForms.css';
 

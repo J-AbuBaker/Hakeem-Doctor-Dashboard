@@ -3,10 +3,10 @@
  * Provides functions to detect overlapping appointments and prevent scheduling conflicts
  */
 
-import { Appointment } from '../../types';
-import { parseDateTimeString } from '../../shared/utils/date/parsing';
+import { Appointment } from '../../../types';
+import { parseDateTimeString } from '../../../shared/utils/date/parsing';
 import { getDuration } from './durationCache';
-import { APP_CONFIG } from '../../shared/constants/appConfig';
+import { APP_CONFIG } from '../../../shared/constants/appConfig';
 
 export interface CalculatedSlot {
   datetime: string;
@@ -461,3 +461,4 @@ export function getTimeSlotAvailability(
     };
   });
 }
+

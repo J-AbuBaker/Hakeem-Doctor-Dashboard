@@ -181,3 +181,4 @@ export const clearDurationCache = (): void => {
 export const getAllCachedDurations = (): DurationCache => {
   return getCache();
 };
+

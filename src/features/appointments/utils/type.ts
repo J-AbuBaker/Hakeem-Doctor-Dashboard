@@ -83,3 +83,4 @@ export function getAppointmentTypeLabel(appointmentType: string | null | undefin
   }
   return getAppointmentTypeOption(appointmentType).label;
 }
+

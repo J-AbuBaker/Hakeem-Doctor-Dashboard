@@ -2,9 +2,9 @@ import React from 'react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../app/providers';
-import { SPECIALIZATIONS, BLOOD_TYPES } from '../../types';
-import { getErrorMessage, getErrorStatus } from '../../shared/utils/error/handlers';
+import { useAuth } from '@app/providers';
+import { SPECIALIZATIONS, BLOOD_TYPES } from '../../../types';
+import { getErrorMessage, getErrorStatus } from '@shared/utils/error/handlers';
 import {
   UserPlus,
   Loader2,
@@ -25,10 +25,9 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
-import DatePicker from '../common/DatePicker';
-import ClinicLocationPickerModal from '../common/ClinicLocationPickerModal';
-import SelectDropdown from '../common/SelectDropdown';
-import type { SelectOption, SelectOptionGroup } from '../common/SelectDropdown';
+import DatePicker from '@shared/components/common/DatePicker';
+import ClinicLocationPickerModal from '@shared/components/common/ClinicLocationPickerModal';
+import SelectDropdown from '@shared/components/common/SelectDropdown';
 import './AuthShared.css';
 import './AuthForms.css';
 
@@ -112,7 +111,7 @@ const SignupForm: React.FC = () => {
       .test('not-future', 'Date of birth cannot be in the future', function (value) {
         if (!value || value === '') return true; // Allow empty for initial state
         const date = new Date(value);
-        if (isNaN(date.getTime())) return true; // Let valid-date test handle invalid dates
+        if (isNaN(date.getTime())) return true;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         date.setHours(0, 0, 0, 0);
@@ -176,7 +175,7 @@ const SignupForm: React.FC = () => {
       confirmPassword: '',
       name: '',
       dob: '',
-      gender: null as any,
+      gender: null as boolean | null,
       blood_type: '',
       weight: '',
       ph_num: '',
@@ -219,6 +218,7 @@ const SignupForm: React.FC = () => {
           ...signupData,
           dob: dobISO,
           age: calculatedAge,
+          gender: signupData.gender as boolean, // Convert to boolean (validation ensures it's not null)
           ph_num: Number(signupData.ph_num),
           license: Number(signupData.license),
           weight: Number(signupData.weight),
@@ -304,8 +304,7 @@ const SignupForm: React.FC = () => {
       setBloodRhFactor('');
       setBloodTypeLetter('');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.blood_type]); // Update when blood_type changes
+  }, [formik.values.blood_type]);
 
   // Custom submit handler that validates and shows errors
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%);
+  background: var(--gradient-primary);
   position: relative;
   overflow: hidden;
 }
@@ -79,10 +79,10 @@
   justify-content: center;
   width: 88px;
   height: 88px;
-  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%);
+  background: var(--gradient-primary);
   border-radius: 50%;
   margin: 0 auto 1.75rem;
-  box-shadow: var(--shadow-primary), 0 0 0 4px rgba(13, 148, 136, 0.1);
+  box-shadow: var(--shadow-primary), 0 0 0 4px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.1);
   animation: float 4s ease-in-out infinite;
   position: relative;
 }
@@ -92,7 +92,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0d9488, #14b8a6, #2dd4bf);
+  background: var(--gradient-primary);
   opacity: 0.2;
   z-index: -1;
   animation: pulse-ring 2s ease-out infinite;
@@ -130,7 +130,7 @@
 .auth-icon {
   width: 28px;
   height: 28px;
-  color: white;
+  color: var(--text-inverse);
 }
 
 .auth-icon.success {
@@ -148,7 +148,7 @@
 .forgot-password-icon-wrapper .refresh-icon {
   width: 40px;
   height: 40px;
-  color: white;
+  color: var(--text-inverse);
   position: relative;
   z-index: 2;
   stroke-width: 2.5;
@@ -157,7 +157,7 @@
 .forgot-password-icon-wrapper .lock-icon {
   width: 16px;
   height: 16px;
-  color: white;
+  color: var(--text-inverse);
   position: absolute;
   top: 50%;
   left: 50%;
@@ -171,7 +171,7 @@
   font-weight: 800;
   margin-bottom: 0.5rem;
   color: var(--text);
-  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -212,12 +212,12 @@
 
 /* Success Screen Styling */
 .success-icon-wrapper {
-  background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%) !important;
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3), 0 0 0 4px rgba(16, 185, 129, 0.1) !important;
+  background: var(--gradient-success) !important;
+  box-shadow: 0 8px 24px hsla(var(--success-hue), 71%, 45%, 0.3), 0 0 0 4px hsla(var(--success-hue), 71%, 45%, 0.1) !important;
 }
 
 .success-icon-wrapper::after {
-  background: linear-gradient(135deg, #10b981, #059669, #047857) !important;
+  background: var(--gradient-success) !important;
   opacity: 0.2;
 }
 
@@ -246,21 +246,21 @@
   justify-content: center;
   gap: 0.5rem;
   min-height: 52px;
-  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%);
-  color: white;
+  background: var(--gradient-primary);
+  color: var(--text-inverse);
   border: none;
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25), 0 2px 4px rgba(13, 148, 136, 0.15);
+  box-shadow: 0 4px 12px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.25), 0 2px 4px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.15);
 }
 
 .success-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35), 0 4px 8px rgba(13, 148, 136, 0.2);
-  background: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 50%, #5eead4 100%);
+  box-shadow: 0 6px 20px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.35), 0 4px 8px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.2);
+  background: var(--gradient-primary-hover);
 }
 
 .success-button:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+  box-shadow: 0 2px 8px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.25);
 }
 
 .success-footer-link {
@@ -272,7 +272,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: #0d9488;
+  color: var(--primary);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.9375rem;
@@ -282,8 +282,8 @@
 }
 
 .success-footer-link .back-link:hover {
-  color: #14b8a6;
-  background-color: rgba(13, 148, 136, 0.08);
+  color: var(--primary-light);
+  background-color: hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.08);
   text-decoration: none;
 }
 
@@ -324,17 +324,17 @@
 }
 
 .progress-step-circle.active {
-  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%);
-  border-color: #0d9488;
-  color: white;
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  background: var(--gradient-primary);
+  border-color: var(--primary);
+  color: var(--text-inverse);
+  box-shadow: 0 4px 12px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.3);
 }
 
 .progress-step-circle.completed {
-  background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
-  border-color: #10b981;
-  color: white;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  background: var(--gradient-success);
+  border-color: var(--success);
+  color: var(--text-inverse);
+  box-shadow: 0 4px 12px hsla(var(--success-hue), 71%, 45%, 0.3);
 }
 
 .progress-step-label {
@@ -365,7 +365,7 @@
 }
 
 .progress-step-line.completed {
-  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(90deg, var(--success) 0%, var(--success-dark) 100%);
 }
 
 .email-verification-content {
@@ -392,7 +392,7 @@
 }
 
 .email-icon {
-  color: #0d9488;
+  color: var(--primary);
   opacity: 0.9;
 }
 
@@ -400,11 +400,11 @@
   position: absolute;
   bottom: 8px;
   right: 8px;
-  color: #10b981;
-  background: white;
+  color: var(--success);
+  background: var(--text-inverse);
   border-radius: 50%;
   padding: 2px;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 2px 8px hsla(var(--success-hue), 71%, 45%, 0.3);
 }
 
 .email-verification-content h1 {
@@ -412,7 +412,7 @@
   font-weight: 800;
   margin-bottom: 1.5rem;
   color: var(--text);
-  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -454,7 +454,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: #0d9488;
+  color: var(--primary);
   text-decoration: none;
   font-weight: 500;
   font-size: 0.9375rem;
@@ -464,8 +464,8 @@
 }
 
 .email-verification-footer .back-link:hover {
-  color: #14b8a6;
-  background-color: rgba(13, 148, 136, 0.08);
+  color: var(--primary-light);
+  background-color: hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.08);
   text-decoration: none;
 }
 
@@ -522,16 +522,16 @@
   justify-content: center;
   width: 88px;
   height: 88px;
-  background: linear-gradient(135deg, rgba(13, 148, 136, 0.1) 0%, rgba(20, 184, 166, 0.1) 50%, rgba(45, 212, 191, 0.1) 100%);
+  background: linear-gradient(135deg, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.1) 0%, hsla(var(--primary-hue), var(--primary-saturation), calc(var(--primary-lightness) + 8%), 0.1) 50%, hsla(var(--primary-hue), calc(var(--primary-saturation) - 15%), calc(var(--primary-lightness) + 18%), 0.1) 100%);
   border-radius: 50%;
   margin: 0 auto 1.5rem;
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+  box-shadow: 0 4px 12px hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.15);
 }
 
 .create-password-icon {
   width: 40px;
   height: 40px;
-  color: #0d9488;
+  color: var(--primary);
   opacity: 0.9;
 }
 
@@ -540,7 +540,7 @@
   font-weight: 800;
   margin-bottom: 0.75rem;
   color: var(--text);
-  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 50%, #2dd4bf 100%);
+  background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -653,7 +653,7 @@
 }
 
 .requirement-icon-check {
-  color: #10b981;
+  color: var(--success);
   width: 20px;
   height: 20px;
   flex-shrink: 0;
@@ -669,8 +669,8 @@
 }
 
 .password-requirement-item.met .requirement-icon-empty {
-  border-color: #10b981;
-  background-color: rgba(16, 185, 129, 0.1);
+  border-color: var(--success);
+  background-color: hsla(var(--success-hue), 71%, 45%, 0.1);
 }
 
 .requirement-text {
@@ -684,7 +684,7 @@
 }
 
 .requirement-text.met {
-  color: #10b981;
+  color: var(--success);
   font-weight: 600;
 }
 

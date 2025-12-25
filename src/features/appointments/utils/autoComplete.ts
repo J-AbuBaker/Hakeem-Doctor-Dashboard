@@ -3,10 +3,10 @@
  * Handles logic for determining when appointments should be automatically marked as complete
  */
 
-import { Appointment } from '../../types';
-import { parseAppointmentDate } from '../../shared/utils/date/utils';
+import { Appointment } from '../../../types';
+import { parseAppointmentDate } from '../../../shared/utils/date/utils';
 import { hasStatus } from './status';
-import { APP_CONFIG } from '../../shared/constants/appConfig';
+import { APP_CONFIG } from '../../../shared/constants/appConfig';
 
 /**
  * Calculates the end time of an appointment (start time + duration)
@@ -84,3 +84,4 @@ export function getAppointmentsToAutoComplete(
 ): Appointment[] {
   return appointments.filter(appointment => shouldAutoComplete(appointment, gracePeriodMinutes));
 }
+

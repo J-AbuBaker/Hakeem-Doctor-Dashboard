@@ -192,3 +192,4 @@ export const getDisplayDuration = (
   const normalized = normalizeDuration(duration);
   return Math.max(normalized, minDisplayDuration);
 };
+

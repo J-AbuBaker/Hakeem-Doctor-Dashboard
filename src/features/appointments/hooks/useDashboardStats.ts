@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Appointment } from '../../../types';
 import { getTodayAppointments, isAppointmentInFuture } from '../../../shared/utils/date/utils';
-import { hasStatus } from '../../../utils/appointment/status';
+import { hasStatus } from '../utils/status';
 
 export interface DashboardStats {
   totalAppointments: number;

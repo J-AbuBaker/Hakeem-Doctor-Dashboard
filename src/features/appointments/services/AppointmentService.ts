@@ -1,22 +1,22 @@
-import api from '../../../infrastructure/api/client';
+import api from '@infrastructure/api/client';
 import {
   Appointment,
   ScheduledAppointmentResponse,
   OpenSlotRequest,
 } from '../../../types';
-import { mapBackendStatusToFrontend, isExpiredAppointment } from '../../../utils/appointment/status';
+import { mapBackendStatusToFrontend, isExpiredAppointment } from '../utils/status';
 import {
   parseDateTimeString,
   formatDateToString,
   formatTimeToString,
   isValidDateTime,
-} from '../../../shared/utils/date/parsing';
-import { formatAppointmentType } from '../../../shared/utils/string/stringUtils';
-import { API_ENDPOINTS } from '../../../shared/constants/apiEndpoints';
-import { APP_CONFIG } from '../../../shared/constants/appConfig';
-import { TypedAxiosError } from '../../../shared/types/common/errors';
-import { getDuration } from '../../../utils/appointment/durationCache';
-import { IAppointmentService } from '../../../shared/services/interfaces/IAppointmentService';
+} from '@shared/utils/date/parsing';
+import { formatAppointmentType } from '@shared/utils/string/stringUtils';
+import { API_ENDPOINTS } from '@shared/constants/apiEndpoints';
+import { APP_CONFIG } from '@shared/constants/appConfig';
+import { TypedAxiosError } from '@shared/types/common/errors';
+import { getDuration } from '../utils/durationCache';
+import { IAppointmentService } from '@shared/services/interfaces/IAppointmentService';
 
 class AppointmentService implements IAppointmentService {
 
@@ -159,20 +159,7 @@ class AppointmentService implements IAppointmentService {
     };
 
     try {
-      // Log request details in dev mode
-      if (import.meta.env.DEV) {
-        console.log('Creating slot:', {
-          datetime: appointmentDate,
-          request,
-          endpoint: API_ENDPOINTS.APPOINTMENT.DOCTOR_SCHEDULE,
-        });
-      }
-
       await api.post<OpenSlotRequest>(API_ENDPOINTS.APPOINTMENT.DOCTOR_SCHEDULE, request);
-
-      if (import.meta.env.DEV) {
-        console.log('Slot created successfully:', appointmentDate);
-      }
     } catch (error: unknown) {
       const axiosError = error as TypedAxiosError;
 
@@ -202,7 +189,12 @@ class AppointmentService implements IAppointmentService {
           } else if ('error' in errorData && typeof errorData.error === 'string') {
             errorMessage = errorData.error;
           } else if (Array.isArray(errorData) && errorData.length > 0) {
-            errorMessage = errorData.map((e: any) => e.message || String(e)).join(', ');
+            errorMessage = errorData.map((e: unknown) => {
+              if (typeof e === 'object' && e !== null && 'message' in e) {
+                return String((e as { message: unknown }).message);
+              }
+              return String(e);
+            }).join(', ');
           } else {
             // Try to stringify the error object
             try {
