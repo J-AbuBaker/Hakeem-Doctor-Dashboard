@@ -12,6 +12,9 @@ export * from './appointment';
 // Doctor types
 export * from './doctor';
 
+// Medical Records types
+export * from './medicalRecords';
+
 // Error types (from common directory)
 export * from './common/errors';
 
