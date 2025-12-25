@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import DoctorSidebar from '../components/dashboard/DoctorSidebar';
-import DoctorProfile from '../components/dashboard/DoctorProfile';
+import DoctorSidebar from '@features/dashboard/components/DoctorSidebar';
+import DoctorProfile from '@features/dashboard/components/DoctorProfile';
 import './DashboardPage.css';
 
 const ProfilePage: React.FC = () => {

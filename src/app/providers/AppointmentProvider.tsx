@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from 'react';
-import { AppointmentService } from '../../features/appointments';
+import { AppointmentService } from '@features/appointments';
 import { Appointment } from '../../types';
-import { hasStatus } from '../../utils/appointment/status';
-import { getStoredToken } from '../../infrastructure/storage';
-import { decodeToken } from '../../shared/utils/auth/jwt';
-import { TypedAxiosError } from '../../shared/types/common/errors';
-import { getAppointmentsToAutoComplete } from '../../utils/appointment/autoComplete';
-import { APP_CONFIG } from '../../shared/constants/appConfig';
-import { extractErrorMessage } from '../../shared/utils/error/handlers';
+import { hasStatus } from '@features/appointments/utils/status';
+import { getStoredToken } from '@infrastructure/storage';
+import { decodeToken } from '@shared/utils/auth/jwt';
+import { TypedAxiosError } from '@shared/types/common/errors';
+import { getAppointmentsToAutoComplete } from '@features/appointments/utils/autoComplete';
+import { APP_CONFIG } from '@shared/constants/appConfig';
+import { extractErrorMessage } from '@shared/utils/error/handlers';
 
 interface LoadingState {
   fetching: boolean;
@@ -84,7 +84,7 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
       const payload = decodeToken(token);
       if (payload && payload.role && payload.role.toUpperCase() !== 'DOCTOR') {
         if (import.meta.env.DEV) {
-          console.warn(`⚠️ Warning: User role in token is "${payload.role}", but DOCTOR role is required.`);
+          console.warn(`Warning: User role in token is "${payload.role}", but DOCTOR role is required.`);
         }
       }
 
@@ -195,7 +195,7 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
       previousStateRef.current = [...prev];
       appointmentToUpdate = prev.find(apt => apt.id === id);
 
-      // CRITICAL: Check if appointment is cancelled before attempting completion
+      // Check if appointment is cancelled before attempting completion
       if (appointmentToUpdate && hasStatus(appointmentToUpdate.status, 'Cancelled')) {
         // Do not update - return unchanged state
         return prev;
@@ -343,12 +343,12 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
             hasSuccessfulCompletions = true;
 
             if (import.meta.env.DEV) {
-              console.log(`✅ Auto-completed appointment ${appointment.id} (${appointment.patientName})`);
+              console.log(`Auto-completed appointment ${appointment.id} (${appointment.patientName})`);
             }
           } catch (error) {
             // Log error in dev mode but don't disrupt the app
             if (import.meta.env.DEV) {
-              console.error(`❌ Failed to auto-complete appointment ${appointment.id}:`, error);
+              console.error(`Failed to auto-complete appointment ${appointment.id}:`, error);
             }
             // Remove from processing set on error so it can be retried next interval
             processingAppointmentsRef.current.delete(appointment.id);

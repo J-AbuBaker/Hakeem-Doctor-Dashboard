@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, History } from 'lucide-react';
-import DoctorSidebar from '../components/dashboard/DoctorSidebar';
-import OpenSlotModal from '../components/dashboard/OpenSlotModal';
-import DashboardStats from '../components/dashboard/DashboardStats';
-import TodaySchedule from '../components/dashboard/TodaySchedule';
-import UpcomingAppointments from '../components/dashboard/UpcomingAppointments';
-import ExpiredAppointments from '../components/dashboard/ExpiredAppointments';
-import { useAppointments } from '../app/providers';
+import DoctorSidebar from '@features/dashboard/components/DoctorSidebar';
+import OpenSlotModal from '@features/dashboard/components/OpenSlotModal';
+import DashboardStats from '@features/dashboard/components/DashboardStats';
+import TodaySchedule from '@features/dashboard/components/TodaySchedule';
+import UpcomingAppointments from '@features/dashboard/components/UpcomingAppointments';
+import ExpiredAppointments from '@features/dashboard/components/ExpiredAppointments';
+import { useAppointments } from '@app/providers';
 import './DashboardPage.css';
 
 type DashboardTab = 'today' | 'upcoming' | 'expired';

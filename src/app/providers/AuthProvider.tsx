@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
-import { AuthService } from '../../features/auth';
+import { AuthService } from '@features/auth';
 import { Doctor, SignUpUserDto } from '../../types';
-import { extractErrorMessage } from '../../shared/utils/error/handlers';
+import { extractErrorMessage } from '@shared/utils/error/handlers';
 
 interface LoadingState {
   initializing: boolean;

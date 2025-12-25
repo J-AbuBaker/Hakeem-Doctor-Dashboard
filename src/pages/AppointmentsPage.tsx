@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import DoctorSidebar from '../components/dashboard/DoctorSidebar';
-import AppointmentCalendar from '../components/dashboard/AppointmentCalendar';
-import OpenSlotModal from '../components/dashboard/OpenSlotModal';
-import { useAppointments } from '../app/providers';
+import DoctorSidebar from '@features/dashboard/components/DoctorSidebar';
+import AppointmentCalendar from '@features/dashboard/components/AppointmentCalendar';
+import OpenSlotModal from '@features/dashboard/components/OpenSlotModal';
+import { useAppointments } from '@app/providers';
 import { Calendar, Plus } from 'lucide-react';
 import './DashboardPage.css';
 
