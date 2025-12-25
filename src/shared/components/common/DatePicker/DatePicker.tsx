@@ -121,8 +121,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
   // Dates before 2000 are valid (they guarantee age >= 25)
   const getAvailableYears = (): number[] => {
     const currentYear = new Date().getFullYear();
-    // Get the maximum selectable year from minDate (e.g., 2000)
-    // This is the latest year that makes someone 25+ years old
+    // Get the maximum selectable year from minDate
     const maxSelectableYear = minDateObj ? minDateObj.getFullYear() : currentYear - 25;
     const minSelectableYear = 1961; // Don't show years 1960 and below
     const years: number[] = [];

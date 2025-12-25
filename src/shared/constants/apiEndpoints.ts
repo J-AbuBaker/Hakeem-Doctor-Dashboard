@@ -30,4 +30,10 @@ export const API_ENDPOINTS = {
     BY_ID: (id: string) => `/doctors/${id}`,
     SEARCH: '/doctors',
   },
+
+  // Medical Records endpoints
+  MEDICAL_RECORDS: {
+    INTERVIEWS: (userId: string) => `/medical-records/interviews/${userId}`,
+    RISK_FACTORS: (patientId: string) => `/medical-records/risk-factors/patient/${patientId}`,
+  },
 } as const;

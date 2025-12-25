@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import logger from '../logging/logger';
-import { formatAxiosError } from '../../shared/utils/error/handlers';
-import { APP_CONFIG } from '../../shared/constants/appConfig';
+import { formatAxiosError } from '@shared/utils/error/handlers';
+import { APP_CONFIG } from '@shared/constants/appConfig';
 import { getStoredToken } from '../storage/tokenStorage';
 
 /**
@@ -19,8 +19,6 @@ const getApiBaseUrl = (): string => {
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
 
   if (!apiUrl) {
-    console.error('❌ VITE_API_BASE_URL is not set in production environment!');
-    console.error('   Please set VITE_API_BASE_URL in your .env file or build environment.');
     throw new Error('VITE_API_BASE_URL environment variable is required in production');
   }
 
@@ -29,12 +27,6 @@ const getApiBaseUrl = (): string => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-// Log API base URL in development for debugging
-if (import.meta.env.DEV) {
-  console.log('🔧 Development mode: Using proxy /api →', import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080');
-} else {
-  console.log('🚀 Production mode: Using API URL →', API_BASE_URL);
-}
 
 /**
  * Test server connectivity
@@ -89,7 +81,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('Request Setup Error:', error);
     return Promise.reject(error);
   }
 );
@@ -158,7 +149,6 @@ Please contact the server administrator to configure CORS.`;
         error.message = `Connection Error: ${error.message || `No response received from server at ${API_BASE_URL}. The server might be down or unreachable.`}`;
       }
     } else {
-      console.error('Request Error:', error.message);
       error.message = `Request Setup Error: ${error.message}`;
     }
 

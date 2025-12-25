@@ -26,3 +26,16 @@ export function formatAppointmentType(appointmentType: string): string {
     .map((word) => capitalizeFirst(word))
     .join(' ');
 }
+
+/**
+ * Gets initials from a full name
+ * @param name - Full name string
+ * @returns Initials (e.g., "John Doe" -> "JD", "John" -> "J")
+ */
+export function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return name.charAt(0).toUpperCase();
+}

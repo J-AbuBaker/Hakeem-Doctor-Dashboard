@@ -45,3 +45,4 @@ export class StateRollbackManager<T> {
 export function createStateRollbackManager<T>(): StateRollbackManager<T> {
   return new StateRollbackManager<T>();
 }
+

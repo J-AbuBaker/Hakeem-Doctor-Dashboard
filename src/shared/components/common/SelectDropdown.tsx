@@ -14,7 +14,6 @@ export interface SelectOptionGroup {
 
 interface SelectDropdownProps {
   id: string;
-  name: string;
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
@@ -31,7 +30,6 @@ interface SelectDropdownProps {
 
 const SelectDropdown: React.FC<SelectDropdownProps> = ({
   id,
-  name,
   value,
   onChange,
   onBlur,
