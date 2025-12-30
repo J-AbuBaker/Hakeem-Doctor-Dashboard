@@ -220,14 +220,14 @@ const DoctorProfile: React.FC = () => {
             </div>
           </div>
 
-          {/* Professional Details - Bottom Left */}
+          {/* Details - Bottom Left */}
           <div className="profile-section-modern">
             <div className="section-header-modern">
               <div className="section-icon-modern section-icon-professional">
                 <Briefcase size={20} />
               </div>
               <div className="section-header-text">
-                <h3 className="section-title-modern">Professional Details</h3>
+                <h3 className="section-title-modern">Details</h3>
                 <p className="section-subtitle-modern">Credentials and qualifications</p>
               </div>
             </div>

@@ -6,3 +6,12 @@ declare module 'babel_generator';
 declare module 'babel_template';
 declare module 'babel_traverse';
 declare module 'json-schema';
+
+// Extend Window interface for Google Maps API
+declare global {
+  interface Window {
+    google?: {
+      maps: typeof google.maps;
+    };
+  }
+}

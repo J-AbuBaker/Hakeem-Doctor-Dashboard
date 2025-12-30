@@ -1,5 +1,5 @@
 /**
- * Professional duration calculation and formatting utilities
+ * Duration calculation and formatting utilities
  * Handles duration calculations for calendar events created via UI
  */
 

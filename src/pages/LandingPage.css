@@ -1,4 +1,4 @@
-/* Landing Page Styles - Professional Enterprise Design */
+/* Landing Page Styles */
 
 .landing-page {
   min-height: 100vh;
@@ -18,7 +18,7 @@
   padding: 0 2.5rem;
 }
 
-/* Hero Section - Professional Enterprise Design */
+/* Hero Section */
 .landing-hero {
   padding: 7rem 0 5.5rem;
   background: linear-gradient(180deg,
@@ -209,7 +209,7 @@
   color: white;
 }
 
-/* Features Section - Professional Enterprise Design */
+/* Features Section */
 .landing-features {
   padding: 5.5rem 0;
   background: linear-gradient(180deg,
@@ -370,7 +370,7 @@
   letter-spacing: 0.01em;
 }
 
-/* CTA Section - Professional Enterprise Design */
+/* CTA Section */
 .landing-cta {
   padding: 5.5rem 0;
   background: linear-gradient(135deg,
@@ -468,7 +468,7 @@
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Footer - Professional Enterprise Design */
+/* Footer */
 .landing-footer {
   padding: 2.5rem 0 0.75rem;
   background: linear-gradient(180deg,
@@ -811,7 +811,7 @@
   transform: translateY(-1px);
 }
 
-/* Responsive Landing Page - Professional Mobile Design */
+/* Responsive Landing Page - Mobile Design */
 @media (max-width: 768px) {
   .landing-container {
     padding: 0 1.5rem;
@@ -944,7 +944,7 @@
   }
 }
 
-/* Animations - Professional Enterprise */
+/* Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;

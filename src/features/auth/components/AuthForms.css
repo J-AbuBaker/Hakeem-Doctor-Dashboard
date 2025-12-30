@@ -1,4 +1,4 @@
-/* Auth Forms Error Messages - Professional Alignment & Styling */
+/* Auth Forms Error Messages - Alignment & Styling */
 
 /* Field Error Messages - Properly Aligned at Start of Field */
 .auth-container .field-error {
@@ -284,7 +284,7 @@
   }
 }
 
-/* Textarea - Disable Resize (Professional - No User Resizing) */
+/* Textarea - Disable Resize (No User Resizing) */
 .auth-container textarea,
 .auth-container .form-group textarea,
 .auth-container .textarea-wrapper textarea {

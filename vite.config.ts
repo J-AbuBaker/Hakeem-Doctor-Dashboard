@@ -13,9 +13,9 @@ export default defineConfig(({ mode }) => {
 
   // Validate API base URL
   if (!env.VITE_API_BASE_URL) {
-    console.warn('⚠️  VITE_API_BASE_URL is not set. Using default: http://localhost:8080')
+    console.warn('VITE_API_BASE_URL is not set. Using default: http://localhost:8080')
   } else {
-    console.log(`✅ Using API Base URL: ${apiBaseUrl}`)
+    console.log(`Using API Base URL: ${apiBaseUrl}`)
   }
 
   return {
@@ -50,36 +50,36 @@ export default defineConfig(({ mode }) => {
           secure: false,
           configure: (proxy) => {
             proxy.on('error', (err: Error & { code?: string }) => {
-              console.error('❌ Proxy error:', err.message || err);
-              console.error('   Error code:', err.code);
-              console.error('   Make sure the backend server is running at:', apiBaseUrl);
+              console.error('Proxy error:', err.message || err);
+              console.error('Error code:', err.code);
+              console.error('Make sure the backend server is running at:', apiBaseUrl);
 
               // Provide helpful error messages based on error code
               if (err.code === 'ECONNREFUSED') {
-                console.error('\n💡 Possible solutions:');
-                console.error('   1. Check if backend server is running');
-                console.error('   2. Verify the server URL is correct:', apiBaseUrl);
-                console.error('   3. Check if port 8089 is accessible');
-                console.error('   4. Verify firewall/network settings');
-                console.error('   5. Try: curl', apiBaseUrl, 'to test connectivity');
+                console.error('\nPossible solutions:');
+                console.error('1. Check if backend server is running');
+                console.error('2. Verify the server URL is correct:', apiBaseUrl);
+                console.error('3. Check if port 8089 is accessible');
+                console.error('4. Verify firewall/network settings');
+                console.error('5. Try: curl', apiBaseUrl, 'to test connectivity');
               } else if (err.code === 'ECONNRESET') {
-                console.error('\n💡 Connection was reset. Possible causes:');
-                console.error('   1. Server closed the connection unexpectedly');
-                console.error('   2. Network instability');
-                console.error('   3. Server overloaded or restarting');
-                console.error('   4. Check server logs for errors');
+                console.error('\nConnection was reset. Possible causes:');
+                console.error('1. Server closed the connection unexpectedly');
+                console.error('2. Network instability');
+                console.error('3. Server overloaded or restarting');
+                console.error('4. Check server logs for errors');
               } else if (err.code === 'ETIMEDOUT') {
-                console.error('\n💡 Connection timeout. Possible causes:');
-                console.error('   1. Server is slow to respond');
-                console.error('   2. Network latency issues');
-                console.error('   3. Server might be overloaded');
+                console.error('\nConnection timeout. Possible causes:');
+                console.error('1. Server is slow to respond');
+                console.error('2. Network latency issues');
+                console.error('3. Server might be overloaded');
               }
             });
             proxy.on('proxyReq', (proxyReq, req) => {
-              console.log('📤 Sending Request to the Target:', req.method, req.url, '→', apiBaseUrl);
+              console.log('Sending Request to the Target:', req.method, req.url, '->', apiBaseUrl);
             });
             proxy.on('proxyRes', (proxyRes, req) => {
-              console.log('📥 Received Response from the Target:', proxyRes.statusCode, req.url);
+              console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
             });
           },
         },

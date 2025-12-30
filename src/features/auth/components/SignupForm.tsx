@@ -150,8 +150,8 @@ const SignupForm: React.FC = () => {
         return parseInt(value) >= 1000;
       }),
     description: Yup.string()
-      .min(10, 'Professional description must be at least 10 characters long')
-      .required('Professional description is required'),
+      .min(10, 'Description must be at least 10 characters long')
+      .required('Description is required'),
     x: Yup.string()
       .required('Longitude is required. Please select clinic location from map.')
       .test('is-number', 'Longitude must be a number between -180 and 180', (value) => {
@@ -228,7 +228,7 @@ const SignupForm: React.FC = () => {
         });
         navigate('/dashboard');
       } catch (err: unknown) {
-        // Professional error messages for better UX
+        // Error messages for better UX
         let errorMessage = getErrorMessage(err);
         const status = getErrorStatus(err);
 
@@ -348,7 +348,7 @@ const SignupForm: React.FC = () => {
             <Stethoscope className="auth-icon" />
           </div>
           <h1>Doctor Registration</h1>
-          <p>Create your professional account to get started</p>
+          <p>Create your account to get started</p>
         </div>
 
         {error && (
@@ -746,7 +746,7 @@ const SignupForm: React.FC = () => {
             </div>
           </div>
 
-          {/* Section 4: Professional Information */}
+          {/* Section 4: Information */}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="specialization">
@@ -810,7 +810,7 @@ const SignupForm: React.FC = () => {
           <div className="form-group">
             <label htmlFor="description">
               <FileText className="label-icon" />
-              Professional Description *
+              Description *
             </label>
             <div className="textarea-wrapper">
               <FileText className="input-icon" />
@@ -821,7 +821,7 @@ const SignupForm: React.FC = () => {
                 onBlur={formik.handleBlur}
                 value={formik.values.description}
                 className={formik.touched.description && formik.errors.description ? 'error' : ''}
-                placeholder="Describe your professional background and expertise..."
+                placeholder="Describe your background and expertise..."
                 rows={4}
               />
             </div>

@@ -27,13 +27,13 @@ const LandingPage: React.FC = () => {
               <div className="logo-container">
                 <img
                   src="/hakeem-logo.png"
-                  alt="HAKEEM - Professional Healthcare Management"
+                  alt="HAKEEM - Healthcare Management"
                   className="logo-image"
                 />
               </div>
             </div>
             <h2 className="hero-title">
-              Professional Healthcare Management
+              Healthcare Management
               <span className="hero-subtitle">for Modern Medical Practices</span>
             </h2>
             <p className="hero-description">
@@ -175,7 +175,7 @@ const LandingPage: React.FC = () => {
                 </div>
               </div>
               <p className="footer-brand-description">
-                Professional healthcare management platform designed for modern medical practices. Empowering doctors with advanced tools to deliver exceptional patient care.
+                Healthcare management platform designed for modern medical practices. Empowering doctors with tools to deliver patient care.
               </p>
             </div>
 

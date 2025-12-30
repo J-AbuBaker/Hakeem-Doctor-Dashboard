@@ -7,7 +7,7 @@
  */
 
 body {
-  /* Professional Medical Enterprise Font Stack */
+  /* Font Stack */
   font-family:
     'Inter',
     -apple-system,
@@ -23,14 +23,14 @@ body {
     'Segoe UI Symbol',
     'Noto Color Emoji';
 
-  /* Professional Typography - Medical Enterprise Standards */
+  /* Typography */
   font-size: var(--font-size-base);
   line-height: var(--line-height-relaxed);
   letter-spacing: -0.011em;
   font-weight: var(--font-weight-normal);
   color: var(--text-primary);
 
-  /* Optimized Rendering - Professional Quality */
+  /* Optimized Rendering */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;

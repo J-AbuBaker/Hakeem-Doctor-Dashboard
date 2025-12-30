@@ -86,7 +86,7 @@ class AppointmentService implements IAppointmentService {
     };
 
     // Check if appointment should be marked as expired (past date + no patient)
-    // CRITICAL: Never override Completed or Cancelled status from API - preserve them exactly as returned
+    // Never override Completed or Cancelled status from API - preserve them exactly as returned
     // Only Scheduled appointments without patients can become Expired
     if (status !== 'Completed' && status !== 'Cancelled' && isExpiredAppointment(mappedAppointment)) {
       mappedAppointment.status = 'Expired';
@@ -163,7 +163,7 @@ class AppointmentService implements IAppointmentService {
     } catch (error: unknown) {
       const axiosError = error as TypedAxiosError;
 
-      // Enhanced error message extraction with detailed logging
+      // Error message extraction with detailed logging
       let errorMessage = 'Failed to open slot';
 
       if (axiosError.response) {
@@ -250,7 +250,7 @@ class AppointmentService implements IAppointmentService {
         throw new Error(`Invalid appointment ID: ${id}. ID must be a positive number.`);
       }
 
-      // Note: We cannot check appointment status here as we don't have access to the appointment list
+      // Cannot check appointment status here as we don't have access to the appointment list
       // The backend should reject completion of cancelled appointments, but we add validation
       // in the context and component layers to prevent the API call
 
@@ -268,7 +268,7 @@ class AppointmentService implements IAppointmentService {
       try {
         const mappedAppointment = this.mapScheduledAppointmentToAppointment(response.data);
 
-        // CRITICAL: Never override Cancelled status - if backend returns cancelled, preserve it
+        // Never override Cancelled status - if backend returns cancelled, preserve it
         // This ensures cancelled appointments remain cancelled and are never marked as completed
         if (mappedAppointment.status === 'Cancelled') {
           return mappedAppointment; // Return as-is, do not change to Completed

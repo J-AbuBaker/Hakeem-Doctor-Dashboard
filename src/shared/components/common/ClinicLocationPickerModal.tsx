@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
-import { Autocomplete } from '@react-google-maps/api';
+import { GoogleMap, Marker, useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { X, MapPin, Search, Navigation, Crosshair, Navigation2, ArrowLeftRight, Loader2, AlertCircle } from 'lucide-react';
 import './ClinicLocationPickerModal.css';
 
@@ -48,6 +47,7 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const autocompleteInputRef = useRef<HTMLInputElement | null>(null);
   const mapRef = useRef<HTMLDivElement | null>(null);
 
   // Load Google Maps API
@@ -166,9 +166,14 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
   }, [onChange]);
 
   const handlePlaceSelect = useCallback(() => {
+    if (!isLoaded) {
+      setSearchError('Google Maps API is not loaded. Please wait and try again.');
+      return;
+    }
+
     if (autocompleteRef.current) {
       const place = autocompleteRef.current.getPlace();
-      if (place.geometry?.location) {
+      if (place && place.geometry && place.geometry.location) {
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
         const location = new google.maps.LatLng(lat, lng);
@@ -183,7 +188,7 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
         setSelectedLng(lng);
         setMapCenter({ lat, lng });
         setZoom(15);
-        setSearchQuery(place.formatted_address || '');
+        setSearchQuery(place.formatted_address || place.name || '');
         setSearchError(null);
         if (onChange) {
           onChange(lat, lng);
@@ -192,7 +197,7 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
         setSearchError('Location not found. Please try a different search term.');
       }
     }
-  }, [onChange, map]);
+  }, [onChange, map, isLoaded]);
 
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim() || !isLoaded) return;
@@ -204,24 +209,35 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ address: searchQuery }, (results, status) => {
         setIsSearching(false);
-        if (status === 'OK' && results && results[0] && map) {
+        if (status === 'OK' && results && results.length > 0 && results[0] && map) {
           const location = results[0].geometry.location;
-          const lat = location.lat();
-          const lng = location.lng();
-          const latLng = new google.maps.LatLng(lat, lng);
+          if (location) {
+            const lat = location.lat();
+            const lng = location.lng();
+            const latLng = new google.maps.LatLng(lat, lng);
 
-          // Pan map smoothly to the search result location
-          map.panTo(latLng);
-          map.setZoom(15);
+            // Pan map smoothly to the search result location
+            map.panTo(latLng);
+            map.setZoom(15);
 
-          setSelectedLat(lat);
-          setSelectedLng(lng);
-          setMapCenter({ lat, lng });
-          setZoom(15);
-          if (onChange) {
-            onChange(lat, lng);
+            setSelectedLat(lat);
+            setSelectedLng(lng);
+            setMapCenter({ lat, lng });
+            setZoom(15);
+            if (onChange) {
+              onChange(lat, lng);
+            }
+            setSearchQuery(results[0].formatted_address || searchQuery);
+            setSearchError(null);
+          } else {
+            setSearchError('Location not found. Please try a different search term.');
           }
-          setSearchQuery('');
+        } else if (status === 'ZERO_RESULTS') {
+          setSearchError('No results found. Please try a different search term.');
+        } else if (status === 'OVER_QUERY_LIMIT') {
+          setSearchError('Search quota exceeded. Please try again later.');
+        } else if (status === 'REQUEST_DENIED') {
+          setSearchError('Search request denied. Please check your API key configuration.');
         } else {
           setSearchError('Location not found. Please try a different search term.');
         }
@@ -259,6 +275,12 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
         // Validate coordinates are valid numbers
         if (isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
           setSearchError('Invalid location data received. Please try again.');
+          setIsGeolocationLoading(false);
+          return;
+        }
+
+        if (!isLoaded) {
+          setSearchError('Google Maps API is not loaded. Please wait and try again.');
           setIsGeolocationLoading(false);
           return;
         }
@@ -307,7 +329,7 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
       },
       geolocationOptions
     );
-  }, [onChange, map]);
+  }, [onChange, map, isLoaded]);
 
   const handleConfirm = () => {
     if (selectedLat !== null && selectedLng !== null) {
@@ -448,6 +470,7 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
                 }}
               >
                 <input
+                  ref={autocompleteInputRef}
                   type="text"
                   className="map-search-input"
                   placeholder="Search for an address, city, or place..."
@@ -472,8 +495,8 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
                   onClick={() => {
                     setSearchQuery('');
                     setSearchError(null);
-                    if (autocompleteRef.current) {
-                      autocompleteRef.current.set('place', null);
+                    if (autocompleteInputRef.current) {
+                      autocompleteInputRef.current.value = '';
                     }
                   }}
                   aria-label="Clear search"
@@ -572,7 +595,7 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
                   ],
                 }}
               >
-                {hasSelection && (
+                {hasSelection && isLoaded && (
                   <Marker
                     position={{ lat: selectedLat!, lng: selectedLng! }}
                     draggable={true}

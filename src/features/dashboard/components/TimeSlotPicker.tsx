@@ -39,7 +39,7 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
   const timeSlots = generateTimeSlots();
 
   // Get time slot availability with improved conflict detection
-  // CRITICAL: Slots BEFORE blocked ranges MUST be selectable (with duration limits)
+  // Slots before blocked ranges must be selectable (with duration limits)
   // Only slots WITHIN blocked ranges should be disabled
   // This allows slots before appointments to be selectable, then duration is limited dynamically
   const timeSlotAvailability = useMemo(() => {
@@ -62,7 +62,7 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
     const blockedRanges = getBlockedTimeRanges(appointmentsForDate, true);
 
     // Check each time slot
-    // IMPORTANT: Slots BEFORE blocked ranges are ALWAYS selectable (with duration limits)
+      // Slots before blocked ranges are always selectable (with duration limits)
     // Only slots WITHIN blocked ranges are disabled
     const MIN_DURATION = 30;
     const availabilityMap = new Map<string, { isBlocked: boolean; reason?: string; maxDuration?: number }>();
@@ -77,7 +77,7 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
         continue;
       }
 
-      // CRITICAL CHECK: Is the slot start time WITHIN any blocked range?
+      // Check if the slot start time is within any blocked range
       // Slot is ONLY blocked if: range.start <= slotStart < range.end
       // Slots BEFORE the range (slotStart < range.start) are SELECTABLE
       let isWithinBlockedRange = false;
@@ -225,7 +225,7 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
           const hasConflict = availability?.isBlocked || false;
           const maxDuration = availability?.maxDuration;
 
-          // CRITICAL: Slots are ONLY disabled if:
+          // Slots are only disabled if:
           // 1. Parent component disabled them
           // 2. They are in the past
           // 3. They have a conflict (WITHIN blocked range)
@@ -284,7 +284,7 @@ const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // CRITICAL: Only call onTimeSelect if button is NOT disabled
+                // Only call onTimeSelect if button is not disabled
                 // Slots BEFORE blocked ranges (with maxDuration) are SELECTABLE
                 if (!isDisabled) {
                   onTimeSelect(time);

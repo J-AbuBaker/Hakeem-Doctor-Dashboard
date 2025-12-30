@@ -172,7 +172,7 @@
   color: var(--text-primary);
 }
 
-/* In-progress appointments - professional info color (blue) */
+/* In-progress appointments - info color (blue) */
 /* Using !important and higher specificity to ensure it overrides all status classes */
 .upcoming-appointment-item.in-progress {
   background: linear-gradient(90deg, hsla(var(--info-hue), 100%, 50%, 0.03) 0%, transparent 100%) !important;

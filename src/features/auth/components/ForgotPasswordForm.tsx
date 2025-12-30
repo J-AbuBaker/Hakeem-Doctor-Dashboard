@@ -47,7 +47,7 @@ const ForgotPasswordForm: React.FC = () => {
         setUserEmail(values.username);
         setSuccess(true);
       } catch (err: unknown) {
-        // Professional error messages for better UX
+        // Error messages for better UX
         let errorMessage = getErrorMessage(err);
 
         // Format network errors for better readability

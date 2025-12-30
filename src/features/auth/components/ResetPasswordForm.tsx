@@ -66,7 +66,7 @@ const ResetPasswordForm: React.FC = () => {
           navigate('/login');
         }, 2000);
       } catch (err: unknown) {
-        // Professional error messages for better UX
+        // Error messages for better UX
         let errorMessage = getErrorMessage(err);
         const status = getErrorStatus(err);
 
@@ -234,7 +234,7 @@ const ResetPasswordForm: React.FC = () => {
         setResendSuccess(false);
       }, 3000);
     } catch (err: unknown) {
-      // Professional error messages for better UX
+      // Error messages for better UX
       let errorMessage = getErrorMessage(err) || 'Unable to send reset code. Please check your email address and try again.';
 
       // Format network errors for better readability

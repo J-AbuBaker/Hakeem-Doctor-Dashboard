@@ -624,7 +624,7 @@
   background-color: var(--surface-alt);
 }
 
-/* Duration Boxes - Professional Compact Selection */
+/* Duration Boxes - Compact Selection */
 .duration-boxes-container {
   display: flex;
   flex-wrap: wrap;
@@ -787,7 +787,7 @@
 
 }
 
-/* Date Input Styling - Professional */
+/* Date Input Styling */
 .form-group input[type="date"] {
   color-scheme: light;
   position: relative;
@@ -830,7 +830,7 @@
   opacity: 1;
 }
 
-/* Enhanced date input appearance */
+/* Date input appearance */
 .form-group input[type="date"]:not(:placeholder-shown) {
   color: var(--text-primary);
 }
@@ -839,7 +839,7 @@
   color: var(--text-secondary);
 }
 
-/* Professional Date Picker Component */
+/* Date Picker Component */
 .date-picker-wrapper {
   position: relative;
   width: 100%;

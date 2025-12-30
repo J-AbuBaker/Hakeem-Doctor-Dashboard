@@ -474,7 +474,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
   }, [conflictCheckResult]);
 
   // Calculate max duration before next appointment AND 6 PM limit for selected time
-  // Note: This calculates max duration for a SINGLE slot, not accounting for breaks
+  // This calculates max duration for a single slot, not accounting for breaks
   // Break duration is considered separately in maxSlotsInFreeTime calculation
   const maxDurationBeforeNext = useMemo(() => {
     if (!formik.values.date || !formik.values.startTime) {
@@ -637,7 +637,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
 
   return (
     <>
-      {/* Professional Success Dialog - Rendered outside modal for proper popup display */}
+      {/* Success Dialog - Rendered outside modal for proper popup display */}
       {showSuccessDialog && successDetails && (
         <div className="success-dialog-overlay" onClick={() => {
           setShowSuccessDialog(false);
@@ -953,7 +953,7 @@ const OpenSlotModal: React.FC<OpenSlotModalProps> = ({
                     {SLOT_DURATION_OPTIONS.map((option) => {
                       const isSelected = formik.values.slotDuration === option.value;
                       // Check if this duration option exceeds max allowed for selected time (considering both next appointment and 6 PM)
-                      // Note: Break duration doesn't affect single slot duration validation, only affects max slots calculation
+                      // Break duration doesn't affect single slot duration validation, only affects max slots calculation
                       const exceedsMax = Boolean(
                         maxDurationBeforeNext !== undefined &&
                         formik.values.startTime &&

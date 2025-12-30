@@ -17,7 +17,7 @@
   padding: 0 2rem;
 }
 
-/* Hero Section - Enhanced */
+/* Hero Section */
 .landing-hero {
   padding: 8rem 0 6rem;
   background: linear-gradient(135deg, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.08) 0%, hsla(var(--primary-hue), var(--primary-saturation), calc(var(--primary-lightness) + 8%), 0.04) 50%, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.08) 100%);

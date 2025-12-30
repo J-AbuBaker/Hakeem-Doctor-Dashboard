@@ -1,11 +1,12 @@
 import React from 'react';
 import { MedicalInterview } from '../../../types/medicalRecords';
 import { 
-  FileText, 
+  ClipboardList, 
   Calendar, 
   Stethoscope, 
-  AlertTriangle,
-  Activity
+  ShieldAlert,
+  HeartPulse,
+  AlertCircle
 } from 'lucide-react';
 import './MedicalRecordsSummary.css';
 
@@ -38,21 +39,21 @@ const MedicalRecordsSummary: React.FC<MedicalRecordsSummaryProps> = ({
     {
       label: 'Total Interviews',
       value: totalInterviews,
-      icon: FileText,
+      icon: ClipboardList,
       color: 'var(--primary)',
       bgColor: 'var(--primary-lightest)',
     },
     {
       label: 'Risk Factors',
       value: riskFactorsCount,
-      icon: AlertTriangle,
+      icon: ShieldAlert,
       color: 'var(--warning)',
       bgColor: 'var(--warning-lighter)',
     },
     {
       label: 'Total Symptoms',
       value: totalSymptoms,
-      icon: Activity,
+      icon: HeartPulse,
       color: 'var(--info)',
       bgColor: 'var(--info-lighter)',
     },
@@ -66,7 +67,7 @@ const MedicalRecordsSummary: React.FC<MedicalRecordsSummaryProps> = ({
     {
       label: 'High Probability Cases',
       value: highProbabilityDiagnoses,
-      icon: AlertTriangle,
+      icon: AlertCircle,
       color: 'var(--danger)',
       bgColor: 'var(--danger-lighter)',
     },

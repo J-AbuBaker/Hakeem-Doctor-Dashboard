@@ -5,7 +5,7 @@ import {
   Briefcase,
   MessageCircle,
   RotateCcw,
-  AlertCircle,
+  Activity,
   LucideIcon
 } from 'lucide-react';
 
@@ -44,7 +44,7 @@ export const APPOINTMENT_TYPES: AppointmentTypeOption[] = [
     value: 'emergency',
     label: 'Emergency',
     description: 'Urgent care',
-    icon: AlertCircle,
+    icon: Activity,
   },
 ];
 

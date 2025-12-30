@@ -58,7 +58,7 @@ export function checkTimeOverlap(
 ): boolean {
   // Two time ranges overlap if they share any common time
   // Overlap: start1 < end2 && start2 < end1
-  // Note: If end1 === start2 (touching), they don't overlap
+  // If end1 === start2 (touching), they don't overlap
   return start1.getTime() < end2.getTime() && start2.getTime() < end1.getTime();
 }
 

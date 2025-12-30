@@ -35,7 +35,7 @@ const LoginForm: React.FC = () => {
         await login(values.username, values.password);
         navigate('/dashboard');
       } catch (err: unknown) {
-        // Professional error messages for better UX
+        // Error messages for better UX
         let errorMessage = getErrorMessage(err);
         const status = getErrorStatus(err);
 

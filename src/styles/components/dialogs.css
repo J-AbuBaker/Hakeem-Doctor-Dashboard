@@ -5,7 +5,7 @@
  * overlays, content, animations, and dialog-specific layouts.
  */
 
-/* Confirmation Dialog Styles - Professional Enterprise Design */
+/* Confirmation Dialog Styles */
 .confirm-dialog-overlay {
   position: fixed;
   top: 0;
@@ -363,7 +363,7 @@
   animation: spin 0.8s linear infinite;
 }
 
-/* Enhanced Modal Styles */
+/* Modal Styles */
 .modal-overlay {
   backdrop-filter: blur(4px);
   background-color: rgba(0, 0, 0, 0.6);
@@ -420,7 +420,7 @@
   padding: 0 2rem;
 }
 
-/* Hero Section - Enhanced */
+/* Hero Section */
 .landing-hero {
   padding: 8rem 0 6rem;
   background: linear-gradient(135deg, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.08) 0%, hsla(var(--primary-hue), var(--primary-saturation), calc(var(--primary-lightness) + 8%), 0.04) 50%, hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.08) 100%);
@@ -1070,7 +1070,7 @@
 }
 
 /* Responsive Design - Comprehensive Breakpoints */
-/* Professional Success Dialog Styles */
+/* Success Dialog Styles */
 .success-dialog-overlay {
   position: fixed;
   top: 0;

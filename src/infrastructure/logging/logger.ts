@@ -268,7 +268,7 @@ class Logger {
     // Auto-save to IndexedDB/localStorage (no automatic file download)
     this.saveToLocalStorage();
 
-    // Note: File downloads are only triggered manually via window.apiLogger.saveLogsAsJSON()
+    // File downloads are only triggered manually via window.apiLogger.saveLogsAsJSON()
     // or when auto-save interval is enabled via enableAutoSave()
   }
 

@@ -2,8 +2,8 @@ import React from 'react';
 import { RiskFactorResponse } from '../../../types/medicalRecords';
 import { 
   BadgeCheck, 
-  Activity,
-  AlertTriangle,
+  HeartPulse,
+  AlertCircle,
   ShieldAlert,
   AlertCircle as AlertCircleIcon
 } from 'lucide-react';
@@ -78,7 +78,7 @@ const PatientProfileCard: React.FC<PatientProfileCardProps> = ({
         {isLoading ? (
           <div className="risk-factors-loading">
             <div className="risk-factors-loading-icon-wrapper">
-              <Activity className="spinner" size={28} />
+              <HeartPulse className="spinner" size={28} />
             </div>
             <p>Loading risk factors...</p>
           </div>
@@ -97,7 +97,7 @@ const PatientProfileCard: React.FC<PatientProfileCardProps> = ({
                 {paginatedRiskFactors.map((riskFactor) => (
                   <div key={riskFactor.id} className="risk-factor-card">
                     <div className="risk-factor-card-icon">
-                      <AlertTriangle size={18} />
+                      <AlertCircle size={18} />
                     </div>
                     <div className="risk-factor-card-content">
                       <span className="risk-factor-card-label">Risk Factor</span>

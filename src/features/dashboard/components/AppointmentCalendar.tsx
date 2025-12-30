@@ -452,7 +452,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                       <p>{error}</p>
                     </div>
                   ) : (
-                    /* Professional Time-Based Week Grid */
+                    /* Time-Based Week Grid */
                     <div className="week-calendar-container">
                       {/* Time column */}
                       <div className="week-time-column">
@@ -559,9 +559,9 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                               // This ensures perfect proportional representation
                               const heightPixels = (actualDuration / MINUTES_PER_HOUR) * PIXELS_PER_HOUR;
 
-                              // Professional minimum height: 40px (for 15 min slots) ensures readability
+                              // Minimum height: 40px (for 15 min slots) ensures readability
                               // Maximum height: 8 hours = 480px (reasonable limit)
-                              // Ensure height is at least 40px for visibility and professionalism
+                              // Ensure height is at least 40px for visibility
                               return Math.max(40, Math.min(480, Math.round(heightPixels)));
                             };
 

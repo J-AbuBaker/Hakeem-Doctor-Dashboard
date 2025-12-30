@@ -176,7 +176,7 @@ export const clearDurationCache = (): void => {
 };
 
 /**
- * Gets all cached durations (for debugging)
+ * Gets all cached durations
  */
 export const getAllCachedDurations = (): DurationCache => {
   return getCache();

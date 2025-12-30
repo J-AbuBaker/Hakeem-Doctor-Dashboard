@@ -213,7 +213,7 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
       return prev;
     });
 
-    // CRITICAL: Validate appointment status after retrieving it from state
+    // Validate appointment status after retrieving it from state
     if (appointmentToUpdate && hasStatus(appointmentToUpdate.status, 'Cancelled')) {
       setLoadingState(prev => ({ ...prev, completing: false }));
       // Rollback optimistic update
@@ -239,7 +239,7 @@ export const AppointmentProvider: React.FC<AppointmentProviderProps> = ({ childr
 
         return prev.map((apt) => {
           if (apt.id === id) {
-            // CRITICAL: Never override Cancelled status - if API returns cancelled, preserve it
+            // Never override Cancelled status - if API returns cancelled, preserve it
             // This ensures cancelled appointments remain cancelled and are never marked as completed
             if (apiResponse.status === 'Cancelled' || hasStatus(apiResponse.status, 'Cancelled')) {
               return { ...apt, status: 'Cancelled' as const };

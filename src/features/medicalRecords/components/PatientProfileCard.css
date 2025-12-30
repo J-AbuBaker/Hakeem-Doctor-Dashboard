@@ -1,32 +1,17 @@
-/* Enterprise Healthcare Patient Profile - Professional Design System */
+/* Patient Profile Card Component Styles */
 
 .patient-profile-card {
-  background: var(--surface);
-  border-radius: var(--radius-lg);
+  background: var(--surface-elevated);
+  border-radius: var(--radius-2xl);
   padding: 0;
   box-shadow: 
-    0 3px 12px rgba(0, 0, 0, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  margin-bottom: 1rem;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  margin-bottom: 0;
+  border: 1.5px solid var(--border-light);
   position: relative;
   overflow: hidden;
-}
-
-.patient-profile-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, 
-    var(--primary) 0%, 
-    var(--primary-light) 50%,
-    var(--primary) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 3s ease-in-out infinite;
+  transition: all var(--transition-base);
 }
 
 .patient-profile-card::before {
@@ -35,13 +20,23 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 5px;
+  height: 4px;
   background: linear-gradient(90deg, 
     var(--primary) 0%, 
     var(--primary-light) 50%,
     var(--primary) 100%);
   background-size: 200% 100%;
-  animation: shimmer 3s ease-in-out infinite;
+  animation: shimmer 4s ease-in-out infinite;
+  z-index: 1;
+}
+
+.patient-profile-card:hover {
+  box-shadow: 
+    var(--shadow-xl),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 3px var(--primary-lightest);
+  border-color: var(--primary-light);
+  transform: translateY(-2px);
 }
 
 @keyframes shimmer {
@@ -52,12 +47,24 @@
 .patient-profile-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
+  gap: var(--spacing-4);
+  padding: var(--spacing-5) var(--spacing-6);
   background: linear-gradient(135deg, 
     var(--primary-lightest) 0%,
     var(--surface-alt) 100%);
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 2px solid var(--border-light);
+  position: relative;
+}
+
+.patient-profile-header::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+  border-radius: var(--radius-full);
 }
 
 .patient-profile-avatar-container {
@@ -66,22 +73,29 @@
 }
 
 .patient-profile-avatar {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: white;
+  color: var(--text-inverse);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 1.375rem;
+  font-weight: var(--font-weight-extrabold);
+  font-size: var(--font-size-2xl);
   box-shadow: 
-    0 3px 10px rgba(0, 0, 0, 0.12),
-    0 1px 4px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    var(--shadow-lg),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
   position: relative;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--letter-spacing-tight);
+  transition: all var(--transition-base);
+}
+
+.patient-profile-card:hover .patient-profile-avatar {
+  transform: scale(1.05);
+  box-shadow: 
+    var(--shadow-xl),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .patient-profile-avatar::after {
@@ -128,12 +142,12 @@
 }
 
 .patient-profile-name {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
   color: var(--text-primary);
-  margin: 0;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+  margin: 0 0 var(--spacing-1) 0;
+  letter-spacing: var(--letter-spacing-tight);
+  line-height: var(--line-height-tight);
 }
 
 .patient-profile-badge {
@@ -263,20 +277,32 @@
 .risk-factor-card {
   display: flex;
   align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.875rem 1rem;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) var(--spacing-5);
   background: 
-    linear-gradient(135deg, var(--surface-alt) 0%, var(--surface) 100%),
-    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.4) 0%, transparent 60%);
-  border-radius: var(--radius-md);
+    linear-gradient(135deg, var(--surface-elevated) 0%, var(--surface-alt) 100%),
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.5) 0%, transparent 60%);
+  border-radius: var(--radius-xl);
   border: 1.5px solid var(--border-light);
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
   box-shadow: 
-    0 2px 6px rgba(0, 0, 0, 0.06),
-    0 1px 3px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    var(--shadow-sm),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.risk-factor-card:hover {
+  transform: translateY(-3px) translateX(4px);
+  box-shadow: 
+    var(--shadow-md),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 0 0 3px var(--warning-lighter);
+  border-color: var(--warning-light);
+  background: 
+    linear-gradient(135deg, var(--warning-lighter) 0%, var(--surface-elevated) 100%),
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.6) 0%, transparent 60%);
 }
 
 .risk-factor-card::before {

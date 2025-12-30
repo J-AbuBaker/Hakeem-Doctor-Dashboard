@@ -1,6 +1,6 @@
 /**
  * Clinic Location Picker Modal Styles
- * Professional map picker UI with enhanced UX
+ * Map picker UI component
  */
 
 /* Override modal overlay padding for full-screen-like experience */
@@ -849,7 +849,7 @@
   margin-right: 0.75rem !important;
 }
 
-/* Enhanced Modal Actions */
+/* Modal Actions */
 .clinic-location-modal .modal-actions {
   padding: 1.5rem 2rem;
   background: var(--surface-alt);

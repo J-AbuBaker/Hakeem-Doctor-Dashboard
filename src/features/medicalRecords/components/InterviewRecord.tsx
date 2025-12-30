@@ -9,14 +9,13 @@ import {
   Target,
   Clock,
   ClipboardList,
-  Activity,
+  HeartPulse,
   Search,
   ChevronLeft,
   ChevronRight,
   Eye,
   EyeOff,
-  Briefcase,
-  HeartPulse
+  Briefcase
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { getProbabilityStyle, formatProbability } from '../utils/diagnosisUtils';
@@ -32,6 +31,7 @@ interface InterviewRecordProps {
 }
 
 const InterviewRecord: React.FC<InterviewRecordProps> = ({ interview }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
   const [isQnAExpanded, setIsQnAExpanded] = useState(false);
   const [qnaSearchQuery, setQnaSearchQuery] = useState('');
 
@@ -73,7 +73,11 @@ const InterviewRecord: React.FC<InterviewRecordProps> = ({ interview }) => {
 
   return (
     <div className="interview-record">
-      <div className="interview-record-header">
+      <button 
+        className="interview-record-header interview-record-header-button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
+      >
         <div className="interview-record-date-section">
           <div className="interview-record-date">
             <div className="interview-date-icon-wrapper">
@@ -89,33 +93,45 @@ const InterviewRecord: React.FC<InterviewRecordProps> = ({ interview }) => {
             </div>
           </div>
         </div>
-        {primaryDiagnosis && (
-          <div className="interview-primary-diagnosis">
-            <Target size={16} />
-            <div className="primary-diagnosis-content">
-              <span className="primary-diagnosis-label">Primary Diagnosis</span>
-              <span className="primary-diagnosis-name">{primaryDiagnosis.name}</span>
+        <div className="interview-record-header-right">
+          {primaryDiagnosis && (
+            <div className="interview-primary-diagnosis">
+              <Target size={16} />
+              <div className="primary-diagnosis-content">
+                <span className="primary-diagnosis-label">Primary Diagnosis</span>
+                <span className="primary-diagnosis-name">{primaryDiagnosis.name}</span>
+              </div>
+              <div 
+                className="primary-diagnosis-probability"
+                style={{
+                  color: primaryDiagnosisStyle.color,
+                  backgroundColor: primaryDiagnosisStyle.bgColor,
+                  borderColor: primaryDiagnosisStyle.borderColor
+                }}
+              >
+                {formatProbability(primaryDiagnosis.probability)}
+              </div>
             </div>
-            <div 
-              className="primary-diagnosis-probability"
-              style={{
-                color: primaryDiagnosisStyle.color,
-                backgroundColor: primaryDiagnosisStyle.bgColor,
-                borderColor: primaryDiagnosisStyle.borderColor
-              }}
-            >
-              {formatProbability(primaryDiagnosis.probability)}
-            </div>
+          )}
+          <div className="interview-record-toggle-icon">
+            {isExpanded ? (
+              <ChevronUp size={20} />
+            ) : (
+              <ChevronDown size={20} />
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      </button>
+
+      {isExpanded && (
+        <>
 
       {/* Symptoms */}
       {interview.symptoms.length > 0 && (
         <div className="interview-section">
           <div className="interview-section-header">
             <div className="interview-section-icon-wrapper interview-section-icon-symptoms">
-              <Activity className="interview-section-icon" size={20} />
+              <HeartPulse className="interview-section-icon" size={20} />
             </div>
             <div className="interview-section-header-content">
               <h4 className="interview-section-title">Presenting Symptoms</h4>
@@ -396,6 +412,8 @@ const InterviewRecord: React.FC<InterviewRecordProps> = ({ interview }) => {
             </div>
           )}
         </div>
+      )}
+        </>
       )}
     </div>
   );

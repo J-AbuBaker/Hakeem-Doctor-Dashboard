@@ -1,10 +1,12 @@
 import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { Appointment } from '../../../types/appointment';
-import { Users, Search, ChevronRight, UserCircle, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { UserCheck, Search, ChevronRight, UserCircle, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight as ChevronRightIcon, Calendar } from 'lucide-react';
 import { highlightMatch } from '../utils/searchUtils';
 import { sortPatients, getPatientSortLabel, getNextPatientSortOption, PatientSortOption } from '../utils/patientSortUtils';
 import { extractPatientsFromAppointments, filterPatientsByName } from '../utils/patientUtils';
 import { usePagination } from '../hooks/usePagination';
+import { format } from 'date-fns';
+import { getInitials } from '@shared/utils/string';
 import './PatientList.css';
 
 interface PatientListProps {
@@ -95,7 +97,7 @@ const PatientList: React.FC<PatientListProps> = ({
     <div className="patient-list">
       <div className="patient-list-header">
         <div className="patient-list-header-content">
-          <Users className="patient-list-header-icon" size={20} />
+          <UserCheck className="patient-list-header-icon" size={20} />
           <h3 className="patient-list-title">Patient Directory</h3>
         </div>
         <div className="patient-list-header-stats">
@@ -151,37 +153,46 @@ const PatientList: React.FC<PatientListProps> = ({
           </div>
         ) : (
           <>
-            {paginatedPatients.map((patient) => (
-              <button
-                key={patient.id}
-                className={`patient-list-item ${
-                  selectedPatientId === patient.id ? 'active' : ''
-                }`}
-                onClick={() => onPatientSelect(patient.id, patient.name)}
-                aria-pressed={selectedPatientId === patient.id}
-                aria-label={`Select patient ${patient.name}`}
-              >
-                <div className="patient-list-item-avatar">
-                  {patient.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="patient-list-item-info">
-                  <span className="patient-list-item-name">
-                    {debouncedSearchQuery ? highlightMatch(patient.name, debouncedSearchQuery, 'search-highlight') : patient.name}
-                  </span>
-                  <div className="patient-list-item-meta">
-                    <span className="patient-list-item-indicator">View Records</span>
-                    {patient.appointmentCount > 1 && (
-                      <span className="patient-list-item-badge">
-                        {patient.appointmentCount} {patient.appointmentCount === 1 ? 'visit' : 'visits'}
-                      </span>
-                    )}
+            {paginatedPatients.map((patient) => {
+              const lastVisitDate = patient.lastAppointmentDate 
+                ? format(patient.lastAppointmentDate, 'MMM dd, yyyy')
+                : null;
+              
+              return (
+                <button
+                  key={patient.id}
+                  className={`patient-list-item ${
+                    selectedPatientId === patient.id ? 'active' : ''
+                  }`}
+                  onClick={() => onPatientSelect(patient.id, patient.name)}
+                  aria-pressed={selectedPatientId === patient.id}
+                  aria-label={`Select patient ${patient.name}`}
+                >
+                  <div className="patient-list-item-avatar">
+                    {getInitials(patient.name)}
                   </div>
-                </div>
-                <div className="patient-list-item-arrow">
-                  <ChevronRight size={18} />
-                </div>
-              </button>
-            ))}
+                  <div className="patient-list-item-info">
+                    <span className="patient-list-item-name">
+                      {debouncedSearchQuery ? highlightMatch(patient.name, debouncedSearchQuery, 'search-highlight') : patient.name}
+                    </span>
+                    <div className="patient-list-item-meta">
+                      {lastVisitDate && (
+                        <div className="patient-list-item-visit-info">
+                          <Calendar size={12} />
+                          <span className="patient-list-item-visit-date">{lastVisitDate}</span>
+                        </div>
+                      )}
+                      <div className="patient-list-item-stats">
+                        <span className="patient-list-item-indicator">View Records</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="patient-list-item-arrow">
+                    <ChevronRight size={18} />
+                  </div>
+                </button>
+              );
+            })}
           </>
         )}
       </div>

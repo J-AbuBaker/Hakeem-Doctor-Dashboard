@@ -34,7 +34,7 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Selection styling - Professional */
+/* Selection styling */
 ::selection {
   background-color: hsla(var(--primary-hue), var(--primary-saturation), var(--primary-lightness), 0.2);
   color: var(--text-primary);
