@@ -7,7 +7,7 @@ import MedicalRecordsSummary from '@features/medicalRecords/components/MedicalRe
 import { useAppointments } from '@app/providers';
 import { MedicalRecordsService } from '@features/medicalRecords/services';
 import { MedicalInterview, RiskFactorResponse } from '../types/medicalRecords';
-import { ClipboardList, Loader2, AlertCircle, FileCheck, UserCheck, ArrowUpDown, ChevronRight, Download, Printer, Share2, Home, HeartPulse, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { ClipboardList, Loader2, AlertCircle, FileCheck, UserCheck, ArrowUpDown, ChevronRight, Home, HeartPulse, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { sortInterviews, getSortLabel, getNextSortOption, InterviewSortOption } from '@features/medicalRecords/utils/interviewSortUtils';
 import { getInitials } from '@shared/utils/string';
 import './DashboardPage.css';
@@ -194,32 +194,6 @@ const MedicalHealthRecordsPage: React.FC = () => {
                             </span>
                           </div>
                         </div>
-                      </div>
-                      <div className="patient-detail-actions">
-                        <button 
-                          className="medical-records-action-button"
-                          title="Export Records"
-                          aria-label="Export patient records"
-                        >
-                          <Download size={16} />
-                          <span>Export</span>
-                        </button>
-                        <button 
-                          className="medical-records-action-button"
-                          title="Print Records"
-                          aria-label="Print patient records"
-                        >
-                          <Printer size={16} />
-                          <span>Print</span>
-                        </button>
-                        <button 
-                          className="medical-records-action-button"
-                          title="Share Records"
-                          aria-label="Share patient records"
-                        >
-                          <Share2 size={16} />
-                          <span>Share</span>
-                        </button>
                       </div>
                     </div>
                   </div>

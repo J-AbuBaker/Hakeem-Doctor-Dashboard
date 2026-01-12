@@ -1,16 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GoogleMap, Marker, useJsApiLoader, Autocomplete } from '@react-google-maps/api';
-import { X, MapPin, Search, Navigation, Crosshair, Navigation2, ArrowLeftRight, Loader2, AlertCircle } from 'lucide-react';
+import { X, MapPin, Search, Navigation, Crosshair, Navigation2, ArrowLeftRight, Loader2, AlertCircle, Info } from 'lucide-react';
 import './ClinicLocationPickerModal.css';
 
 // Google Maps configuration
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
-const mapContainerStyle = {
-  width: '100%',
-  height: '100%',
-  borderRadius: 'var(--radius-xl)',
-};
 
 const defaultCenter = {
   lat: 31.9522,
@@ -44,11 +39,36 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
   const [searchError, setSearchError] = useState<string | null>(null);
   const [mapCenter, setMapCenter] = useState<google.maps.LatLngLiteral>(defaultCenter);
   const [zoom, setZoom] = useState<number>(defaultZoom);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [mapHeight, setMapHeight] = useState<string>('500px');
 
+  // Use refs for real-time access without causing re-renders
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const onChangeRef = useRef(onChange);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const autocompleteInputRef = useRef<HTMLInputElement | null>(null);
   const mapRef = useRef<HTMLDivElement | null>(null);
+
+  // Keep onChange ref updated
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Update map height based on screen size
+  useEffect(() => {
+    const updateMapHeight = () => {
+      if (window.innerWidth <= 480) {
+        setMapHeight('350px');
+      } else if (window.innerWidth <= 768) {
+        setMapHeight('400px');
+      } else {
+        setMapHeight('500px');
+      }
+    };
+
+    updateMapHeight();
+    window.addEventListener('resize', updateMapHeight);
+    return () => window.removeEventListener('resize', updateMapHeight);
+  }, []);
 
   // Load Google Maps API
   const { isLoaded, loadError } = useJsApiLoader({
@@ -57,76 +77,10 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
     libraries: ['places'],
   });
 
-  // Initialize coordinates when modal opens
-  useEffect(() => {
-    if (!isOpen || !isLoaded) return;
-
-    // If initial coordinates exist, use them
-    if (initialLatitude !== undefined && initialLongitude !== undefined) {
-      const lat = initialLatitude;
-      const lng = initialLongitude;
-      setSelectedLat(lat);
-      setSelectedLng(lng);
-      setMapCenter({ lat, lng });
-      setZoom(15);
-      if (onChange) {
-        onChange(lat, lng);
-      }
-      return;
-    }
-
-    // Otherwise, try to get user's current location
-    setIsGeolocationLoading(true);
-    if (navigator.geolocation) {
-      const geolocationOptions: PositionOptions = {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0, // Always get fresh location
-      };
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-
-          // Validate coordinates
-          if (isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
-            // Fallback to default if invalid
-            setSelectedLat(defaultCenter.lat);
-            setSelectedLng(defaultCenter.lng);
-            setMapCenter(defaultCenter);
-            setZoom(defaultZoom);
-            if (onChange) {
-              onChange(defaultCenter.lat, defaultCenter.lng);
-            }
-            setIsGeolocationLoading(false);
-            return;
-          }
-
-          setSelectedLat(lat);
-          setSelectedLng(lng);
-          setMapCenter({ lat, lng });
-          setZoom(15);
-          if (onChange) {
-            onChange(lat, lng);
-          }
-          setIsGeolocationLoading(false);
-        },
-        () => {
-          // If geolocation fails, use default center
-          setSelectedLat(defaultCenter.lat);
-          setSelectedLng(defaultCenter.lng);
-          setMapCenter(defaultCenter);
-          setZoom(defaultZoom);
-          if (onChange) {
-            onChange(defaultCenter.lat, defaultCenter.lng);
-          }
-          setIsGeolocationLoading(false);
-        },
-        geolocationOptions
-      );
-    } else {
-      // Default to Middle East region if geolocation not available
+  // Function to request GPS location with proper permission handling
+  const requestCurrentLocation = useCallback((updateMapInstance?: google.maps.Map) => {
+    if (!navigator.geolocation) {
+      // Geolocation not supported
       setSelectedLat(defaultCenter.lat);
       setSelectedLng(defaultCenter.lng);
       setMapCenter(defaultCenter);
@@ -134,36 +88,140 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
       if (onChange) {
         onChange(defaultCenter.lat, defaultCenter.lng);
       }
-      setIsGeolocationLoading(false);
+      return;
     }
-  }, [isOpen, initialLatitude, initialLongitude, onChange, isLoaded]);
+
+    setIsGeolocationLoading(true);
+    setSearchError(null);
+    
+    const geolocationOptions: PositionOptions = {
+      enableHighAccuracy: true, // Request high accuracy GPS
+      timeout: 20000, // 20 seconds timeout for better accuracy
+      maximumAge: 0, // Always get fresh location, don't use cache
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const accuracy = position.coords.accuracy;
+
+        // Validate coordinates - must be valid numbers
+        if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng) && 
+            lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          
+          // Set coordinates first
+          setSelectedLat(lat);
+          setSelectedLng(lng);
+          setMapCenter({ lat, lng });
+          
+          // Adjust zoom based on accuracy - more accurate = closer zoom
+          const zoomLevel = accuracy < 50 ? 18 : accuracy < 100 ? 17 : accuracy < 500 ? 15 : 13;
+          setZoom(zoomLevel);
+          
+          // Update form values
+          if (onChange) {
+            onChange(lat, lng);
+          }
+          
+          // Pan and zoom map to location if map is loaded
+          const mapInstance = updateMapInstance || map;
+          if (mapInstance) {
+            const location = new google.maps.LatLng(lat, lng);
+            
+            // First resize, then pan and zoom
+            setTimeout(() => {
+              google.maps.event.trigger(mapInstance, 'resize');
+              mapInstance.panTo(location);
+              mapInstance.setZoom(zoomLevel);
+              
+              // Double-check positioning after a short delay
+              setTimeout(() => {
+                mapInstance.panTo(location);
+                mapInstance.setZoom(zoomLevel);
+              }, 200);
+            }, 100);
+          }
+        } else {
+          // Invalid coordinates - fallback to default
+          setSelectedLat(defaultCenter.lat);
+          setSelectedLng(defaultCenter.lng);
+          setMapCenter(defaultCenter);
+          setZoom(defaultZoom);
+          if (onChange) {
+            onChange(defaultCenter.lat, defaultCenter.lng);
+          }
+        }
+        setIsGeolocationLoading(false);
+      },
+      (error) => {
+        // Handle geolocation errors
+        console.error('Geolocation error:', error);
+        let errorMessage = 'Unable to get your location. ';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location permission denied. Please enable location access in your browser settings and try again.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable. Please check your device GPS settings.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out. Please try again.';
+            break;
+          default:
+            errorMessage = 'Unable to get your location. Please use the map to select your clinic location.';
+            break;
+        }
+        setSearchError(errorMessage);
+        
+        // Fallback to default center
+        setSelectedLat(defaultCenter.lat);
+        setSelectedLng(defaultCenter.lng);
+        setMapCenter(defaultCenter);
+        setZoom(defaultZoom);
+        if (onChange) {
+          onChange(defaultCenter.lat, defaultCenter.lng);
+        }
+        setIsGeolocationLoading(false);
+      },
+      geolocationOptions
+    );
+  }, [onChange, map]);
+
+  // Initialize coordinates when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // If initial coordinates exist, use them immediately
+    if (initialLatitude !== undefined && initialLongitude !== undefined) {
+      updateCoordinates(initialLatitude, initialLongitude, 15);
+      return;
+    }
+
+    // Always try to get user's current GPS location immediately when modal opens
+    // Don't wait for map to load - request location right away
+    requestCurrentLocation();
+  }, [isOpen, initialLatitude, initialLongitude, requestCurrentLocation, updateCoordinates]);
 
   const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
     if (e.latLng) {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
-      setSelectedLat(lat);
-      setSelectedLng(lng);
-      setMapCenter({ lat, lng });
-      setZoom(15);
-      if (onChange) {
-        onChange(lat, lng);
-      }
+      
+      // Update coordinates and map in real-time
+      updateCoordinates(lat, lng, 15);
     }
-  }, [onChange]);
+  }, [updateCoordinates]);
 
   const handleMarkerDragEnd = useCallback((e: google.maps.MapMouseEvent) => {
     if (e.latLng) {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
-      setSelectedLat(lat);
-      setSelectedLng(lng);
-      setMapCenter({ lat, lng });
-      if (onChange) {
-        onChange(lat, lng);
-      }
+      
+      // Update coordinates and map in real-time
+      updateCoordinates(lat, lng, 15);
     }
-  }, [onChange]);
+  }, [updateCoordinates]);
 
   const handlePlaceSelect = useCallback(() => {
     if (!isLoaded) {
@@ -176,28 +234,17 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
       if (place && place.geometry && place.geometry.location) {
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
-        const location = new google.maps.LatLng(lat, lng);
-
-        // Pan map smoothly to the selected location if map is loaded
-        if (map) {
-          map.panTo(location);
-          map.setZoom(15);
-        }
-
-        setSelectedLat(lat);
-        setSelectedLng(lng);
-        setMapCenter({ lat, lng });
-        setZoom(15);
+        
+        // Update coordinates and map in real-time
+        updateCoordinates(lat, lng, 15);
+        
         setSearchQuery(place.formatted_address || place.name || '');
         setSearchError(null);
-        if (onChange) {
-          onChange(lat, lng);
-        }
       } else {
         setSearchError('Location not found. Please try a different search term.');
       }
     }
-  }, [onChange, map, isLoaded]);
+  }, [isLoaded, updateCoordinates]);
 
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim() || !isLoaded) return;
@@ -209,24 +256,15 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ address: searchQuery }, (results, status) => {
         setIsSearching(false);
-        if (status === 'OK' && results && results.length > 0 && results[0] && map) {
+        if (status === 'OK' && results && results.length > 0 && results[0]) {
           const location = results[0].geometry.location;
           if (location) {
             const lat = location.lat();
             const lng = location.lng();
-            const latLng = new google.maps.LatLng(lat, lng);
 
-            // Pan map smoothly to the search result location
-            map.panTo(latLng);
-            map.setZoom(15);
-
-            setSelectedLat(lat);
-            setSelectedLng(lng);
-            setMapCenter({ lat, lng });
-            setZoom(15);
-            if (onChange) {
-              onChange(lat, lng);
-            }
+            // Update coordinates and map in real-time
+            updateCoordinates(lat, lng, 15);
+            
             setSearchQuery(results[0].formatted_address || searchQuery);
             setSearchError(null);
           } else {
@@ -247,89 +285,13 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
       setSearchError('Search failed. Please try again.');
       console.error('Geocoding error:', error);
     }
-  }, [searchQuery, isLoaded, onChange, map]);
+  }, [searchQuery, isLoaded, updateCoordinates]);
 
   const handleCurrentLocation = useCallback(() => {
-    setIsGeolocationLoading(true);
     setSearchError(null);
-
-    if (!navigator.geolocation) {
-      setSearchError('Geolocation is not supported by your browser.');
-      setIsGeolocationLoading(false);
-      return;
-    }
-
-    // Geolocation options for accurate device location
-    const geolocationOptions: PositionOptions = {
-      enableHighAccuracy: true, // Use GPS if available for better accuracy
-      timeout: 10000, // 10 seconds timeout
-      maximumAge: 0, // Don't use cached position, always get fresh location
-    };
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        const accuracy = position.coords.accuracy; // Accuracy in meters
-
-        // Validate coordinates are valid numbers
-        if (isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
-          setSearchError('Invalid location data received. Please try again.');
-          setIsGeolocationLoading(false);
-          return;
-        }
-
-        if (!isLoaded) {
-          setSearchError('Google Maps API is not loaded. Please wait and try again.');
-          setIsGeolocationLoading(false);
-          return;
-        }
-
-        const location = new google.maps.LatLng(lat, lng);
-
-        // Pan map smoothly to current location
-        if (map) {
-          map.panTo(location);
-          // Adjust zoom based on accuracy - more accurate = closer zoom
-          const zoomLevel = accuracy < 100 ? 17 : accuracy < 500 ? 15 : 13;
-          map.setZoom(zoomLevel);
-          setZoom(zoomLevel);
-        } else {
-          setZoom(15);
-        }
-
-        setSelectedLat(lat);
-        setSelectedLng(lng);
-        setMapCenter({ lat, lng });
-
-        if (onChange) {
-          onChange(lat, lng);
-        }
-        setIsGeolocationLoading(false);
-      },
-      (error) => {
-        // Provide specific error messages based on error code
-        let errorMessage = 'Unable to get your location. ';
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage += 'Please enable location permissions in your browser settings.';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage += 'Location information is unavailable. Please check your device settings.';
-            break;
-          case error.TIMEOUT:
-            errorMessage += 'Location request timed out. Please try again.';
-            break;
-          default:
-            errorMessage += 'An unknown error occurred. Please try again.';
-            break;
-        }
-        setSearchError(errorMessage);
-        setIsGeolocationLoading(false);
-      },
-      geolocationOptions
-    );
-  }, [onChange, map, isLoaded]);
+    // Request location - will use mapInstanceRef for real-time updates
+    requestCurrentLocation();
+  }, [requestCurrentLocation]);
 
   const handleConfirm = () => {
     if (selectedLat !== null && selectedLng !== null) {
@@ -342,16 +304,39 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
   };
 
   const onMapLoad = useCallback((mapInstance: google.maps.Map) => {
-    setMap(mapInstance);
-  }, []);
+    // Store map instance in ref for real-time access
+    mapInstanceRef.current = mapInstance;
+    
+    // Force map to resize and render properly
+    google.maps.event.trigger(mapInstance, 'resize');
+    
+    // If coordinates are already set, center map on them immediately
+    if (selectedLat !== null && selectedLng !== null) {
+      const location = new google.maps.LatLng(selectedLat, selectedLng);
+      mapInstance.panTo(location);
+      mapInstance.setZoom(zoom || 15);
+      google.maps.event.trigger(mapInstance, 'resize');
+    } else {
+      // If no location selected yet, get user's current GPS location
+      // Pass the map instance so it can update immediately
+      requestCurrentLocation(mapInstance);
+    }
+  }, [selectedLat, selectedLng, zoom, requestCurrentLocation]);
 
   const onUnmount = useCallback(() => {
-    setMap(null);
+    mapInstanceRef.current = null;
   }, []);
 
   if (!isOpen) return null;
 
   const hasSelection = selectedLat !== null && selectedLng !== null;
+  
+  // Debug: Log coordinates to help troubleshoot
+  useEffect(() => {
+    if (hasSelection) {
+      console.log('Map coordinates:', { lat: selectedLat, lng: selectedLng });
+    }
+  }, [hasSelection, selectedLat, selectedLng]);
 
   // Show error if Google Maps API key is missing
   if (!GOOGLE_MAPS_API_KEY) {
@@ -442,6 +427,19 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
         </div>
 
         <div className="modal-body clinic-location-modal-body">
+          {/* Professional Clinic Location Notice */}
+          <div className="clinic-location-notice">
+            <div className="clinic-location-notice-icon">
+              <Info size={20} />
+            </div>
+            <div className="clinic-location-notice-content">
+              <h3 className="clinic-location-notice-title">Important: Set Location from Your Clinic</h3>
+              <p className="clinic-location-notice-text">
+                For accurate location services and better patient experience, please make sure you are setting your account location from your clinic premises. This ensures precise mapping and helps patients find your clinic easily.
+              </p>
+            </div>
+          </div>
+
           <div className="map-instructions">
             <div className="map-instructions-icon">
               <MapPin size={20} />
@@ -449,7 +447,7 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
             <div className="map-instructions-content">
               <h3 className="map-instructions-title">Select Your Clinic Location</h3>
               <p className="map-instructions-text">
-                Search for a location, click on the map, or drag the marker to set your clinic location.
+                Search for a location, click anywhere on the map, or drag the marker to precisely set your clinic location.
               </p>
             </div>
           </div>
@@ -565,54 +563,57 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
                   <span>Click on map to select location</span>
                 </div>
               )}
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={mapCenter}
-                zoom={zoom}
-                onClick={handleMapClick}
-                onLoad={onMapLoad}
-                onUnmount={onUnmount}
-                options={{
-                  disableDefaultUI: false,
-                  zoomControl: true,
-                  streetViewControl: false,
-                  mapTypeControl: true,
-                  fullscreenControl: true,
-                  draggable: true,
-                  scrollwheel: true,
-                  gestureHandling: 'greedy', // Allows free panning and dragging
-                  keyboardShortcuts: true,
-                  clickableIcons: true,
-                  restriction: undefined, // No map bounds restrictions - allow full world navigation
-                  minZoom: 1, // Allow zooming out to see entire world
-                  maxZoom: 20, // Allow zooming in for detailed view
-                  styles: [
-                    {
-                      featureType: 'poi',
-                      elementType: 'labels',
-                      stylers: [{ visibility: 'on' }],
-                    },
-                  ],
-                }}
-              >
-                {hasSelection && isLoaded && (
-                  <Marker
-                    position={{ lat: selectedLat!, lng: selectedLng! }}
-                    draggable={true}
-                    onDragEnd={handleMarkerDragEnd}
-                    icon={{
-                      url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                        <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M20 0C9 0 0 9 0 20c0 15 20 30 20 30s20-15 20-30c0-11-9-20-20-20z" fill="#4285F4"/>
-                          <circle cx="20" cy="20" r="8" fill="white"/>
-                        </svg>
-                      `),
-                      scaledSize: new google.maps.Size(40, 50),
-                      anchor: new google.maps.Point(20, 50),
+              {hasSelection && (
+                <div className="map-overlay-instruction map-marker-hint">
+                  <MapPin size={16} />
+                  <span>Marker visible - Drag to adjust or click map to move</span>
+                </div>
+              )}
+              {isLoaded ? (
+                  <GoogleMap
+                    mapContainerStyle={{ width: '100%', height: mapHeight }}
+                    center={mapCenter}
+                    zoom={zoom}
+                    onClick={handleMapClick}
+                    onLoad={onMapLoad}
+                    onUnmount={onUnmount}
+                    options={{
+                      disableDefaultUI: false,
+                      zoomControl: true,
+                      streetViewControl: false,
+                      mapTypeControl: window.innerWidth > 768,
+                      fullscreenControl: true,
+                      draggable: true,
+                      scrollwheel: true,
+                      gestureHandling: 'greedy',
+                      keyboardShortcuts: true,
+                      clickableIcons: true,
+                      minZoom: 1,
+                      maxZoom: 20,
                     }}
-                  />
-                )}
-              </GoogleMap>
+                  >
+                  {selectedLat !== null && selectedLng !== null && (
+                    <Marker
+                      key={`marker-${selectedLat}-${selectedLng}`}
+                      position={{ 
+                        lat: Number(selectedLat), 
+                        lng: Number(selectedLng) 
+                      }}
+                      draggable={true}
+                      onDragEnd={handleMarkerDragEnd}
+                      title="Drag to adjust clinic location"
+                      animation={google.maps.Animation.DROP}
+                      visible={true}
+                      zIndex={1000}
+                    />
+                  )}
+                </GoogleMap>
+              ) : (
+                <div className="map-loading-placeholder">
+                  <Loader2 className="loading-spinner" size={48} />
+                  <p>Loading Google Maps...</p>
+                </div>
+              )}
             </div>
           </div>
 

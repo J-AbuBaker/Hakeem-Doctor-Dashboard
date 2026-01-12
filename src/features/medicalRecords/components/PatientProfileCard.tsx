@@ -1,14 +1,12 @@
 import React from 'react';
 import { RiskFactorResponse } from '../../../types/medicalRecords';
 import { 
-  BadgeCheck, 
   HeartPulse,
   AlertCircle,
   ShieldAlert,
   AlertCircle as AlertCircleIcon
 } from 'lucide-react';
 import { RISK_FACTOR_PAGINATION_THRESHOLD, RISK_FACTOR_ITEMS_PER_PAGE } from './constants';
-import { getInitials } from '@shared/utils/string';
 import { usePagination } from '../hooks/usePagination';
 import './PatientProfileCard.css';
 
@@ -41,24 +39,6 @@ const PatientProfileCard: React.FC<PatientProfileCardProps> = ({
 
   return (
     <div className="patient-profile-card">
-      <div className="patient-profile-header">
-        <div className="patient-profile-avatar-container">
-          <div className="patient-profile-avatar">
-            {getInitials(patientName)}
-          </div>
-          <div className="patient-profile-status-indicator"></div>
-        </div>
-        <div className="patient-profile-info">
-          <div className="patient-profile-name-section">
-            <h2 className="patient-profile-name">{patientName}</h2>
-            <div className="patient-profile-badge">
-              <BadgeCheck size={14} />
-              <span>Active Patient</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="patient-profile-risk-factors">
         <div className="risk-factors-header">
           <div className="risk-factors-header-icon-wrapper">
