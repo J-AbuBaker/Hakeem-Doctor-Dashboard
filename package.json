@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "generate-report": "node scripts/generate-website-pdf-report.js",
+    "generate-report:all": "node scripts/generate-website-pdf-report.js --pages /,/dashboard,/login,/signup,/profile",
+    "capture-all": "node scripts/capture-all-pages.js --username jameelabubaker@gmail.com --password Test@12345",
+    "capture-all:public": "node scripts/capture-all-pages.js --skip-protected",
+    "capture-all:full": "node scripts/capture-all-pages.js --username jameelabubaker@gmail.com --password Test@12345 --output complete-ui-report.pdf"
   },
   "dependencies": {
     "@react-google-maps/api": "^2.20.8",
@@ -30,6 +35,7 @@
     "@types/babel__template": "^7.4.4",
     "@types/babel__traverse": "^7.28.0",
     "@types/json-schema": "^7.0.15",
+    "@types/node": "^20.19.30",
     "@types/prop-types": "^15.7.15",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
@@ -39,7 +45,13 @@
     "eslint": "^8.55.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "image-size": "^1.2.1",
+    "pdfkit": "^0.14.0",
+    "puppeteer-core": "^21.11.0",
     "typescript": "^5.2.2",
     "vite": "^7.2.7"
+  },
+  "puppeteer": {
+    "skipChromiumDownload": true
   }
 }

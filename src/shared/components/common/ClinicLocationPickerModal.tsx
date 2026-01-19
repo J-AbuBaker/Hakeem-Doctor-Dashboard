@@ -77,17 +77,39 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
     libraries: ['places'],
   });
 
+  // Unified function to update coordinates and map in real-time
+  const updateCoordinates = useCallback((lat: number, lng: number, zoomLevel?: number) => {
+    // Update all state synchronously
+    setSelectedLat(lat);
+    setSelectedLng(lng);
+    setMapCenter({ lat, lng });
+    if (zoomLevel !== undefined) {
+      setZoom(zoomLevel);
+    }
+    
+    // Call onChange immediately with latest values
+    if (onChangeRef.current) {
+      onChangeRef.current(lat, lng);
+    }
+    
+    // Update map immediately if available
+    const mapInstance = mapInstanceRef.current;
+    if (mapInstance) {
+      const location = new google.maps.LatLng(lat, lng);
+      mapInstance.panTo(location);
+      if (zoomLevel !== undefined) {
+        mapInstance.setZoom(zoomLevel);
+      }
+      // Trigger resize to ensure proper rendering
+      google.maps.event.trigger(mapInstance, 'resize');
+    }
+  }, []);
+
   // Function to request GPS location with proper permission handling
   const requestCurrentLocation = useCallback((updateMapInstance?: google.maps.Map) => {
     if (!navigator.geolocation) {
-      // Geolocation not supported
-      setSelectedLat(defaultCenter.lat);
-      setSelectedLng(defaultCenter.lng);
-      setMapCenter(defaultCenter);
-      setZoom(defaultZoom);
-      if (onChange) {
-        onChange(defaultCenter.lat, defaultCenter.lng);
-      }
+      // Geolocation not supported - use default
+      updateCoordinates(defaultCenter.lat, defaultCenter.lng, defaultZoom);
       return;
     }
 
@@ -110,47 +132,22 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
         if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng) && 
             lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
           
-          // Set coordinates first
-          setSelectedLat(lat);
-          setSelectedLng(lng);
-          setMapCenter({ lat, lng });
-          
           // Adjust zoom based on accuracy - more accurate = closer zoom
           const zoomLevel = accuracy < 50 ? 18 : accuracy < 100 ? 17 : accuracy < 500 ? 15 : 13;
-          setZoom(zoomLevel);
           
-          // Update form values
-          if (onChange) {
-            onChange(lat, lng);
-          }
+          // Update coordinates and map in real-time
+          updateCoordinates(lat, lng, zoomLevel);
           
-          // Pan and zoom map to location if map is loaded
-          const mapInstance = updateMapInstance || map;
-          if (mapInstance) {
+          // If map instance was passed, ensure it's updated
+          if (updateMapInstance && updateMapInstance !== mapInstanceRef.current) {
             const location = new google.maps.LatLng(lat, lng);
-            
-            // First resize, then pan and zoom
-            setTimeout(() => {
-              google.maps.event.trigger(mapInstance, 'resize');
-              mapInstance.panTo(location);
-              mapInstance.setZoom(zoomLevel);
-              
-              // Double-check positioning after a short delay
-              setTimeout(() => {
-                mapInstance.panTo(location);
-                mapInstance.setZoom(zoomLevel);
-              }, 200);
-            }, 100);
+            updateMapInstance.panTo(location);
+            updateMapInstance.setZoom(zoomLevel);
+            google.maps.event.trigger(updateMapInstance, 'resize');
           }
         } else {
           // Invalid coordinates - fallback to default
-          setSelectedLat(defaultCenter.lat);
-          setSelectedLng(defaultCenter.lng);
-          setMapCenter(defaultCenter);
-          setZoom(defaultZoom);
-          if (onChange) {
-            onChange(defaultCenter.lat, defaultCenter.lng);
-          }
+          updateCoordinates(defaultCenter.lat, defaultCenter.lng, defaultZoom);
         }
         setIsGeolocationLoading(false);
       },
@@ -175,18 +172,12 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
         setSearchError(errorMessage);
         
         // Fallback to default center
-        setSelectedLat(defaultCenter.lat);
-        setSelectedLng(defaultCenter.lng);
-        setMapCenter(defaultCenter);
-        setZoom(defaultZoom);
-        if (onChange) {
-          onChange(defaultCenter.lat, defaultCenter.lng);
-        }
+        updateCoordinates(defaultCenter.lat, defaultCenter.lng, defaultZoom);
         setIsGeolocationLoading(false);
       },
       geolocationOptions
     );
-  }, [onChange, map]);
+  }, [updateCoordinates]);
 
   // Initialize coordinates when modal opens
   useEffect(() => {
