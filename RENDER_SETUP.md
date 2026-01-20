@@ -69,8 +69,37 @@ If you're seeing `ERR_SSL_PROTOCOL_ERROR` after changing to HTTPS, it means your
 - Only use if absolutely necessary for testing
 - Consider security implications
 
+### Understanding the Proxy vs Direct Connection
+
+**Development (Local):**
+- Uses Vite's development proxy (configured in `vite.config.ts`)
+- Frontend makes requests to `/api` (e.g., `http://localhost:3001/api/auth/login`)
+- Vite dev server proxies these requests to your actual backend (from `.env` file)
+- This avoids CORS issues and Mixed Content problems in development
+- **This proxy only works when running `npm run dev` locally**
+
+**Production (Render):**
+- **No proxy available** - Render serves static files only
+- Frontend must make requests directly to the backend API URL
+- This is why you need to set `VITE_API_BASE_URL` with the full backend URL
+- The backend URL must support HTTPS to work with Render's HTTPS frontend
+
+**Why Proxy Doesn't Work in Production:**
+- Render hosts static sites (just the built HTML/CSS/JS files)
+- There's no server running to proxy requests like Vite's dev server does
+- All requests must go directly from the browser to your backend
+
+### Alternative: Use a Proxy Service for Production
+
+If your backend can't support HTTPS directly, you could:
+
+1. **Use a separate proxy service** (e.g., Cloudflare Workers, AWS API Gateway, or a small Node.js service on Render)
+2. **Deploy your backend on Render** - Render provides HTTPS automatically
+3. **Use Nginx as a reverse proxy** in front of your backend
+
 ### Note:
 - The `.env` file is only used for local development
 - Render uses environment variables set in the dashboard, not the `.env` file
 - After setting the environment variable in Render, you need to trigger a new deployment
 - Always test API connectivity after changing the environment variable
+- The Vite proxy in `vite.config.ts` only works in development mode
