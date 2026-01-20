@@ -22,6 +22,34 @@ const getApiBaseUrl = (): string => {
     throw new Error('VITE_API_BASE_URL environment variable is required in production');
   }
 
+  // Check for Mixed Content issues (HTTP API with HTTPS page)
+  if (typeof window !== 'undefined') {
+    const isPageHttps = window.location.protocol === 'https:';
+    const isApiHttp = apiUrl.trim().toLowerCase().startsWith('http://');
+    
+    if (isPageHttps && isApiHttp) {
+      console.error(
+        '🚨 MIXED CONTENT ERROR DETECTED:\n' +
+        `\nThe page is loaded over HTTPS (${window.location.origin})` +
+        `\nbut the API URL uses HTTP (${apiUrl})` +
+        `\n\nBrowsers block HTTP requests from HTTPS pages for security.` +
+        `\n\nTO FIX:` +
+        `\n1. Set VITE_API_BASE_URL environment variable in Render to use HTTPS` +
+        `\n2. Ensure your backend API supports HTTPS` +
+        `\n3. Or configure your backend behind an HTTPS proxy` +
+        `\n\nCurrent API URL: ${apiUrl}` +
+        `\nPlease update it to use HTTPS in Render's environment variables.`
+      );
+      
+      // Throw a more descriptive error
+      throw new Error(
+        'Mixed Content Error: The page is served over HTTPS but the API URL uses HTTP. ' +
+        'Set VITE_API_BASE_URL in Render to use HTTPS (e.g., https://your-backend-url:8089/). ' +
+        `Current API URL: ${apiUrl}`
+      );
+    }
+  }
+
   return apiUrl;
 };
 
