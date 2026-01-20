@@ -18,7 +18,7 @@ interface PatientProfileCardProps {
 }
 
 const PatientProfileCard: React.FC<PatientProfileCardProps> = ({
-  patientName,
+  patientName: _patientName,
   riskFactors,
   isLoading = false,
   error = null,

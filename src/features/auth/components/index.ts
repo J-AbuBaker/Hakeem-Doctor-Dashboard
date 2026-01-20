@@ -4,3 +4,6 @@
 
 // Individual components should be imported directly when needed
 // This file can be expanded to export commonly used components
+
+// Export empty object to make this a valid module
+export {};

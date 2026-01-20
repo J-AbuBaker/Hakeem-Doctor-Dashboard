@@ -317,7 +317,7 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                         empty={sortedDayAppointments.length === 0}
                         emptyTitle="No appointments scheduled for this day"
                         emptySubtitle={isToday ? "You have a free schedule. Consider opening new slots for patients." : `You have a free schedule for ${format(selectedDate, 'MMMM dd, yyyy')}. Consider adding a new appointment or checking other dates.`}
-                        emptyIcon={Calendar}
+                        emptyIcon={CalendarIcon}
                         aria-label={isToday ? "Today's Schedule" : `Schedule for ${format(selectedDate, 'MMMM dd, yyyy')}`}
                       >
                         {upcomingAppointments.length > 0 && (

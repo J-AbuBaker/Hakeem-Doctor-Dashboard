@@ -584,7 +584,6 @@ const SignupForm: React.FC = () => {
               </label>
               <SelectDropdown
                 id="gender"
-                name="gender"
                 value={formik.values.gender !== undefined && formik.values.gender !== null ? String(formik.values.gender) : ''}
                 onChange={(value) => {
                   formik.setFieldValue('gender', value === 'true');
@@ -620,7 +619,6 @@ const SignupForm: React.FC = () => {
               </label>
               <SelectDropdown
                 id="blood_rh_factor"
-                name="blood_rh_factor"
                 value={bloodRhFactor}
                 onChange={(value) => {
                   setBloodRhFactor(value);
@@ -651,7 +649,6 @@ const SignupForm: React.FC = () => {
               </label>
               <SelectDropdown
                 id="blood_type_letter"
-                name="blood_type_letter"
                 value={bloodTypeLetter}
                 onChange={(value) => {
                   setBloodTypeLetter(value);
@@ -755,7 +752,6 @@ const SignupForm: React.FC = () => {
               </label>
               <SelectDropdown
                 id="specialization"
-                name="specialization"
                 value={formik.values.specialization}
                 onChange={(value) => {
                   formik.setFieldValue('specialization', value);

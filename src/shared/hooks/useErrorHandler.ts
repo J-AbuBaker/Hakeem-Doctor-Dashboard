@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { extractErrorMessage } from '../../utils/error/handlers';
+import { extractErrorMessage } from '@shared/utils/error/handlers';
 
 /**
  * Custom hook for consistent error handling

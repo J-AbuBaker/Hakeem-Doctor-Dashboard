@@ -63,7 +63,7 @@ const InterviewRecord: React.FC<InterviewRecordProps> = ({ interview }) => {
 
   const handleQnASearchInputChange = (value: string) => {
     setQnaSearchQuery(value);
-    handleQnASearchChange(value);
+    handleQnASearchChange();
   };
 
   const primaryDiagnosis = sortedDiagnoses[0];
@@ -103,11 +103,11 @@ const InterviewRecord: React.FC<InterviewRecordProps> = ({ interview }) => {
               </div>
               <div 
                 className="primary-diagnosis-probability"
-                style={{
+                style={primaryDiagnosisStyle ? {
                   color: primaryDiagnosisStyle.color,
                   backgroundColor: primaryDiagnosisStyle.bgColor,
                   borderColor: primaryDiagnosisStyle.borderColor
-                }}
+                } : undefined}
               >
                 {formatProbability(primaryDiagnosis.probability)}
               </div>
