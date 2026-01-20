@@ -168,6 +168,22 @@ Please verify:
 4. Check browser console (F12) for detailed error messages`;
       } else if (error.code === 'ECONNABORTED') {
         error.message = 'Request Timeout: The server took too long to respond. Please try again.';
+      } else if (error.code === 'ERR_SSL_PROTOCOL_ERROR' || error.message.includes('SSL') || error.message.includes('SSL_PROTOCOL')) {
+        error.message = `SSL Protocol Error: The API server at ${API_BASE_URL} is not properly configured for HTTPS.
+
+Possible causes:
+• The backend server doesn't support HTTPS
+• The SSL certificate is invalid or missing
+• The server is configured for HTTP but accessed via HTTPS
+
+Solutions:
+1. Ensure your backend API is properly configured with HTTPS and a valid SSL certificate
+2. Use a reverse proxy (Nginx, Cloudflare) with SSL in front of your backend
+3. Deploy your backend on Render to get automatic HTTPS support
+4. Verify the API URL in Render's environment variables is correct
+
+Current API URL: ${API_BASE_URL}
+Please check the backend server configuration.`;
       } else if (error.message.includes('CORS')) {
         error.message = `CORS Error: The server at ${API_BASE_URL} is blocking the request. 
         
