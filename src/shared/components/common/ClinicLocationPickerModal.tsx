@@ -86,12 +86,12 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
     if (zoomLevel !== undefined) {
       setZoom(zoomLevel);
     }
-    
+
     // Call onChange immediately with latest values
     if (onChangeRef.current) {
       onChangeRef.current(lat, lng);
     }
-    
+
     // Update map immediately if available
     const mapInstance = mapInstanceRef.current;
     if (mapInstance) {
@@ -115,7 +115,7 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
 
     setIsGeolocationLoading(true);
     setSearchError(null);
-    
+
     const geolocationOptions: PositionOptions = {
       enableHighAccuracy: true, // Request high accuracy GPS
       timeout: 20000, // 20 seconds timeout for better accuracy
@@ -129,15 +129,15 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
         const accuracy = position.coords.accuracy;
 
         // Validate coordinates - must be valid numbers
-        if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng) && 
-            lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-          
+        if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng) &&
+          lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+
           // Adjust zoom based on accuracy - more accurate = closer zoom
           const zoomLevel = accuracy < 50 ? 18 : accuracy < 100 ? 17 : accuracy < 500 ? 15 : 13;
-          
+
           // Update coordinates and map in real-time
           updateCoordinates(lat, lng, zoomLevel);
-          
+
           // If map instance was passed, ensure it's updated
           if (updateMapInstance && updateMapInstance !== mapInstanceRef.current) {
             const location = new google.maps.LatLng(lat, lng);
@@ -170,7 +170,7 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
             break;
         }
         setSearchError(errorMessage);
-        
+
         // Fallback to default center
         updateCoordinates(defaultCenter.lat, defaultCenter.lng, defaultZoom);
         setIsGeolocationLoading(false);
@@ -198,7 +198,7 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
     if (e.latLng) {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
-      
+
       // Update coordinates and map in real-time
       updateCoordinates(lat, lng, 15);
     }
@@ -208,7 +208,7 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
     if (e.latLng) {
       const lat = e.latLng.lat();
       const lng = e.latLng.lng();
-      
+
       // Update coordinates and map in real-time
       updateCoordinates(lat, lng, 15);
     }
@@ -225,10 +225,10 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
       if (place && place.geometry && place.geometry.location) {
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
-        
+
         // Update coordinates and map in real-time
         updateCoordinates(lat, lng, 15);
-        
+
         setSearchQuery(place.formatted_address || place.name || '');
         setSearchError(null);
       } else {
@@ -255,7 +255,7 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
 
             // Update coordinates and map in real-time
             updateCoordinates(lat, lng, 15);
-            
+
             setSearchQuery(results[0].formatted_address || searchQuery);
             setSearchError(null);
           } else {
@@ -297,10 +297,10 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
   const onMapLoad = useCallback((mapInstance: google.maps.Map) => {
     // Store map instance in ref for real-time access
     mapInstanceRef.current = mapInstance;
-    
+
     // Force map to resize and render properly
     google.maps.event.trigger(mapInstance, 'resize');
-    
+
     // If coordinates are already set, center map on them immediately
     if (selectedLat !== null && selectedLng !== null) {
       const location = new google.maps.LatLng(selectedLat, selectedLng);
@@ -318,16 +318,16 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
     mapInstanceRef.current = null;
   }, []);
 
-  if (!isOpen) return null;
-
   const hasSelection = selectedLat !== null && selectedLng !== null;
-  
-  // Debug: Log coordinates to help troubleshoot
+
+  // Debug: Log coordinates to help troubleshoot (must run unconditionally - Rules of Hooks)
   useEffect(() => {
-    if (hasSelection) {
+    if (isOpen && hasSelection) {
       console.log('Map coordinates:', { lat: selectedLat, lng: selectedLng });
     }
-  }, [hasSelection, selectedLat, selectedLng]);
+  }, [isOpen, hasSelection, selectedLat, selectedLng]);
+
+  if (!isOpen) return null;
 
   // Show error if Google Maps API key is missing
   if (!GOOGLE_MAPS_API_KEY) {
@@ -561,34 +561,34 @@ const ClinicLocationPickerModal: React.FC<ClinicLocationPickerModalProps> = ({
                 </div>
               )}
               {isLoaded ? (
-                  <GoogleMap
-                    mapContainerStyle={{ width: '100%', height: mapHeight }}
-                    center={mapCenter}
-                    zoom={zoom}
-                    onClick={handleMapClick}
-                    onLoad={onMapLoad}
-                    onUnmount={onUnmount}
-                    options={{
-                      disableDefaultUI: false,
-                      zoomControl: true,
-                      streetViewControl: false,
-                      mapTypeControl: window.innerWidth > 768,
-                      fullscreenControl: true,
-                      draggable: true,
-                      scrollwheel: true,
-                      gestureHandling: 'greedy',
-                      keyboardShortcuts: true,
-                      clickableIcons: true,
-                      minZoom: 1,
-                      maxZoom: 20,
-                    }}
-                  >
+                <GoogleMap
+                  mapContainerStyle={{ width: '100%', height: mapHeight }}
+                  center={mapCenter}
+                  zoom={zoom}
+                  onClick={handleMapClick}
+                  onLoad={onMapLoad}
+                  onUnmount={onUnmount}
+                  options={{
+                    disableDefaultUI: false,
+                    zoomControl: true,
+                    streetViewControl: false,
+                    mapTypeControl: window.innerWidth > 768,
+                    fullscreenControl: true,
+                    draggable: true,
+                    scrollwheel: true,
+                    gestureHandling: 'greedy',
+                    keyboardShortcuts: true,
+                    clickableIcons: true,
+                    minZoom: 1,
+                    maxZoom: 20,
+                  }}
+                >
                   {selectedLat !== null && selectedLng !== null && (
                     <Marker
                       key={`marker-${selectedLat}-${selectedLng}`}
-                      position={{ 
-                        lat: Number(selectedLat), 
-                        lng: Number(selectedLng) 
+                      position={{
+                        lat: Number(selectedLat),
+                        lng: Number(selectedLng)
                       }}
                       draggable={true}
                       onDragEnd={handleMarkerDragEnd}
